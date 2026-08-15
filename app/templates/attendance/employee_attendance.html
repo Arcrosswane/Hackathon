@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Attendance — StratLearn{% endblock %}
+{% block header_title %}Employee & Staff Attendance Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 rounded-2xl p-6 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-black tracking-tight">Daily Staff & Employee Attendance</h1>
+            <p class="text-xs text-slate-300 mt-1">
+                Record or update daily working attendance for teachers, administrative, and support staff.
+            </p>
+        </div>
+        <div class="text-xs font-bold bg-white/10 px-4 py-2 rounded-xl border border-white/20">
+            Total Staff Billed: {{ roster|length }}
+        </div>
+    </div>
+
+    <!-- Date Picker Filter -->
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+        <form method="GET" action="{{ url_for('attendance.employee_attendance') }}" class="flex flex-col md:flex-row items-end gap-4">
+            <div class="flex-1">
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Attendance Date <span class="text-rose-500">*</span></label>
+                <input type="date" name="attendance_date" value="{{ attendance_date }}" required onchange="this.form.submit()" 
+                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+            </div>
+            <div>
+                <button type="submit" class="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs transition-colors shadow-sm">
+                    🔍 Load Staff Roster
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Attendance Form -->
+    {% if roster %}
+    <form method="POST" action="{{ url_for('attendance.employee_attendance') }}" class="space-y-6">
+        <input type="hidden" name="attendance_date" value="{{ attendance_date }}">
+
+        <!-- Quick Controls -->
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center space-x-2">
+                <span class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Quick Actions:</span>
+                <button type="button" onclick="markAllEmp('PRESENT')" class="px-3 py-1.5 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-extrabold text-xs transition-all border border-emerald-300/80">
+                    ✅ Mark All Present
+                </button>
+                <button type="button" onclick="markAllEmp('ABSENT')" class="px-3 py-1.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-800 font-extrabold text-xs transition-all border border-rose-300/80">
+                    ❌ Mark All Absent
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                            <th class="py-3.5 px-6">Emp Code</th>
+                            <th class="py-3.5 px-6">Employee Info</th>
+                            <th class="py-3.5 px-6">Designation / Role</th>
+                            <th class="py-3.5 px-6">Attendance Status</th>
+                            <th class="py-3.5 px-6">Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs font-medium">
+                        {% for item in roster %}
+                        {% set emp = item.employee %}
+                        <input type="hidden" name="employee_ids" value="{{ emp.id }}">
+                        <tr class="hover:bg-slate-50/60 transition-colors">
+                            <td class="py-4 px-6 font-black text-slate-900 whitespace-nowrap">
+                                {{ emp.employee_code or 'EMP-#' + emp.id|string }}
+                            </td>
+                            <td class="py-4 px-6">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 font-black flex items-center justify-center text-xs">
+                                        {{ emp.first_name[0] if emp.first_name else 'E' }}
+                                    </div>
+                                    <div>
+                                        <div class="font-extrabold text-slate-900">{{ emp.display_name or (emp.first_name + ' ' + (emp.last_name or '')) }}</div>
+                                        <div class="text-[10px] text-slate-500">{{ emp.email_address or 'No email' }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-4 px-6">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                    {{ emp.designation or 'Staff' }}
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 whitespace-nowrap">
+                                <div class="inline-flex items-center p-1 rounded-xl bg-slate-100 border border-slate-200 space-x-1">
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="status_{{ emp.id }}" value="PRESENT" 
+                                               {% if item.current_status == 'PRESENT' %}checked{% endif %}
+                                               class="peer sr-only emp-status-radio">
+                                        <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all block peer-checked:bg-emerald-600 peer-checked:text-white text-slate-600 hover:text-slate-900">
+                                            PRESENT
+                                        </span>
+                                    </label>
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="status_{{ emp.id }}" value="ABSENT" 
+                                               {% if item.current_status == 'ABSENT' %}checked{% endif %}
+                                               class="peer sr-only emp-status-radio">
+                                        <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all block peer-checked:bg-rose-600 peer-checked:text-white text-slate-600 hover:text-slate-900">
+                                            ABSENT
+                                        </span>
+                                    </label>
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="status_{{ emp.id }}" value="LATE" 
+                                               {% if item.current_status == 'LATE' %}checked{% endif %}
+                                               class="peer sr-only emp-status-radio">
+                                        <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all block peer-checked:bg-amber-500 peer-checked:text-white text-slate-600 hover:text-slate-900">
+                                            LATE
+                                        </span>
+                                    </label>
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="status_{{ emp.id }}" value="HALF_DAY" 
+                                               {% if item.current_status == 'HALF_DAY' %}checked{% endif %}
+                                               class="peer sr-only emp-status-radio">
+                                        <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all block peer-checked:bg-sky-600 peer-checked:text-white text-slate-600 hover:text-slate-900">
+                                            HALF DAY
+                                        </span>
+                                    </label>
+                                </div>
+                            </td>
+                            <td class="py-4 px-6">
+                                <input type="text" name="remarks_{{ emp.id }}" value="{{ item.remarks }}" placeholder="Optional note..." 
+                                       class="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-800 focus:ring-1 focus:ring-brand-500 focus:outline-none">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="p-5 bg-slate-50 border-t border-slate-200/80 flex items-center justify-end">
+                <button type="submit" class="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 transition-all flex items-center space-x-2">
+                    <span>💾 Save Staff Attendance</span>
+                </button>
+            </div>
+        </div>
+    </form>
+    {% endif %}
+
+</div>
+
+<script>
+function markAllEmp(status) {
+    document.querySelectorAll(`.emp-status-radio[value="${status}"]`).forEach(radio => {
+        radio.checked = true;
+    });
+}
+</script>
+{% endblock %}

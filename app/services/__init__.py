@@ -45,6 +45,14 @@ from app.services.payroll_service import (
     generate_batch_payroll, approve_payroll, record_salary_payment, delete_payroll_record,
     sync_payroll_to_finance_expense, get_payroll_records, get_payroll_summary_metrics
 )
+from app.services.attendance_service import (
+    save_bulk_class_student_attendance, save_bulk_employee_attendance,
+    get_class_daily_attendance, get_student_attendance_summary,
+    get_employee_attendance_summary, get_class_attendance_matrix,
+    verify_teacher_class_access, get_today_attendance_overview,
+    get_month_calendar_attendance, generate_attendance_csv_export,
+    VALID_ATTENDANCE_STATUSES
+)
 
 __all__ = [
     'get_active_academic_session',
@@ -152,5 +160,16 @@ __all__ = [
     'record_salary_payment',
     'sync_payroll_to_finance_expense',
     'get_payroll_records',
-    'get_payroll_summary_metrics'
+    'get_payroll_summary_metrics',
+    'save_bulk_class_student_attendance',
+    'save_bulk_employee_attendance',
+    'get_class_daily_attendance',
+    'get_student_attendance_summary',
+    'get_employee_attendance_summary',
+    'get_class_attendance_matrix',
+    'verify_teacher_class_access',
+    'get_today_attendance_overview',
+    'get_month_calendar_attendance',
+    'generate_attendance_csv_export',
+    'VALID_ATTENDANCE_STATUSES'
 ]

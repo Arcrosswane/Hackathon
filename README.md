@@ -321,6 +321,32 @@ Builds a school Employee Salary & Payroll Management system allowing authorized 
 
 ---
 
+### 📋 Module 14 — Attendance Management
+
+#### Core Objective
+Builds a school Attendance Management system supporting daily student attendance (class-based, bulk marking with default helpers) and employee/teacher staff attendance, with role-based access control for Admins, Teachers, Students, and Parents.
+
+#### Detailed Functionality
+- **Dual Scope Attendance Support**:
+  - Upgrades `Attendance` model to cleanly track daily attendance for both **Students** (linked to class, section, academic session, student) and **Employees/Staff** (linked to employee, school).
+- **Daily Class Student Attendance (`/attendance/class`)**:
+  - Teachers and Admins select Class, Section, and Attendance Date (`YYYY-MM-DD`).
+  - Displays enrolled students with status radio buttons (`PRESENT`, `ABSENT`, `LATE`, `HALF_DAY`), roll numbers, and remarks inputs.
+  - Includes **"Mark All Present"** and **"Mark All Absent"** quick action helpers for fast class marking.
+  - **Atomic Transaction & Duplicate Protection**: Bulk submission updates existing attendance records if already present for the `(student_id, attendance_date, session_id)`, preventing duplicate database entries.
+- **Monthly Class Attendance Matrix & Low Attendance Alerts (`/attendance/class/matrix`)**:
+  - Renders student-by-student monthly attendance matrix grid for selected class/section.
+  - Highlights students with low attendance (< 75%) in a prominent alert section for proactive teacher intervention.
+- **Daily Staff & Teacher Attendance (`/attendance/employees`)**:
+  - Admins select date and record daily attendance for all active school employees/staff with quick status controls and notes.
+- **Student & Parent Attendance Portals (`/attendance/my-attendance`, `/attendance/child/<id>`)**:
+  - Students can view their personal attendance statistics (Attendance %, Present Days, Absences, Late, Half Day) and historical ledger.
+  - Parents can view linked child attendance records with `GuardianStudent` IDOR verification.
+- **Employee Self-Service Portal (`/attendance/my-staff-attendance`)**:
+  - Staff members and teachers can view their own working days attendance ledger and attendance rate.
+
+---
+
 ## 🎨 Navigation & Menu UI Architecture
 
 - **Expandable Dark-Themed Left Sidebar**:

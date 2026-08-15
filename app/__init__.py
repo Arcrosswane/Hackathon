@@ -20,6 +20,7 @@ from app.routes.behaviour_skills import behaviour_skills_bp
 from app.routes.fees import fees_bp
 from app.routes.accounts import accounts_bp
 from app.routes.payroll import payroll_bp
+from app.routes.attendance import attendance_bp
 from app.utils.navigation import get_navigation_for_role
 from app.services.academic_service import get_active_academic_session
 
@@ -49,6 +50,7 @@ def create_app(config_class=Config):
     app.register_blueprint(fees_bp)
     app.register_blueprint(accounts_bp)
     app.register_blueprint(payroll_bp)
+    app.register_blueprint(attendance_bp)
 
     # Auto table & column check
     with app.app_context():
@@ -157,7 +159,18 @@ def create_app(config_class=Config):
                 "ALTER TABLE homework ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP;",
                 "ALTER TABLE homework MODIFY COLUMN created_by_employee_id INT NULL;",
                 "ALTER TABLE homework_submissions ADD COLUMN ai_evaluated TINYINT(1) DEFAULT 0;",
-                "ALTER TABLE homework_submissions ADD COLUMN ai_reasoning TEXT NULL;"
+                "ALTER TABLE homework_submissions ADD COLUMN ai_reasoning TEXT NULL;",
+                "ALTER TABLE attendance ADD COLUMN academic_session_id INT NULL;",
+                "ALTER TABLE attendance ADD COLUMN student_id INT NULL;",
+                "ALTER TABLE attendance ADD COLUMN employee_id INT NULL;",
+                "ALTER TABLE attendance ADD COLUMN class_id INT NULL;",
+                "ALTER TABLE attendance ADD COLUMN section_id INT NULL;",
+                "ALTER TABLE attendance ADD COLUMN attendance_date DATE NULL;",
+                "ALTER TABLE attendance ADD COLUMN remarks VARCHAR(255) NULL;",
+                "ALTER TABLE attendance ADD COLUMN recorded_by_id INT NULL;",
+                "ALTER TABLE attendance ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP;",
+                "ALTER TABLE attendance ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP;",
+                "ALTER TABLE attendance MODIFY COLUMN institute_id INT NULL;"
             ]
             with db.engine.connect() as conn:
                 for stmt in alter_statements:

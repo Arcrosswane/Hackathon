@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Attendance Calendar — StratLearn{% endblock %}
+{% block header_title %}Attendance Calendar View{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span class="px-2.5 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30 text-[10px] font-extrabold uppercase tracking-wider">
+                    CALENDAR VIEW
+                </span>
+                <span class="text-xs text-slate-300 font-bold">
+                    {% if entity_type == 'Student' and student %}{{ student.display_name }}{% elif entity_type == 'Employee' and employee %}{{ employee.full_name }}{% else %}{{ entity_type }} Calendar{% endif %}
+                </span>
+            </div>
+            <h1 class="text-2xl font-black mt-1 tracking-tight">{{ cal_data.month_name }}</h1>
+        </div>
+
+        <!-- Export Dropdown / Action Buttons -->
+        <div class="flex flex-wrap items-center gap-2">
+            
+            <!-- Excel / CSV Export -->
+            <a href="{{ url_for('attendance.export_report', scope=entity_type|lower, period_type='monthly', format='excel', month_year=month_year, student_id=selected_student_id or '', employee_id=selected_employee_id or '') }}" 
+               class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-1.5">
+                <span>📥 Download Excel (.csv)</span>
+            </a>
+
+            <!-- PDF / Printable Report Export -->
+            <a href="{{ url_for('attendance.export_report', scope=entity_type|lower, period_type='monthly', format='pdf', month_year=month_year, student_id=selected_student_id or '', employee_id=selected_employee_id or '') }}" target="_blank"
+               class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs border border-white/20 transition-all flex items-center space-x-1.5">
+                <span>🖨️ PDF / Print Report</span>
+            </a>
+
+        </div>
+    </div>
+
+    <!-- Controls & Month Switcher -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+        
+        <!-- Month Navigation -->
+        <div class="flex items-center space-x-3">
+            <a href="{{ url_for('attendance.calendar_view', entity_type=entity_type, student_id=selected_student_id or '', employee_id=selected_employee_id or '', month_year=cal_data.prev_month) }}" 
+               class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs transition-colors flex items-center space-x-1">
+                <span>◀</span>
+                <span>Previous Month</span>
+            </a>
+
+            <span class="text-sm font-black text-slate-900 px-3 py-1 rounded-xl bg-slate-50 border border-slate-200">
+                {{ cal_data.month_name }}
+            </span>
+
+            <a href="{{ url_for('attendance.calendar_view', entity_type=entity_type, student_id=selected_student_id or '', employee_id=selected_employee_id or '', month_year=cal_data.next_month) }}" 
+               class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs transition-colors flex items-center space-x-1">
+                <span>Next Month</span>
+                <span>▶</span>
+            </a>
+        </div>
+
+        <!-- Month Filter Form -->
+        <form method="GET" action="{{ url_for('attendance.calendar_view') }}" class="flex items-center space-x-2">
+            <input type="hidden" name="entity_type" value="{{ entity_type }}">
+            <input type="hidden" name="student_id" value="{{ selected_student_id or '' }}">
+            <input type="hidden" name="employee_id" value="{{ selected_employee_id or '' }}">
+            
+            <label class="text-xs font-bold text-slate-600">Select Month:</label>
+            <input type="month" name="month_year" value="{{ month_year }}" onchange="this.form.submit()" 
+                   class="px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+        </form>
+
+    </div>
+
+    <!-- Calendar Summary Badges -->
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs text-center">
+            <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Attendance Rate</span>
+            <span class="text-lg font-black text-slate-900">{{ cal_data.summary.percentage }}%</span>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs text-center">
+            <span class="text-[10px] font-extrabold text-emerald-600 uppercase tracking-wider block">Present</span>
+            <span class="text-lg font-black text-emerald-700">{{ cal_data.summary.present }}</span>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs text-center">
+            <span class="text-[10px] font-extrabold text-rose-600 uppercase tracking-wider block">Absent</span>
+            <span class="text-lg font-black text-rose-700">{{ cal_data.summary.absent }}</span>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs text-center">
+            <span class="text-[10px] font-extrabold text-amber-600 uppercase tracking-wider block">Late</span>
+            <span class="text-lg font-black text-amber-700">{{ cal_data.summary.late }}</span>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs text-center col-span-2 sm:col-span-1">
+            <span class="text-[10px] font-extrabold text-sky-600 uppercase tracking-wider block">Half Day</span>
+            <span class="text-lg font-black text-sky-700">{{ cal_data.summary.half_day }}</span>
+        </div>
+    </div>
+
+    <!-- Visual Calendar Grid -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        
+        <!-- Days of Week Header -->
+        <div class="grid grid-cols-7 bg-slate-50 border-b border-slate-200 text-center py-3 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+            <div>Mon</div>
+            <div>Tue</div>
+            <div>Wed</div>
+            <div>Thu</div>
+            <div>Fri</div>
+            <div class="text-rose-500">Sat</div>
+            <div class="text-rose-500">Sun</div>
+        </div>
+
+        <!-- Weeks Grid -->
+        <div class="divide-y divide-slate-100">
+            {% for week in cal_data.weeks %}
+            <div class="grid grid-cols-7 divide-x divide-slate-100 min-h-[100px]">
+                {% for day_item in week %}
+                <div class="p-2.5 flex flex-col justify-between transition-colors {% if not day_item.is_current_month %}bg-slate-50/40 text-slate-300{% elif day_item.is_today %}bg-brand-50/30{% else %}hover:bg-slate-50/50{% endif %}">
+                    
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-black {% if day_item.is_today %}w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center text-[11px]{% elif day_item.is_weekend %}text-rose-400{% else %}text-slate-700{% endif %}">
+                            {{ day_item.day }}
+                        </span>
+                        {% if day_item.is_today %}
+                        <span class="text-[9px] font-extrabold text-brand-600 uppercase">Today</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="mt-2">
+                        {% if day_item.is_current_month %}
+                            {% if day_item.status == 'PRESENT' %}
+                            <div class="p-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-center font-black text-[10px]">
+                                ✅ PRESENT
+                            </div>
+                            {% elif day_item.status == 'ABSENT' %}
+                            <div class="p-1.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 text-center font-black text-[10px]">
+                                ❌ ABSENT
+                            </div>
+                            {% elif day_item.status == 'LATE' %}
+                            <div class="p-1.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 text-center font-black text-[10px]">
+                                ⏰ LATE
+                            </div>
+                            {% elif day_item.status == 'HALF_DAY' %}
+                            <div class="p-1.5 rounded-xl bg-sky-50 text-sky-700 border border-sky-200 text-center font-black text-[10px]">
+                                🌓 HALF DAY
+                            </div>
+                            {% elif day_item.is_weekend %}
+                            <div class="text-[10px] text-center text-slate-300 font-bold uppercase tracking-wider">
+                                Weekend
+                            </div>
+                            {% else %}
+                            <div class="text-[10px] text-center text-slate-300 font-medium">
+                                —
+                            </div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

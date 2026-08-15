@@ -859,6 +859,71 @@ def seed_database():
                 p_paid = record_salary_payment(p_first.id, payment_method="BANK_TRANSFER", payment_reference=f"NEFT-SAL-{p_first.id:04d}")
                 print(f"✓ Seeded paid salary of ₹{p_paid.net_salary:.2f} for '{p_paid.employee.full_name}' and synced to Accounts & Finance.")
 
+            # Seed Module 14 Attendance Records (Students & Employees)
+            from app.services.attendance_service import save_bulk_class_student_attendance, save_bulk_employee_attendance
+            from app.models import StudentEnrollment, SchoolClass
+            import random
+
+            classes = SchoolClass.query.filter_by(academic_session_id=active_sess.id).all()
+            for cls in classes:
+                enrollments = StudentEnrollment.query.filter_by(class_id=cls.id, is_current=True).all()
+                if not enrollments:
+                    continue
+
+                # Seed last 5 working days attendance
+                for days_back in range(5):
+                    d_obj = date.today() - timedelta(days=days_back)
+                    if d_obj.weekday() in (5, 6): # Skip weekends
+                        continue
+
+                    stu_list = []
+                    for idx, en in enumerate(enrollments):
+                        # Give first student absent/late for testing low attendance matrix
+                        if idx == 0 and days_back % 2 == 1:
+                            st = 'ABSENT'
+                        elif idx == 1 and days_back == 1:
+                            st = 'LATE'
+                        else:
+                            st = 'PRESENT'
+
+                        stu_list.append({
+                            'student_id': en.student_id,
+                            'status': st,
+                            'remarks': 'Regular school attendance' if st == 'PRESENT' else 'Excused'
+                        })
+
+                    save_bulk_class_student_attendance(
+                        class_id=cls.id,
+                        section_id=enrollments[0].section_id,
+                        attendance_date=d_obj,
+                        student_attendance_list=stu_list,
+                        recorded_by_id=admin_user.id,
+                        session_id=active_sess.id
+                    )
+
+            # Seed Employee Attendance for last 5 working days
+            all_emps = Employee.query.filter_by(is_active=True).all()
+            for days_back in range(5):
+                d_obj = date.today() - timedelta(days=days_back)
+                if d_obj.weekday() in (5, 6):
+                    continue
+
+                emp_list = []
+                for emp in all_emps:
+                    emp_list.append({
+                        'employee_id': emp.id,
+                        'status': 'PRESENT',
+                        'remarks': 'On duty'
+                    })
+
+                save_bulk_employee_attendance(
+                    attendance_date=d_obj,
+                    employee_attendance_list=emp_list,
+                    recorded_by_id=admin_user.id
+                )
+
+            print("✓ Seeded Module 14 Student and Employee daily attendance records for recent working days.")
+
         db.session.commit()
         print("\n🎉 Database initialization and seeding completed successfully!")
 

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Report — StratLearn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; font-size: 11pt; }
+            .page-break { page-break-after: always; }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen font-sans p-6 text-slate-800">
+
+    <!-- Top Action Bar for Browser -->
+    <div class="max-w-4xl mx-auto mb-6 flex items-center justify-between no-print bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+        <div>
+            <h2 class="text-sm font-bold text-slate-900">Official Attendance Report Document</h2>
+            <p class="text-xs text-slate-500">Ready to save as PDF or print</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button onclick="window.print()" class="px-5 py-2 rounded-xl bg-brand-600 text-white font-extrabold text-xs shadow-md shadow-brand-600/20 hover:bg-brand-700 transition-all flex items-center space-x-2">
+                <span>🖨️ Save as PDF / Print</span>
+            </button>
+            <button onclick="window.close()" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <!-- Printable Paper Sheet -->
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-lg border border-slate-200 space-y-6">
+
+        <!-- School Header -->
+        <div class="border-b border-slate-200 pb-6 flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight">STRATLEARN ACADEMIC PLATFORM</h1>
+                <p class="text-xs text-slate-500 font-medium">Official School Attendance Management Report</p>
+            </div>
+            <div class="text-right">
+                <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 font-extrabold text-xs uppercase border border-slate-200">
+                    {{ period_type|upper }} REPORT
+                </span>
+                <p class="text-xs font-bold text-slate-600 mt-1">{{ period_label }}</p>
+            </div>
+        </div>
+
+        <!-- Report Details Card -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+            <div>
+                <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Scope</span>
+                <span class="font-bold text-slate-900">{{ scope|capitalize }} Attendance</span>
+            </div>
+            <div>
+                <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Target Entity</span>
+                <span class="font-bold text-slate-900">
+                    {% if target_class %}{{ target_class.display_name }}{% elif target_student %}{{ target_student.display_name }}{% elif target_employee %}{{ target_employee.full_name }}{% else %}School-wide{% endif %}
+                </span>
+            </div>
+            <div>
+                <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Report Period</span>
+                <span class="font-bold text-slate-900">{{ period_label }}</span>
+            </div>
+            <div>
+                <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Attendance Rate</span>
+                <span class="font-extrabold text-emerald-700 text-sm">{{ summary.rate }}%</span>
+            </div>
+        </div>
+
+        <!-- Summary Statistics Bar -->
+        <div class="grid grid-cols-5 gap-3 text-center text-xs font-bold">
+            <div class="p-3 rounded-xl bg-slate-100 text-slate-700 border border-slate-200">
+                <span class="text-[10px] text-slate-400 block uppercase">Total Recorded</span>
+                <span class="text-base font-black text-slate-900">{{ summary.total }}</span>
+            </div>
+            <div class="p-3 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200">
+                <span class="text-[10px] text-emerald-600 block uppercase">Present</span>
+                <span class="text-base font-black">{{ summary.present }}</span>
+            </div>
+            <div class="p-3 rounded-xl bg-rose-50 text-rose-800 border border-rose-200">
+                <span class="text-[10px] text-rose-600 block uppercase">Absent</span>
+                <span class="text-base font-black">{{ summary.absent }}</span>
+            </div>
+            <div class="p-3 rounded-xl bg-amber-50 text-amber-800 border border-amber-200">
+                <span class="text-[10px] text-amber-600 block uppercase">Late</span>
+                <span class="text-base font-black">{{ summary.late }}</span>
+            </div>
+            <div class="p-3 rounded-xl bg-sky-50 text-sky-800 border border-sky-200">
+                <span class="text-[10px] text-sky-600 block uppercase">Half Day</span>
+                <span class="text-base font-black">{{ summary.half_day }}</span>
+            </div>
+        </div>
+
+        <!-- Table of Attendance Records -->
+        <table class="w-full text-left border-collapse border border-slate-200 text-xs">
+            <thead>
+                <tr class="bg-slate-100 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-600">
+                    <th class="py-2.5 px-4 border-r border-slate-200">Date</th>
+                    <th class="py-2.5 px-4 border-r border-slate-200">Name / Code</th>
+                    <th class="py-2.5 px-4 border-r border-slate-200">Class / Role</th>
+                    <th class="py-2.5 px-4 border-r border-slate-200">Status</th>
+                    <th class="py-2.5 px-4">Remarks</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 font-medium">
+                {% for r in records %}
+                <tr>
+                    <td class="py-2.5 px-4 border-r border-slate-200 font-bold text-slate-900 whitespace-nowrap">
+                        {{ r.attendance_date.strftime('%Y-%m-%d') }}
+                    </td>
+                    <td class="py-2.5 px-4 border-r border-slate-200">
+                        {% if r.entity_type == 'Student' %}
+                        {{ r.student.display_name if r.student else 'Student #' + r.student_id|string }}
+                        {% else %}
+                        {{ r.employee.full_name if r.employee else 'Employee #' + r.employee_id|string }}
+                        {% endif %}
+                    </td>
+                    <td class="py-2.5 px-4 border-r border-slate-200 text-slate-600">
+                        {% if r.entity_type == 'Student' %}
+                        {{ r.school_class.display_name if r.school_class else 'N/A' }}
+                        {% else %}
+                        {{ r.employee.designation if r.employee else 'Staff' }}
+                        {% endif %}
+                    </td>
+                    <td class="py-2.5 px-4 border-r border-slate-200 font-extrabold whitespace-nowrap">
+                        {% if r.status == 'PRESENT' %}
+                        <span class="text-emerald-700">PRESENT</span>
+                        {% elif r.status == 'ABSENT' %}
+                        <span class="text-rose-700">ABSENT</span>
+                        {% elif r.status == 'LATE' %}
+                        <span class="text-amber-700">LATE</span>
+                        {% else %}
+                        <span class="text-sky-700">HALF DAY</span>
+                        {% endif %}
+                    </td>
+                    <td class="py-2.5 px-4 text-slate-500 italic">
+                        {{ r.remarks or '-' }}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="py-6 text-center text-slate-400">No attendance logs found for selected criteria.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Report Footer Stamp -->
+        <div class="pt-6 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-400 font-medium">
+            <div>Generated by StratLearn School Management Platform</div>
+            <div>Date Generated: {{ records[0].created_at.strftime('%Y-%m-%d') if records else '2026-08-15' }}</div>
+        </div>
+
+    </div>
+
+</body>
+</html>

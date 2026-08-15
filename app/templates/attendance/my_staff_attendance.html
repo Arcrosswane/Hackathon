@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}My Staff Attendance — StratLearn{% endblock %}
+{% block header_title %}My Staff Attendance Ledger{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    {% set emp = data.employee %}
+    {% set sum = data.summary %}
+
+    <!-- Employee Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 rounded-2xl p-6 text-white shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-full bg-emerald-600 text-white font-black text-lg flex items-center justify-center border-2 border-white/20">
+                {{ emp.first_name[0] if emp.first_name else 'E' }}
+            </div>
+            <div>
+                <h1 class="text-xl font-black tracking-tight">{{ emp.display_name or (emp.first_name + ' ' + (emp.last_name or '')) }}</h1>
+                <p class="text-xs text-slate-300">Code: {{ emp.employee_code or 'N/A' }} | {{ emp.designation or 'Staff Member' }}</p>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+            <a href="{{ url_for('attendance.calendar_view', entity_type='Employee', employee_id=emp.id, month_year=month_year) }}" 
+               class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs border border-white/20 transition-all flex items-center space-x-1.5">
+                <span>📅 Calendar View</span>
+            </a>
+            <a href="{{ url_for('attendance.export_report', scope='employee', employee_id=emp.id, period_type='monthly', format='excel', month_year=month_year) }}" 
+               class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-1.5">
+                <span>📥 Export Excel</span>
+            </a>
+            <form method="GET" action="{{ url_for('attendance.my_staff_attendance') }}" class="flex items-center space-x-2">
+                <label class="text-xs font-bold text-slate-300">Period:</label>
+                <input type="month" name="month_year" value="{{ month_year }}" onchange="this.form.submit()" 
+                       class="px-3 py-1.5 rounded-xl border border-white/20 bg-white/10 text-xs font-bold text-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
+            </form>
+        </div>
+    </div>
+
+    <!-- Summary Metrics -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Attendance Rate</span>
+            <div class="text-2xl font-black text-slate-900">{{ sum.percentage }}%</div>
+            <div class="w-full bg-slate-100 rounded-full h-1.5 mt-2 overflow-hidden">
+                <div class="h-1.5 rounded-full {% if sum.percentage >= 85 %}bg-emerald-500{% else %}bg-rose-500{% endif %}" style="width: {{ sum.percentage }}%"></div>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Total Working Days</span>
+            <div class="text-2xl font-black text-slate-900">{{ sum.total_working_days }}</div>
+            <div class="text-[10px] text-slate-500 font-medium">Billed working days</div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-emerald-600">Present</span>
+            <div class="text-2xl font-black text-emerald-700">{{ sum.present }}</div>
+            <div class="text-[10px] text-emerald-700 font-medium">Full days present</div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-rose-600">Absent</span>
+            <div class="text-2xl font-black text-rose-700">{{ sum.absent }}</div>
+            <div class="text-[10px] text-rose-700 font-medium">Full days absent</div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-amber-600">Late / Half Day</span>
+            <div class="text-2xl font-black text-amber-700">{{ sum.late + sum.half_day }}</div>
+            <div class="text-[10px] text-amber-700 font-medium">{{ sum.late }} Late, {{ sum.half_day }} Half Day</div>
+        </div>
+
+    </div>
+
+    <!-- Attendance History Ledger Table -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="p-4 border-b border-slate-100">
+            <h3 class="text-sm font-bold text-slate-900">Personal Staff Attendance Ledger</h3>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                        <th class="py-3.5 px-6">Date</th>
+                        <th class="py-3.5 px-6">Status</th>
+                        <th class="py-3.5 px-6">Remarks / Note</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs font-medium">
+                    {% for rec in data.records %}
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                        <td class="py-4 px-6 font-extrabold text-slate-900 whitespace-nowrap">
+                            {{ rec.attendance_date.strftime('%B %d, %Y') }}
+                        </td>
+                        <td class="py-4 px-6 whitespace-nowrap">
+                            {% if rec.status == 'PRESENT' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">PRESENT</span>
+                            {% elif rec.status == 'ABSENT' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200">ABSENT</span>
+                            {% elif rec.status == 'LATE' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">LATE</span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200">HALF DAY</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 text-slate-500 italic">
+                            {{ rec.remarks or '-' }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3" class="py-8 text-center text-slate-400 font-medium">No staff attendance logged for this period.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

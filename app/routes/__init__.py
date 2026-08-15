@@ -14,6 +14,7 @@ from app.routes.timetables import timetables_bp
 from app.routes.fees import fees_bp
 from app.routes.accounts import accounts_bp
 from app.routes.payroll import payroll_bp
+from app.routes.attendance import attendance_bp
 
 __all__ = [
     'auth_bp', 
@@ -31,5 +32,6 @@ __all__ = [
     'timetables_bp',
     'fees_bp',
     'accounts_bp',
-    'payroll_bp'
+    'payroll_bp',
+    'attendance_bp'
 ]

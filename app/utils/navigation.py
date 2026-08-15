@@ -106,6 +106,16 @@ ADMIN_NAV = [
             {'label': 'Salary Structures', 'endpoint': 'payroll.structures_list'},
             {'label': 'Salary Components', 'endpoint': 'payroll.components_list'}
         ]
+    },
+    {
+        'label': 'Attendance',
+        'icon': 'clipboard-check',
+        'subitems': [
+            {'label': 'Record Class Attendance', 'endpoint': 'attendance.class_attendance'},
+            {'label': 'Class Attendance Matrix', 'endpoint': 'attendance.class_matrix'},
+            {'label': 'Attendance Calendar', 'endpoint': 'attendance.calendar_view'},
+            {'label': 'Staff Attendance', 'endpoint': 'attendance.employee_attendance'}
+        ]
     }
 ]
 
@@ -115,6 +125,16 @@ TEACHER_NAV = [
         'endpoint': 'teacher.dashboard',
         'icon': 'home',
         'subitems': []
+    },
+    {
+        'label': 'Attendance',
+        'icon': 'clipboard-check',
+        'subitems': [
+            {'label': 'Mark Class Attendance', 'endpoint': 'attendance.class_attendance'},
+            {'label': 'Class Monthly Matrix', 'endpoint': 'attendance.class_matrix'},
+            {'label': 'Attendance Calendar', 'endpoint': 'attendance.calendar_view'},
+            {'label': 'My Staff Attendance', 'endpoint': 'attendance.my_staff_attendance'}
+        ]
     },
     {
         'label': 'Homework',
@@ -151,6 +171,13 @@ STUDENT_NAV = [
         'subitems': []
     },
     {
+        'label': 'Attendance',
+        'icon': 'clipboard-check',
+        'subitems': [
+            {'label': 'My Attendance Record', 'endpoint': 'attendance.my_attendance'}
+        ]
+    },
+    {
         'label': 'Homework',
         'icon': 'document-text',
         'subitems': [
@@ -179,6 +206,13 @@ PARENT_NAV = [
         'endpoint': 'parent.dashboard',
         'icon': 'home',
         'subitems': []
+    },
+    {
+        'label': 'Attendance',
+        'icon': 'clipboard-check',
+        'subitems': [
+            {'label': 'Children Attendance', 'endpoint': 'attendance.my_attendance'}
+        ]
     },
     {
         'label': 'Homework',
