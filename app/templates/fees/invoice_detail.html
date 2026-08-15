@@ -17,12 +17,22 @@
             </div>
         </div>
 
-        {% if invoice.status != 'PAID' and invoice.status != 'CANCELLED' and session.get('user_role') in ('Student', 'Parent', 'Guardian') %}
-        <a href="{{ url_for('fees.pay_invoice_online', invoice_id=invoice.id) }}" 
-           class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 transition-all flex items-center space-x-1.5">
-            <span>💳 Pay Invoice Online</span>
-        </a>
-        {% endif %}
+        <div class="flex items-center space-x-2">
+            {% if invoice.status != 'PAID' and invoice.status != 'CANCELLED' and session.get('user_role') in ('Student', 'Parent', 'Guardian') %}
+            <a href="{{ url_for('fees.pay_invoice_online', invoice_id=invoice.id) }}" 
+               class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 transition-all flex items-center space-x-1.5">
+                <span>💳 Pay Invoice Online</span>
+            </a>
+            {% endif %}
+
+            {% if session.get('user_role') in ('Admin', 'admin') %}
+            <form action="{{ url_for('fees.delete_invoice_route', invoice_id=invoice.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete invoice {{ invoice.invoice_number }}?')">
+                <button type="submit" class="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold text-xs transition-colors flex items-center space-x-1.5">
+                    <span>🗑️ Delete Invoice</span>
+                </button>
+            </form>
+            {% endif %}
+        </div>
     </div>
 
     <!-- Main Invoice Card -->
@@ -31,7 +41,7 @@
         <div class="flex flex-col sm:flex-row justify-between pb-6 border-b border-slate-100 gap-4">
             <div>
                 <span class="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700">Student Info</span>
-                <h3 class="text-lg font-extrabold text-slate-900 mt-2">{{ invoice.student.first_name }} {{ invoice.student.last_name or '' }}</h3>
+                <h3 class="text-lg font-extrabold text-slate-900 mt-2">{{ invoice.student.display_name if invoice.student else 'Student' }}</h3>
                 <p class="text-xs text-slate-500">Class: {{ invoice.school_class.name }} | Reg: {{ invoice.student.registration_number }}</p>
             </div>
 

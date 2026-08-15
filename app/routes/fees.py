@@ -10,13 +10,27 @@ from app.models import Student, Guardian, GuardianStudent, Employee, FeeInvoice,
 from app.services.fee_service import (
     get_all_fee_types, create_fee_type, update_fee_type, toggle_fee_type_status,
     get_fee_structures, create_fee_structure, update_fee_structure, toggle_fee_structure_status,
-    generate_student_invoice, generate_batch_class_invoices, get_invoices,
+    generate_student_invoice, generate_batch_class_invoices, get_invoices, delete_invoice,
     record_payment, get_payments, get_receipt_by_id,
     get_student_fee_summary, get_collection_summary,
     verify_parent_invoice_access, verify_parent_receipt_access, VALID_PAYMENT_METHODS
 )
 
+
 fees_bp = Blueprint('fees', __name__, url_prefix='/fees')
+
+
+@fees_bp.route('/invoices/<int:invoice_id>/delete', methods=['POST'])
+@login_required
+@role_required('Admin')
+def delete_invoice_route(invoice_id):
+    """Delete a fee invoice and its attached records."""
+    try:
+        delete_invoice(invoice_id)
+        flash("🗑️ Fee invoice deleted successfully!", "success")
+    except ValueError as e:
+        flash(str(e), "danger")
+    return redirect(request.referrer or url_for('fees.invoices_list'))
 
 
 # ==========================================

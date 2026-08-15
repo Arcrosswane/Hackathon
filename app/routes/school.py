@@ -55,6 +55,10 @@ def setup():
             }
             return render_template('admin/school.html', school=form_data, is_new=is_new)
 
+        if not school_code:
+            code_prefix = "".join(e for e in school_name.upper() if e.isalnum())[:3] or "SCH"
+            school_code = f"SCH-{code_prefix}-001"
+
         if not school:
             school = School(
                 name=school_name,

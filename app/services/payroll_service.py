@@ -16,8 +16,35 @@ VALID_CALCULATION_TYPES = {'FIXED_AMOUNT', 'PERCENTAGE'}
 VALID_PAYROLL_STATUSES = {'DRAFT', 'GENERATED', 'APPROVED', 'PAID', 'CANCELLED'}
 VALID_PAYMENT_METHODS = {'BANK_TRANSFER', 'CASH', 'UPI', 'CHEQUE', 'OTHER'}
 
+def ensure_default_salary_components():
+    """Auto-provisions standard salary components if DB is empty."""
+    if SalaryComponent.query.count() == 0:
+        defaults = [
+            ("Basic Salary", "EARNING", "FIXED_AMOUNT", 35000.00, "Core base monthly salary"),
+            ("House Rent Allowance (HRA)", "EARNING", "PERCENTAGE", 20.00, "HRA rate (% of basic salary)"),
+            ("Transport Allowance", "EARNING", "FIXED_AMOUNT", 2500.00, "Commute allowance"),
+            ("Special Allowance", "EARNING", "FIXED_AMOUNT", 1500.00, "Performance and special duty allowance"),
+            ("Professional Tax", "DEDUCTION", "FIXED_AMOUNT", 200.00, "Statutory professional tax deduction"),
+            ("Advance Recovery", "DEDUCTION", "FIXED_AMOUNT", 0.00, "Salary advance recovery deduction")
+        ]
+        for name, c_type, calc_t, val, desc in defaults:
+            try:
+                comp = SalaryComponent(
+                    name=name,
+                    type=c_type,
+                    calculation_type=calc_t,
+                    default_value=Decimal(str(val)),
+                    description=desc,
+                    is_active=True
+                )
+                db.session.add(comp)
+            except Exception:
+                pass
+        db.session.commit()
+
 def get_all_salary_components(component_type=None, active_only=False):
-    """Retrieve salary components with optional filtering."""
+    """Retrieve salary components with optional filtering. Auto-provisions defaults if empty."""
+    ensure_default_salary_components()
     query = SalaryComponent.query
     if component_type:
         query = query.filter_by(type=component_type.upper())
@@ -81,8 +108,8 @@ def get_all_salary_structures(active_only=False):
     return query.order_by(SalaryStructure.name.asc()).all()
 
 
-def create_salary_structure(name, description=None, component_items=None, school_id=None):
-    """Create a new salary structure with component items."""
+def create_salary_structure(name, description=None, component_items=None, auto_assign_all=False, school_id=None):
+    """Create a new salary structure with component items and optional auto-assignment."""
     if not name or not name.strip():
         raise ValueError("Salary structure name is required.")
 
@@ -111,7 +138,105 @@ def create_salary_structure(name, description=None, component_items=None, school
                 db.session.add(s_item)
 
     db.session.commit()
+
+    if auto_assign_all:
+        assign_structure_to_all_employees(structure.id)
+
     return structure
+
+
+def update_salary_structure(structure_id, name, description=None, component_items=None, auto_assign_all=False):
+    """Update an existing salary structure and its components."""
+    structure = SalaryStructure.query.get(structure_id)
+    if not structure:
+        raise ValueError("Salary structure not found.")
+
+    if not name or not name.strip():
+        raise ValueError("Salary structure name is required.")
+
+    structure.name = name.strip()
+    structure.description = description.strip() if description else None
+
+    # Clear existing items
+    SalaryStructureItem.query.filter_by(salary_structure_id=structure.id).delete()
+    db.session.flush()
+
+    if component_items:
+        for item in component_items:
+            comp_id = item.get('component_id')
+            calc_t = item.get('calculation_type', 'FIXED_AMOUNT')
+            val = item.get('amount_or_percentage', 0.0)
+
+            if comp_id:
+                s_item = SalaryStructureItem(
+                    salary_structure_id=structure.id,
+                    component_id=comp_id,
+                    calculation_type=calc_t,
+                    amount_or_percentage=round(Decimal(str(val)), 2)
+                )
+                db.session.add(s_item)
+
+    db.session.commit()
+
+    if auto_assign_all:
+        assign_structure_to_all_employees(structure.id)
+
+    return structure
+
+
+def assign_structure_to_all_employees(salary_structure_id):
+    """Bulk assigns a salary structure to all active employees."""
+    struct = SalaryStructure.query.get(salary_structure_id)
+    if not struct:
+        raise ValueError("Salary structure not found.")
+
+    employees = Employee.query.filter_by(is_active=True).all()
+    eff_date = date.today()
+    count = 0
+    for emp in employees:
+        prev_assignments = EmployeeSalaryAssignment.query.filter_by(employee_id=emp.id, is_active=True).all()
+        for prev in prev_assignments:
+            prev.is_active = False
+            prev.effective_until = eff_date
+
+        assignment = EmployeeSalaryAssignment(
+            employee_id=emp.id,
+            salary_structure_id=struct.id,
+            effective_from=eff_date,
+            is_active=True,
+            notes=f"Assigned structure '{struct.name}'"
+        )
+        db.session.add(assignment)
+        count += 1
+
+    db.session.commit()
+    return count
+
+
+def delete_salary_structure(structure_id):
+    """Deletes a salary structure."""
+    structure = SalaryStructure.query.get(structure_id)
+    if not structure:
+        raise ValueError("Salary structure not found.")
+    db.session.delete(structure)
+    db.session.commit()
+    return True
+
+
+def delete_payroll_record(payroll_id):
+    """Deletes a payroll record and cleans up any synced financial transaction in Module 12."""
+    payroll = PayrollRecord.query.get(payroll_id)
+    if not payroll:
+        raise ValueError("Payroll record not found.")
+
+    # Remove synced Module 12 expense transaction if exists
+    synced_txn = FinancialTransaction.query.filter_by(source_type='PAYROLL_PAYMENT', source_id=payroll.id).first()
+    if synced_txn:
+        db.session.delete(synced_txn)
+
+    db.session.delete(payroll)
+    db.session.commit()
+    return True
 
 
 def assign_salary_structure(employee_id, salary_structure_id, effective_from=None, notes=None):
@@ -160,37 +285,43 @@ def calculate_employee_salary_snapshot(employee_id):
 
     assignment = get_employee_active_assignment(employee_id)
     if not assignment or not assignment.structure:
-        # Fallback to employee.monthly_salary if set
-        base_salary = Decimal(str(emp.monthly_salary or 0.00))
-        items = [{
-            'component_name': 'Basic Salary',
-            'component_type': 'EARNING',
-            'calculation_type': 'FIXED_AMOUNT',
-            'amount': base_salary
-        }]
-        return {
-            'structure': None,
-            'items': items,
-            'gross': base_salary,
-            'deductions': Decimal('0.00'),
-            'net': base_salary
-        }
+        # Auto-resolve latest active salary structure if present
+        latest_struct = SalaryStructure.query.filter_by(is_active=True).order_by(SalaryStructure.id.desc()).first()
+        if latest_struct:
+            assignment = assign_salary_structure(employee_id, latest_struct.id)
+        else:
+            base_salary = Decimal(str(emp.monthly_salary or 0.00))
+            items = [{
+                'component_name': 'Basic Salary',
+                'component_type': 'EARNING',
+                'calculation_type': 'FIXED_AMOUNT',
+                'amount': base_salary
+            }]
+            return {
+                'structure': None,
+                'items': items,
+                'gross': base_salary,
+                'deductions': Decimal('0.00'),
+                'net': base_salary
+            }
 
     struct = assignment.structure
     items = []
     
-    # 1. Process Fixed Earnings & find Basic Salary for percentage calculations
+    # 1. Determine Basic Salary base amount for percentage calculations
     basic_amount = Decimal('0.00')
-    if emp.monthly_salary:
+    if emp.monthly_salary and Decimal(str(emp.monthly_salary)) > 0:
         basic_amount = Decimal(str(emp.monthly_salary))
 
     for item in struct.items:
         comp = item.component
-        if not comp or not comp.is_active:
-            continue
+        if comp and comp.is_active:
+            if comp.name == 'Basic Salary' and item.amount_or_percentage > 0:
+                basic_amount = Decimal(str(item.amount_or_percentage))
+                break
 
-        if comp.name == 'Basic Salary' and item.amount_or_percentage > 0:
-            basic_amount = Decimal(str(item.amount_or_percentage))
+    if basic_amount <= 0:
+        basic_amount = Decimal('35000.00')
 
     # 2. Compute item amounts
     gross = Decimal('0.00')
@@ -349,9 +480,11 @@ def record_salary_payment(payroll_id, payment_method='BANK_TRANSFER', payment_re
     if pmeth not in VALID_PAYMENT_METHODS:
         pmeth = 'OTHER'
 
+    ref_val = payment_reference.strip() if payment_reference and payment_reference.strip() else f"UTR-PAY-{payroll.id:06d}"
+
     payroll.status = 'PAID'
     payroll.payment_method = pmeth
-    payroll.payment_reference = payment_reference.strip() if payment_reference else None
+    payroll.payment_reference = ref_val
     payroll.paid_at = datetime.utcnow()
     db.session.commit()
 

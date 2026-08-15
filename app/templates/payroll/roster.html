@@ -129,12 +129,19 @@
                                 {% if p.status in ('GENERATED', 'APPROVED') %}
                                 <!-- Record Payment Modal / Quick Trigger Form -->
                                 <form action="{{ url_for('payroll.record_payment_route', payroll_id=p.id) }}" method="POST" class="inline-flex items-center space-x-1">
-                                    <input type="text" name="payment_reference" placeholder="UTR/Ref #" required class="w-24 px-2 py-1 border border-slate-300 rounded text-[11px]">
+                                    <input type="text" name="payment_reference" placeholder="Ref # (Auto)" class="w-24 px-2 py-1 border border-slate-300 rounded text-[11px]">
                                     <button type="submit" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs">
                                         Pay
                                     </button>
                                 </form>
                                 {% endif %}
+
+                                <!-- Delete Payroll Record -->
+                                <form action="{{ url_for('payroll.delete_payroll_route', payroll_id=p.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this payroll record?')">
+                                    <button type="submit" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs">
+                                        🗑️
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>

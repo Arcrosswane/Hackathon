@@ -72,7 +72,16 @@ def get_student_enrollments(student_id):
     """Returns full academic placement history for a student ordered by created_at DESC."""
     return StudentEnrollment.query.filter_by(student_id=student_id).order_by(StudentEnrollment.created_at.desc()).all()
 
-def create_student(admission_number, first_name, last_name=None, middle_name=None,
+def generate_next_admission_number():
+    year = date.today().year
+    count = Student.query.count() + 1
+    code = f"STU-{year}-{count:04d}"
+    while Student.query.filter_by(registration_number=code).first():
+        count += 1
+        code = f"STU-{year}-{count:04d}"
+    return code
+
+def create_student(admission_number=None, first_name=None, last_name=None, middle_name=None,
                    academic_session_id=None, class_id=None, section_id=None, roll_number=None,
                    admission_date=None, date_of_birth=None, gender=None,
                    email_address=None, mobile_phone_number=None,
@@ -81,15 +90,15 @@ def create_student(admission_number, first_name, last_name=None, middle_name=Non
                    profile_photo=None):
     """
     Register a new student and create initial StudentEnrollment record.
-    Validates:
-    - Unique admission_number
-    - Class & Section existence and Section -> Class relationship
-    - Roll number uniqueness within section
+    Auto-generates unique admission_number if not provided.
     """
-    adm_clean = admission_number.strip().upper()
-    existing = Student.query.filter_by(registration_number=adm_clean).first()
-    if existing:
-        raise ValueError(f"Admission Number / Registration Number '{adm_clean}' is already registered.")
+    if not admission_number or not str(admission_number).strip():
+        adm_clean = generate_next_admission_number()
+    else:
+        adm_clean = admission_number.strip().upper()
+        existing = Student.query.filter_by(registration_number=adm_clean).first()
+        if existing:
+            raise ValueError(f"Admission Number / Registration Number '{adm_clean}' is already registered.")
 
     # Auto-resolve default Institute ID
     inst = Institute.query.first()

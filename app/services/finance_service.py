@@ -156,6 +156,8 @@ def create_manual_transaction(category_id, transaction_type, amount, transaction
 
     att_info = save_finance_attachment(file) if file else None
 
+    ref_num = reference_number.strip() if reference_number and reference_number.strip() else f"REF-{uuid.uuid4().hex[:8].upper()}"
+
     txn = FinancialTransaction(
         school_id=school_id,
         academic_session_id=session_id,
@@ -166,7 +168,7 @@ def create_manual_transaction(category_id, transaction_type, amount, transaction
         transaction_date=t_date,
         description=description.strip() if description else None,
         payment_method=pmeth,
-        reference_number=reference_number.strip() if reference_number else None,
+        reference_number=ref_num,
         vendor_or_payer=vendor_or_payer.strip() if vendor_or_payer else None,
         source_type='MANUAL',
         status='COMPLETED',

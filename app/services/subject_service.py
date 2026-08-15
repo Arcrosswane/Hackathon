@@ -24,11 +24,21 @@ def create_subject(name, code=None, short_name=None, subject_type="core", descri
     if existing:
         raise ValueError(f"Subject with name '{name}' already exists.")
 
+    if not code or not str(code).strip():
+        clean_n = "".join(e for e in name.upper() if e.isalnum())[:4] or "SUB"
+        code = f"SUB-{clean_n}"
+        count = 1
+        while Subject.query.filter_by(code=code).first():
+            code = f"SUB-{clean_n}{count}"
+            count += 1
+    else:
+        code = code.strip().upper()
+
     if not short_name:
         short_name = name[:10]
 
     subject = Subject(
-        code=code.upper() if code else None,
+        code=code,
         name=name,
         short_name=short_name,
         subject_type=subject_type or "core",

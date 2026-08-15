@@ -55,7 +55,7 @@
         <div class="grid grid-cols-2 gap-6 bg-slate-50 p-4 rounded-xl border border-slate-100 text-xs">
             <div>
                 <span class="text-[10px] font-extrabold uppercase text-slate-400 block mb-1">Student Details</span>
-                <p class="font-extrabold text-slate-900 text-sm">{{ receipt.payment.student.first_name }} {{ receipt.payment.student.last_name or '' }}</p>
+                <p class="font-extrabold text-slate-900 text-sm">{{ receipt.payment.student.display_name if receipt.payment.student else 'Student' }}</p>
                 <p class="text-slate-500">Reg #: <span class="font-bold text-slate-800">{{ receipt.payment.student.registration_number }}</span></p>
                 <p class="text-slate-500">Class: <span class="font-bold text-slate-800">{{ receipt.payment.student.school_class.name if receipt.payment.student.school_class else 'N/A' }}</span></p>
             </div>

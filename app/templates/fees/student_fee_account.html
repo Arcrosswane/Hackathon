@@ -10,12 +10,16 @@
     <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
             <div class="flex items-center space-x-4">
-                <div class="w-12 h-12 rounded-full bg-brand-50 text-brand-700 font-black text-lg flex items-center justify-center border border-brand-200">
-                    {{ data.student.first_name[0] | upper }}
+                {% if data.student.profile_photo %}
+                <img src="{{ url_for('static', filename=data.student.profile_photo) }}" alt="{{ data.student.display_name }}" class="w-12 h-12 rounded-full object-cover border-2 border-brand-200 shadow-xs">
+                {% else %}
+                <div class="w-12 h-12 rounded-full bg-brand-600 text-white font-black text-lg flex items-center justify-center border-2 border-brand-200 shadow-xs">
+                    {{ data.student.initials }}
                 </div>
+                {% endif %}
                 <div>
-                    <h2 class="text-xl font-extrabold text-slate-900">{{ data.student.first_name }} {{ data.student.last_name or '' }}</h2>
-                    <p class="text-xs font-semibold text-slate-500">Registration #: {{ data.student.registration_number }} | Class: {{ data.student.school_class.name if data.student.school_class else 'N/A' }}</p>
+                    <h2 class="text-xl font-extrabold text-slate-900">{{ data.student.display_name }}</h2>
+                    <p class="text-xs font-semibold text-slate-500">Registration #: {{ data.student.registration_number }} | Class: {{ data.student.get_current_enrollment().school_class.name if data.student.get_current_enrollment() and data.student.get_current_enrollment().school_class else (data.student.school_class.name if data.student.school_class else 'N/A') }}</p>
                 </div>
             </div>
 
@@ -116,6 +120,14 @@
                                    class="inline-flex items-center px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs border border-slate-200/80 transition-all">
                                     <span>Details</span>
                                 </a>
+
+                                {% if session.get('user_role') in ('Admin', 'admin') %}
+                                <form action="{{ url_for('fees.delete_invoice_route', invoice_id=inv.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete invoice {{ inv.invoice_number }}?')">
+                                    <button type="submit" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition-colors">
+                                        🗑️ Delete
+                                    </button>
+                                </form>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>

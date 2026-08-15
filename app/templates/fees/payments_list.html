@@ -72,7 +72,7 @@
                     <tr class="hover:bg-slate-50/60 transition-colors">
                         <td class="py-4 px-6 font-bold text-slate-400">#{{ p.id }}</td>
                         <td class="py-4 px-6 font-extrabold text-slate-900">
-                            {{ p.student.first_name }} {{ p.student.last_name or '' }}
+                            {{ p.student.display_name if p.student else 'Student' }}
                         </td>
                         <td class="py-4 px-6 font-bold text-brand-700">
                             <a href="{{ url_for('fees.invoice_detail', invoice_id=p.invoice.id) }}" class="hover:underline">{{ p.invoice.invoice_number }}</a>

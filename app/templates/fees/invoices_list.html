@@ -75,7 +75,7 @@
                             <a href="{{ url_for('fees.invoice_detail', invoice_id=inv.id) }}" class="hover:underline">{{ inv.invoice_number }}</a>
                         </td>
                         <td class="py-4 px-6">
-                            <div class="font-extrabold text-slate-900">{{ inv.student.first_name }} {{ inv.student.last_name or '' }}</div>
+                            <div class="font-extrabold text-slate-900">{{ inv.student.display_name if inv.student else 'Student' }}</div>
                             <div class="text-[10px] text-slate-400">Class: {{ inv.school_class.name }} | Reg: {{ inv.student.registration_number }}</div>
                         </td>
                         <td class="py-4 px-6">
@@ -101,7 +101,14 @@
                             {% endif %}
                         </td>
                         <td class="py-4 px-6 text-right whitespace-nowrap">
-                            <a href="{{ url_for('fees.invoice_detail', invoice_id=inv.id) }}" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs border border-slate-200/80 transition-all">View Details</a>
+                            <div class="inline-flex items-center space-x-2">
+                                <a href="{{ url_for('fees.invoice_detail', invoice_id=inv.id) }}" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs border border-slate-200/80 transition-all">View Details</a>
+                                <form action="{{ url_for('fees.delete_invoice_route', invoice_id=inv.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete invoice {{ inv.invoice_number }}?')">
+                                    <button type="submit" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition-colors">
+                                        🗑️ Delete
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     {% else %}

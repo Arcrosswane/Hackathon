@@ -82,10 +82,29 @@ class Student(db.Model):
     def address(self, val):
         self.home_address = val
 
+    @property
+    def display_name(self):
+        if self.full_name and str(self.full_name).strip() and str(self.full_name).strip() != 'None':
+            return str(self.full_name).strip()
+        if self.first_name and str(self.first_name).strip() and str(self.first_name).strip() != 'None':
+            parts = [p for p in [self.first_name, self.middle_name, self.last_name] if p and str(p).strip() != 'None']
+            return " ".join(parts) if parts else f"Student #{self.registration_number}"
+        return f"Student #{self.registration_number}"
+
+    @property
+    def initials(self):
+        name = self.display_name
+        parts = [p for p in name.split() if p and p != 'Student' and p != '#']
+        if len(parts) >= 2:
+            return f"{parts[0][0]}{parts[1][0]}".upper()
+        elif parts and parts[0]:
+            return parts[0][0].upper()
+        return "S"
+
     def sync_full_name(self):
         """Construct full_name from first_name, middle_name, and last_name."""
-        parts = [p for p in [self.first_name, self.middle_name, self.last_name] if p]
-        self.full_name = " ".join(parts) if parts else self.first_name
+        parts = [p for p in [self.first_name, self.middle_name, self.last_name] if p and str(p).strip() != 'None']
+        self.full_name = " ".join(parts) if parts else f"Student #{self.registration_number}"
 
     def get_current_enrollment(self):
         """Returns the student's currently active enrollment record."""

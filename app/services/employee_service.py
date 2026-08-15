@@ -73,7 +73,16 @@ def get_employee_by_code(code):
     """Retrieve employee by unique employee code / registration number."""
     return Employee.query.filter_by(registration_number=code.strip()).first()
 
-def create_employee(registration_number, first_name, last_name=None, middle_name=None,
+def generate_next_employee_code():
+    year = datetime.now().year
+    count = Employee.query.count() + 1
+    code = f"EMP-{year}-{count:04d}"
+    while Employee.query.filter_by(registration_number=code).first():
+        count += 1
+        code = f"EMP-{year}-{count:04d}"
+    return code
+
+def create_employee(registration_number=None, first_name=None, last_name=None, middle_name=None,
                     department="Academic", designation="Teacher", employment_type="Full-time",
                     is_teacher=True, email_address=None, mobile_phone_number=None,
                     gender=None, date_of_birth=None, date_of_joining=None,
@@ -81,12 +90,15 @@ def create_employee(registration_number, first_name, last_name=None, middle_name
                     profile_photo=None, educational_qualification=None):
     """
     Create a new employee record.
-    Enforces uniqueness of registration_number / employee_code.
+    Auto-generates unique registration_number / employee_code if missing.
     """
-    code_clean = registration_number.strip().upper()
-    existing = Employee.query.filter_by(registration_number=code_clean).first()
-    if existing:
-        raise ValueError(f"Employee Code / Registration Number '{code_clean}' is already registered.")
+    if not registration_number or not str(registration_number).strip():
+        code_clean = generate_next_employee_code()
+    else:
+        code_clean = registration_number.strip().upper()
+        existing = Employee.query.filter_by(registration_number=code_clean).first()
+        if existing:
+            raise ValueError(f"Employee Code / Registration Number '{code_clean}' is already registered.")
 
     # Determine is_teacher automatically if department is Academic or designation contains Teacher
     if department == "Academic" or "teacher" in designation.lower():

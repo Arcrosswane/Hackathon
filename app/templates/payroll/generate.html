@@ -32,18 +32,38 @@
 
             <!-- Employee Selection Roster -->
             <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-700">Select Employees (Leave unselected for ALL staff)</label>
-                    <span class="text-xs text-brand-600 font-bold">{{ employees|length }} Active Staff Members</span>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-700">
+                        Select Staff Members (Total: {{ employees|length }})
+                    </label>
+
+                    <!-- Quick Selection Buttons -->
+                    <div class="flex items-center space-x-2">
+                        <button type="button" onclick="selectTeachersOnly()" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-[11px] rounded-lg border border-amber-200 transition-all">
+                            👩‍🏫 Select All Teachers
+                        </button>
+                        <button type="button" onclick="selectAllStaff(true)" class="px-2.5 py-1 bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold text-[11px] rounded-lg border border-brand-200 transition-all">
+                            👥 Select All Staff
+                        </button>
+                        <button type="button" onclick="selectAllStaff(false)" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-[11px] rounded-lg transition-all">
+                            ❌ Clear
+                        </button>
+                    </div>
                 </div>
 
                 <div class="max-h-80 overflow-y-auto border border-slate-200 rounded-xl divide-y divide-slate-100 p-2">
                     {% for emp in employees %}
                     <label class="flex items-center justify-between p-3 hover:bg-slate-50 rounded-lg cursor-pointer transition-colors">
                         <div class="flex items-center space-x-3">
-                            <input type="checkbox" name="employee_ids" value="{{ emp.id }}" class="rounded text-brand-600 focus:ring-brand-500">
+                            <input type="checkbox" name="employee_ids" value="{{ emp.id }}" data-is-teacher="{{ 'true' if emp.is_teacher else 'false' }}"
+                                   class="emp-cb rounded text-brand-600 focus:ring-brand-500">
                             <div>
-                                <span class="text-xs font-bold text-slate-900 block">{{ emp.full_name }}</span>
+                                <span class="text-xs font-bold text-slate-900 flex items-center space-x-1.5">
+                                    <span>{{ emp.full_name }}</span>
+                                    {% if emp.is_teacher %}
+                                    <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-800">Teacher</span>
+                                    {% endif %}
+                                </span>
                                 <span class="text-[10px] text-slate-500">{{ emp.registration_number }} | {{ emp.department or 'Academic' }} — {{ emp.designation }}</span>
                             </div>
                         </div>
@@ -51,6 +71,7 @@
                     </label>
                     {% endfor %}
                 </div>
+                <p class="text-[11px] text-slate-400 italic">* Tip: If no checkboxes are selected, payroll will be generated for ALL active staff.</p>
             </div>
 
             <!-- Submit CTA -->
@@ -68,4 +89,16 @@
     </div>
 
 </div>
+
+<script>
+function selectAllStaff(state) {
+    document.querySelectorAll('.emp-cb').forEach(cb => cb.checked = state);
+}
+
+function selectTeachersOnly() {
+    document.querySelectorAll('.emp-cb').forEach(cb => {
+        cb.checked = (cb.dataset.isTeacher === 'true');
+    });
+}
+</script>
 {% endblock %}

@@ -3,7 +3,7 @@ from datetime import datetime, date
 from flask import current_app
 from app.models import (
     db, FeeType, FeeStructure, FeeComponent, StudentFeeAssignment,
-    FeeInvoice, FeeInvoiceItem, Payment, Receipt,
+    FeeInvoice, FeeInvoiceItem, Payment, Receipt, FinancialTransaction,
     Student, StudentEnrollment, Employee, SchoolClass, Section, AcademicSession, GuardianStudent
 )
 from app.services.academic_service import get_active_academic_session
@@ -402,6 +402,34 @@ def get_invoices(session_id=None, class_id=None, student_id=None, status=None, s
         query = query.filter((FeeInvoice.invoice_number.ilike(sq)) | (FeeInvoice.notes.ilike(sq)))
 
     return query.order_by(FeeInvoice.issue_date.desc(), FeeInvoice.created_at.desc()).all()
+
+
+def delete_invoice(invoice_id):
+    """
+    Deletes a FeeInvoice and cleans up attached line items, payments, receipts, and Module 12 Accounts income transactions.
+    """
+    inv = FeeInvoice.query.get(invoice_id)
+    if not inv:
+        raise ValueError("Fee invoice record not found.")
+
+    # 1. Clean up payments and associated receipts & synced income transactions
+    for pm in inv.payments:
+        synced_txn = FinancialTransaction.query.filter_by(source_type='FEE_PAYMENT', source_id=pm.id).first()
+        if synced_txn:
+            db.session.delete(synced_txn)
+        
+        if hasattr(pm, 'receipt') and pm.receipt:
+            db.session.delete(pm.receipt)
+
+        db.session.delete(pm)
+
+    # 2. Clean up invoice items
+    FeeInvoiceItem.query.filter_by(invoice_id=inv.id).delete()
+
+    # 3. Delete invoice
+    db.session.delete(inv)
+    db.session.commit()
+    return True
 
 
 # ==========================================

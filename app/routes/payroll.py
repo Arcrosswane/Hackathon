@@ -5,9 +5,9 @@ from app.services.academic_service import get_active_academic_session
 from app.services.employee_service import get_all_employees, get_employee_by_id
 from app.services.payroll_service import (
     get_all_salary_components, create_salary_component, toggle_salary_component_status,
-    get_all_salary_structures, create_salary_structure, assign_salary_structure,
-    get_employee_active_assignment, calculate_employee_salary_snapshot,
-    generate_batch_payroll, approve_payroll, record_salary_payment,
+    get_all_salary_structures, create_salary_structure, update_salary_structure, delete_salary_structure,
+    assign_salary_structure, assign_structure_to_all_employees, get_employee_active_assignment, calculate_employee_salary_snapshot,
+    generate_batch_payroll, approve_payroll, record_salary_payment, delete_payroll_record,
     get_payroll_records, get_payroll_summary_metrics,
     VALID_PAYMENT_METHODS
 )
@@ -178,32 +178,109 @@ def structures_list():
         desc = request.form.get('description')
         comp_ids = request.form.getlist('component_ids', type=int)
         amounts = request.form.getlist('amounts')
+        auto_assign = (request.form.get('auto_assign_all') == '1')
 
         items = []
-        for cid, val in zip(comp_ids, amounts):
-            if cid and val:
-                comp = SalaryComponent.query.get(cid)
+        for cid in comp_ids:
+            val = request.form.get(f'amount_{cid}', 0.0)
+            comp = SalaryComponent.query.get(cid)
+            if comp:
                 items.append({
                     'component_id': cid,
-                    'calculation_type': comp.calculation_type if comp else 'FIXED_AMOUNT',
+                    'calculation_type': comp.calculation_type,
                     'amount_or_percentage': val
                 })
 
         try:
-            struct = create_salary_structure(name, desc, items)
-            flash(f"Salary Structure '{struct.name}' created with {len(items)} components!", "success")
+            struct = create_salary_structure(name, desc, items, auto_assign_all=auto_assign)
+            msg = f"Salary Structure '{struct.name}' created with {len(items)} components!"
+            if auto_assign:
+                msg += " Auto-assigned to all active staff members."
+            flash(msg, "success")
             return redirect(url_for('payroll.structures_list'))
         except ValueError as e:
             flash(str(e), "danger")
 
     structures = get_all_salary_structures(active_only=False)
-    components = get_all_salary_components(active_only=True)
+    components = get_all_salary_components(active_only=False)
 
     return render_template(
         'payroll/structures.html',
         structures=structures,
         components=components
     )
+
+
+@payroll_bp.route('/structures/<int:structure_id>/edit', methods=['POST'])
+@login_required
+@role_required('Admin')
+def edit_structure(structure_id):
+    """Edit an existing salary structure."""
+    name = request.form.get('name')
+    desc = request.form.get('description')
+    comp_ids = request.form.getlist('component_ids', type=int)
+    auto_assign = (request.form.get('auto_assign_all') == '1')
+
+    items = []
+    for cid in comp_ids:
+        val = request.form.get(f'amount_{cid}', 0.0)
+        comp = SalaryComponent.query.get(cid)
+        if comp:
+            items.append({
+                'component_id': cid,
+                'calculation_type': comp.calculation_type,
+                'amount_or_percentage': val
+            })
+
+    try:
+        struct = update_salary_structure(structure_id, name, desc, items, auto_assign_all=auto_assign)
+        msg = f"Salary Structure '{struct.name}' updated successfully!"
+        if auto_assign:
+            msg += " Auto-assigned to all active staff members."
+        flash(msg, "success")
+    except ValueError as e:
+        flash(str(e), "danger")
+
+    return redirect(url_for('payroll.structures_list'))
+
+
+@payroll_bp.route('/structures/<int:structure_id>/assign-all', methods=['POST'])
+@login_required
+@role_required('Admin')
+def assign_all_structure_route(structure_id):
+    """Bulk assign structure to all active employees."""
+    try:
+        count = assign_structure_to_all_employees(structure_id)
+        flash(f"⚡ Structure assigned to {count} active staff members successfully!", "success")
+    except ValueError as e:
+        flash(str(e), "danger")
+    return redirect(url_for('payroll.structures_list'))
+
+
+@payroll_bp.route('/structures/<int:structure_id>/delete', methods=['POST'])
+@login_required
+@role_required('Admin')
+def delete_structure_route(structure_id):
+    """Delete a salary structure."""
+    try:
+        delete_salary_structure(structure_id)
+        flash("Salary structure deleted successfully.", "info")
+    except ValueError as e:
+        flash(str(e), "danger")
+    return redirect(url_for('payroll.structures_list'))
+
+
+@payroll_bp.route('/<int:payroll_id>/delete', methods=['POST'])
+@login_required
+@role_required('Admin')
+def delete_payroll_route(payroll_id):
+    """Delete a payroll record and clean up synced accounts expenses."""
+    try:
+        delete_payroll_record(payroll_id)
+        flash("🗑️ Payroll record deleted successfully. You can now re-generate payroll for this period if needed.", "success")
+    except ValueError as e:
+        flash(str(e), "danger")
+    return redirect(request.referrer or url_for('payroll.roster'))
 
 
 @payroll_bp.route('/components', methods=['GET', 'POST'])

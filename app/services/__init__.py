@@ -28,7 +28,7 @@ from app.services.behaviour_skills_service import (
 from app.services.fee_service import (
     get_all_fee_types, create_fee_type, update_fee_type, toggle_fee_type_status,
     get_fee_structures, create_fee_structure, update_fee_structure, toggle_fee_structure_status,
-    generate_student_invoice, generate_batch_class_invoices, get_invoices,
+    generate_student_invoice, generate_batch_class_invoices, get_invoices, delete_invoice,
     record_payment, get_payments, get_receipt_by_id,
     get_student_fee_summary, get_collection_summary,
     verify_parent_invoice_access, verify_parent_receipt_access, VALID_PAYMENT_METHODS
@@ -40,9 +40,9 @@ from app.services.finance_service import (
 )
 from app.services.payroll_service import (
     get_all_salary_components, create_salary_component, toggle_salary_component_status,
-    get_all_salary_structures, create_salary_structure, assign_salary_structure,
-    get_employee_active_assignment, calculate_employee_salary_snapshot,
-    generate_batch_payroll, approve_payroll, record_salary_payment,
+    get_all_salary_structures, create_salary_structure, update_salary_structure, delete_salary_structure,
+    assign_salary_structure, assign_structure_to_all_employees, get_employee_active_assignment, calculate_employee_salary_snapshot,
+    generate_batch_payroll, approve_payroll, record_salary_payment, delete_payroll_record,
     sync_payroll_to_finance_expense, get_payroll_records, get_payroll_summary_metrics
 )
 

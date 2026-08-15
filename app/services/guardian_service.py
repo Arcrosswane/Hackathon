@@ -49,19 +49,31 @@ def get_guardian_by_code(code):
     """Retrieve guardian by unique guardian code / registration number."""
     return Guardian.query.filter_by(registration_number=code.strip().upper()).first()
 
-def create_guardian(guardian_code, first_name, last_name=None, middle_name=None,
+def generate_next_guardian_code():
+    year = datetime.now().year
+    count = Guardian.query.count() + 1
+    code = f"GDN-{year}-{count:04d}"
+    while Guardian.query.filter_by(registration_number=code).first():
+        count += 1
+        code = f"GDN-{year}-{count:04d}"
+    return code
+
+def create_guardian(guardian_code=None, first_name=None, last_name=None, middle_name=None,
                     email_address=None, mobile_phone_number=None, alternate_phone=None,
                     occupation=None, home_address=None, city=None, state=None, country="India", postal_code=None,
                     student_id=None, relationship="Father", is_primary=False, is_emergency_contact=False, can_receive_notifications=True):
     """
     Create a new parent/guardian record.
-    Enforces uniqueness of guardian_code / registration_number.
+    Auto-generates unique guardian_code / registration_number if missing.
     Optionally links an existing student if student_id is provided.
     """
-    code_clean = guardian_code.strip().upper()
-    existing = Guardian.query.filter_by(registration_number=code_clean).first()
-    if existing:
-        raise ValueError(f"Guardian Code / Registration Number '{code_clean}' is already registered.")
+    if not guardian_code or not str(guardian_code).strip():
+        code_clean = generate_next_guardian_code()
+    else:
+        code_clean = guardian_code.strip().upper()
+        existing = Guardian.query.filter_by(registration_number=code_clean).first()
+        if existing:
+            raise ValueError(f"Guardian Code / Registration Number '{code_clean}' is already registered.")
 
     # Auto-resolve default Institute ID
     inst = Institute.query.first()
