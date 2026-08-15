@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}Accounts & Finance — StratLearn{% endblock %}
+{% block header_title %}Accounts & Finance Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Top Action Banner -->
+    <div class="bg-slate-900 text-white p-6 sm:p-8 rounded-2xl shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
+        <div class="relative z-10 space-y-2 max-w-xl">
+            <span class="px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                School Financial Management
+            </span>
+            <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Accounts Overview</h1>
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                Monitor school income, operational expenses, net financial balance, and student fee collections in real-time.
+            </p>
+        </div>
+
+        <div class="relative z-10 flex flex-wrap items-center gap-3">
+            <a href="{{ url_for('accounts.create_income') }}" 
+               class="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-1.5">
+                <span>➕ Record Income</span>
+            </a>
+            <a href="{{ url_for('accounts.create_expense') }}" 
+               class="px-4 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-1.5">
+                <span>➖ Record Expense</span>
+            </a>
+            <a href="{{ url_for('accounts.transactions_list') }}" 
+               class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/20 transition-all">
+                <span>📜 Ledger History</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Financial Key Metrics Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+
+        <!-- Total Income -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Total Income</span>
+                <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">
+                    ↑
+                </div>
+            </div>
+            <div class="text-2xl font-black text-slate-900">₹{{ "%.2f"|format(summary.total_income) }}</div>
+            <div class="text-[11px] text-emerald-700 font-medium flex items-center space-x-1">
+                <span>Month: ₹{{ "%.2f"|format(summary.month_income) }}</span>
+                <span>•</span>
+                <span>Today: ₹{{ "%.2f"|format(summary.today_income) }}</span>
+            </div>
+        </div>
+
+        <!-- Total Expenses -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Total Expenses</span>
+                <div class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-sm">
+                    ↓
+                </div>
+            </div>
+            <div class="text-2xl font-black text-slate-900">₹{{ "%.2f"|format(summary.total_expenses) }}</div>
+            <div class="text-[11px] text-rose-700 font-medium flex items-center space-x-1">
+                <span>Month: ₹{{ "%.2f"|format(summary.month_expenses) }}</span>
+                <span>•</span>
+                <span>Today: ₹{{ "%.2f"|format(summary.today_expenses) }}</span>
+            </div>
+        </div>
+
+        <!-- Net Financial Balance -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Net Financial Balance</span>
+                <div class="w-8 h-8 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center font-bold text-sm">
+                    ⚖️
+                </div>
+            </div>
+            <div class="text-2xl font-black {% if summary.net_balance >= 0 %}text-emerald-700{% else %}text-rose-700{% endif %}">
+                ₹{{ "%.2f"|format(summary.net_balance) }}
+            </div>
+            <div class="text-[11px] text-slate-500 font-medium">
+                Calculated server-side (Income - Expenses)
+            </div>
+        </div>
+
+        <!-- Quick Categories Summary -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Category Streams</span>
+                <a href="{{ url_for('accounts.manage_categories') }}" class="text-[11px] font-bold text-brand-600 hover:underline">Manage</a>
+            </div>
+            <div class="text-2xl font-black text-slate-900">
+                {{ summary.income_by_category|length + summary.expenses_by_category|length }}
+            </div>
+            <div class="text-[11px] text-slate-500 font-medium">
+                {{ summary.income_by_category|length }} Income / {{ summary.expenses_by_category|length }} Expense Categories
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Category Breakdown Grids -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Income by Category -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="text-sm font-bold text-slate-900">Income by Category</h3>
+                <span class="text-xs font-extrabold text-emerald-700">₹{{ "%.2f"|format(summary.total_income) }}</span>
+            </div>
+
+            {% if summary.income_by_category %}
+            <div class="space-y-3">
+                {% for item in summary.income_by_category %}
+                {% set pct = (item.amount / summary.total_income * 100) if summary.total_income > 0 else 0 %}
+                <div>
+                    <div class="flex items-center justify-between text-xs mb-1">
+                        <span class="font-bold text-slate-800">{{ item.category }}</span>
+                        <span class="font-extrabold text-emerald-700">₹{{ "%.2f"|format(item.amount) }} ({{ "%.1f"|format(pct) }}%)</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-emerald-500 rounded-full" style="width: {{ pct }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-xs text-slate-400 italic py-4 text-center">No income categories recorded yet.</p>
+            {% endif %}
+        </div>
+
+        <!-- Expenses by Category -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="text-sm font-bold text-slate-900">Expenses by Category</h3>
+                <span class="text-xs font-extrabold text-rose-700">₹{{ "%.2f"|format(summary.total_expenses) }}</span>
+            </div>
+
+            {% if summary.expenses_by_category %}
+            <div class="space-y-3">
+                {% for item in summary.expenses_by_category %}
+                {% set pct = (item.amount / summary.total_expenses * 100) if summary.total_expenses > 0 else 0 %}
+                <div>
+                    <div class="flex items-center justify-between text-xs mb-1">
+                        <span class="font-bold text-slate-800">{{ item.category }}</span>
+                        <span class="font-extrabold text-rose-700">₹{{ "%.2f"|format(item.amount) }} ({{ "%.1f"|format(pct) }}%)</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-rose-500 rounded-full" style="width: {{ pct }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-xs text-slate-400 italic py-4 text-center">No expense categories recorded yet.</p>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- Recent Transactions Table -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div>
+                <h3 class="text-sm font-bold text-slate-900">Recent Financial Activity</h3>
+                <p class="text-xs text-slate-500">Latest income, expenses, and fee collection entries</p>
+            </div>
+            <a href="{{ url_for('accounts.transactions_list') }}" class="text-xs font-bold text-brand-600 hover:text-brand-700">
+                View All Transactions →
+            </a>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                        <th class="py-3.5 px-6">Transaction #</th>
+                        <th class="py-3.5 px-6">Type</th>
+                        <th class="py-3.5 px-6">Category</th>
+                        <th class="py-3.5 px-6">Payer / Vendor</th>
+                        <th class="py-3.5 px-6">Amount</th>
+                        <th class="py-3.5 px-6">Date</th>
+                        <th class="py-3.5 px-6">Method</th>
+                        <th class="py-3.5 px-6">Status</th>
+                        <th class="py-3.5 px-6 text-right">Details</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+                    {% for t in summary.recent_transactions %}
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                        <td class="py-4 px-6 font-extrabold text-brand-700">#{{ t.transaction_number }}</td>
+                        <td class="py-4 px-6">
+                            {% if t.transaction_type == 'INCOME' %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">INCOME</span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">EXPENSE</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 font-bold text-slate-800">{{ t.category.name if t.category else 'N/A' }}</td>
+                        <td class="py-4 px-6 text-slate-700">{{ t.vendor_or_payer or 'N/A' }}</td>
+                        <td class="py-4 px-6 font-extrabold {% if t.transaction_type == 'INCOME' %}text-emerald-700{% else %}text-rose-700{% endif %}">
+                            {% if t.transaction_type == 'INCOME' %}+{% else %}-{% endif %}₹{{ "%.2f"|format(t.amount) }}
+                        </td>
+                        <td class="py-4 px-6 text-slate-600">{{ t.transaction_date.strftime('%b %d, %Y') }}</td>
+                        <td class="py-4 px-6 text-slate-600"><span class="px-2 py-0.5 bg-slate-100 rounded text-[10px] font-bold">{{ t.payment_method }}</span></td>
+                        <td class="py-4 px-6">
+                            {% if t.status == 'COMPLETED' %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700">COMPLETED</span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500">CANCELLED</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 text-right whitespace-nowrap">
+                            <a href="{{ url_for('accounts.transaction_detail', transaction_id=t.id) }}" 
+                               class="px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 font-bold text-xs">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="py-8 text-center text-slate-400 font-medium">No financial transactions recorded yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

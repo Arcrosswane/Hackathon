@@ -20,9 +20,18 @@
             </div>
 
             {% if data.summary.total_outstanding > 0 %}
-            <div class="px-4 py-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-right">
-                <div class="text-[10px] font-extrabold uppercase">Outstanding Dues</div>
-                <div class="text-lg font-black">₹{{ "%.2f"|format(data.summary.total_outstanding) }}</div>
+            <div class="flex flex-col items-end space-y-2">
+                <div class="px-4 py-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-right">
+                    <div class="text-[10px] font-extrabold uppercase">Outstanding Dues</div>
+                    <div class="text-lg font-black">₹{{ "%.2f"|format(data.summary.total_outstanding) }}</div>
+                </div>
+                {% set first_unpaid = (data.invoices | selectattr('status', 'ne', 'PAID') | list | first) %}
+                {% if first_unpaid %}
+                <a href="{{ url_for('fees.pay_invoice_online', invoice_id=first_unpaid.id) }}" 
+                   class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md shadow-emerald-600/20 transition-all flex items-center space-x-1.5">
+                    <span>💳 Pay Dues Now</span>
+                </a>
+                {% endif %}
             </div>
             {% else %}
             <div class="px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-right">
@@ -73,7 +82,7 @@
                         <th class="py-3.5 px-6">Paid</th>
                         <th class="py-3.5 px-6">Balance</th>
                         <th class="py-3.5 px-6">Status</th>
-                        <th class="py-3.5 px-6 text-right">View</th>
+                        <th class="py-3.5 px-6 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
@@ -94,8 +103,20 @@
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">UNPAID</span>
                             {% endif %}
                         </td>
-                        <td class="py-4 px-6 text-right">
-                            <a href="{{ url_for('fees.invoice_detail', invoice_id=inv.id) }}" class="px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 font-bold hover:bg-slate-100">Details</a>
+                        <td class="py-4 px-6 text-right whitespace-nowrap">
+                            <div class="inline-flex items-center justify-end gap-2">
+                                {% if inv.status != 'PAID' %}
+                                <a href="{{ url_for('fees.pay_invoice_online', invoice_id=inv.id) }}" 
+                                   class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-xs transition-all border border-emerald-500">
+                                    <span>💳</span>
+                                    <span>Pay Now</span>
+                                </a>
+                                {% endif %}
+                                <a href="{{ url_for('fees.invoice_detail', invoice_id=inv.id) }}" 
+                                   class="inline-flex items-center px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs border border-slate-200/80 transition-all">
+                                    <span>Details</span>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     {% else %}

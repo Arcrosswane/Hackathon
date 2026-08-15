@@ -35,6 +35,30 @@
         }
     </script>
 
+    <!-- Custom Modern Sleek Scrollbars -->
+    <style>
+        /* Custom Modern Sleek Scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.2);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.4);
+        }
+        /* Firefox Scrollbar Styling */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+        }
+    </style>
+
     <!-- Custom App Script -->
     <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
 </head>
@@ -86,7 +110,7 @@
             </div>
 
             <!-- Navigation Links List with Expandable Subitems -->
-            <nav id="sidebar-menu-nav" class="px-2.5 py-2 space-y-1 overflow-y-auto max-h-[calc(100vh-14rem)] scrollbar-thin">
+            <nav id="sidebar-menu-nav" class="px-2.5 py-2 space-y-1 overflow-y-auto flex-1 max-h-[calc(100vh-13rem)]">
                 {% for item in nav_items %}
                 {% set item_id = 'menu-item-' ~ loop.index %}
                 

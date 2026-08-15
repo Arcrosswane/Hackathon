@@ -124,23 +124,25 @@
                     </div>
 
                     <!-- Academic Modules Quick Status Bar -->
-                    <div class="pt-3 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
-                        <div class="p-2 bg-slate-50 border border-slate-200 rounded-xl">
-                            <span class="text-[10px] font-bold text-slate-400 block uppercase">Attendance</span>
-                            <span class="font-extrabold text-slate-700">Records Ready</span>
+                    <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                        <div class="grid grid-cols-3 gap-2 text-center text-xs w-full sm:w-auto">
+                            <div class="p-2 bg-slate-50 border border-slate-200 rounded-xl">
+                                <span class="text-[10px] font-bold text-slate-400 block uppercase">Homework</span>
+                                <span class="font-extrabold text-slate-700">Tasks</span>
+                            </div>
+                            <div class="p-2 bg-slate-50 border border-slate-200 rounded-xl">
+                                <span class="text-[10px] font-bold text-slate-400 block uppercase">Growth</span>
+                                <span class="font-extrabold text-slate-700">Records</span>
+                            </div>
+                            <div class="p-2 bg-slate-50 border border-slate-200 rounded-xl">
+                                <span class="text-[10px] font-bold text-slate-400 block uppercase">Fees</span>
+                                <span class="font-extrabold text-emerald-700">Active</span>
+                            </div>
                         </div>
-                        <div class="p-2 bg-slate-50 border border-slate-200 rounded-xl">
-                            <span class="text-[10px] font-bold text-slate-400 block uppercase">Homework</span>
-                            <span class="font-extrabold text-slate-700">Tasks Ready</span>
-                        </div>
-                        <div class="p-2 bg-slate-50 border border-slate-200 rounded-xl">
-                            <span class="text-[10px] font-bold text-slate-400 block uppercase">Report Cards</span>
-                            <span class="font-extrabold text-slate-700">Grades Ready</span>
-                        </div>
-                        <div class="p-2 bg-slate-50 border border-slate-200 rounded-xl">
-                            <span class="text-[10px] font-bold text-slate-400 block uppercase">Fees</span>
-                            <span class="font-extrabold text-slate-700">Portal Active</span>
-                        </div>
+                        <a href="{{ url_for('fees.child_fee_account', student_id=child.id) }}" 
+                           class="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center space-x-1.5 whitespace-nowrap">
+                            <span>💳 Fee Account & Pay Dues</span>
+                        </a>
                     </div>
 
                 </div>

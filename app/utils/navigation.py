@@ -79,10 +79,32 @@ ADMIN_NAV = [
         'subitems': [
             {'label': 'Fee Invoices', 'endpoint': 'fees.invoices_list'},
             {'label': 'Generate Invoices', 'endpoint': 'fees.generate_invoices'},
-            {'label': 'Record Payment', 'endpoint': 'fees.record_payment_route'},
-            {'label': 'Payment History', 'endpoint': 'fees.payments_list'},
+            {'label': 'Collection History', 'endpoint': 'fees.payments_list'},
             {'label': 'Fee Structures', 'endpoint': 'fees.structures_list'},
             {'label': 'Fee Types', 'endpoint': 'fees.manage_types'}
+        ]
+    },
+    {
+        'label': 'Accounts & Finance',
+        'icon': 'calculator',
+        'subitems': [
+            {'label': 'Finance Dashboard', 'endpoint': 'accounts.dashboard'},
+            {'label': 'Record Income', 'endpoint': 'accounts.create_income'},
+            {'label': 'Record Expense', 'endpoint': 'accounts.create_expense'},
+            {'label': 'All Transactions', 'endpoint': 'accounts.transactions_list'},
+            {'label': 'Financial Categories', 'endpoint': 'accounts.manage_categories'}
+        ]
+    },
+    {
+        'label': 'Salary & Payroll',
+        'icon': 'banknotes',
+        'subitems': [
+            {'label': 'Payroll Dashboard', 'endpoint': 'payroll.dashboard'},
+            {'label': 'Monthly Roster', 'endpoint': 'payroll.roster'},
+            {'label': 'Generate Payroll', 'endpoint': 'payroll.generate_view'},
+            {'label': 'Assign Structures', 'endpoint': 'payroll.assignments'},
+            {'label': 'Salary Structures', 'endpoint': 'payroll.structures_list'},
+            {'label': 'Salary Components', 'endpoint': 'payroll.components_list'}
         ]
     }
 ]
@@ -110,6 +132,13 @@ TEACHER_NAV = [
             {'label': 'Record Observation', 'endpoint': 'behaviour_skills.create_behaviour'},
             {'label': 'Skill Assessments', 'endpoint': 'behaviour_skills.assessments_index'},
             {'label': 'Bulk Skill Rating', 'endpoint': 'behaviour_skills.bulk_assessments'}
+        ]
+    },
+    {
+        'label': 'Salary & Slips',
+        'icon': 'banknotes',
+        'subitems': [
+            {'label': 'My Salary History', 'endpoint': 'payroll.my_salary'}
         ]
     }
 ]

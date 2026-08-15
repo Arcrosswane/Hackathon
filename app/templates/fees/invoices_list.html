@@ -100,11 +100,8 @@
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">ISSUED</span>
                             {% endif %}
                         </td>
-                        <td class="py-4 px-6 text-right space-x-1">
-                            <a href="{{ url_for('fees.invoice_detail', invoice_id=inv.id) }}" class="px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 font-bold">View</a>
-                            {% if inv.status != 'PAID' and inv.status != 'CANCELLED' %}
-                            <a href="{{ url_for('fees.record_payment_route', invoice_id=inv.id) }}" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700">Pay</a>
-                            {% endif %}
+                        <td class="py-4 px-6 text-right whitespace-nowrap">
+                            <a href="{{ url_for('fees.invoice_detail', invoice_id=inv.id) }}" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs border border-slate-200/80 transition-all">View Details</a>
                         </td>
                     </tr>
                     {% else %}

@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Monthly Payroll Roster — StratLearn{% endblock %}
+{% block header_title %}Monthly Staff Payroll Roster{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Actions -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-extrabold text-slate-900">Monthly Payroll Roster</h2>
+            <p class="text-xs font-semibold text-slate-500">Review, approve, and record salary disbursements for school staff.</p>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            <a href="{{ url_for('payroll.generate_view') }}" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs shadow-xs flex items-center space-x-1">
+                <span>⚡ Run Batch Payroll</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Panel -->
+    <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+        <form method="GET" action="{{ url_for('payroll.roster') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+
+            <!-- Period Selector -->
+            <div>
+                <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 mb-1">Payroll Period</label>
+                <input type="month" name="period" value="{{ selected_period }}"
+                       class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+            </div>
+
+            <!-- Department Filter -->
+            <div>
+                <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 mb-1">Department</label>
+                <select name="department" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs text-slate-900 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    <option value="">All Departments</option>
+                    {% for d in departments %}
+                    <option value="{{ d }}" {% if selected_dept == d %}selected{% endif %}>{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Status Filter -->
+            <div>
+                <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 mb-1">Status</label>
+                <select name="status" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs text-slate-900 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    <option value="">All Statuses</option>
+                    <option value="GENERATED" {% if selected_status == 'GENERATED' %}selected{% endif %}>GENERATED</option>
+                    <option value="APPROVED" {% if selected_status == 'APPROVED' %}selected{% endif %}>APPROVED</option>
+                    <option value="PAID" {% if selected_status == 'PAID' %}selected{% endif %}>PAID</option>
+                </select>
+            </div>
+
+            <!-- Search Query -->
+            <div>
+                <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 mb-1">Search Employee / Slip #</label>
+                <input type="text" name="q" value="{{ search_query or '' }}" placeholder="Search name, EMP #..."
+                       class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs text-slate-900 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+            </div>
+
+            <!-- CTA -->
+            <div class="flex items-end space-x-2">
+                <button type="submit" class="w-full py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl transition-colors">
+                    Filter Roster
+                </button>
+                <a href="{{ url_for('payroll.roster') }}" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors">
+                    Reset
+                </a>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- Payroll Roster Table -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                        <th class="py-3.5 px-6">Slip #</th>
+                        <th class="py-3.5 px-6">Employee</th>
+                        <th class="py-3.5 px-6">Department</th>
+                        <th class="py-3.5 px-6">Gross Salary</th>
+                        <th class="py-3.5 px-6">Deductions</th>
+                        <th class="py-3.5 px-6">Net Salary</th>
+                        <th class="py-3.5 px-6">Status</th>
+                        <th class="py-3.5 px-6 text-right">Actions / Payment</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+                    {% for p in payrolls %}
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                        <td class="py-4 px-6 font-extrabold text-brand-700">#{{ p.salary_slip_number }}</td>
+                        <td class="py-4 px-6">
+                            <div class="font-bold text-slate-900">{{ p.employee.full_name }}</div>
+                            <div class="text-[10px] text-slate-500">{{ p.employee.registration_number }} | {{ p.employee.designation }}</div>
+                        </td>
+                        <td class="py-4 px-6 text-slate-700">{{ p.employee.department or 'Academic' }}</td>
+                        <td class="py-4 px-6 font-extrabold text-slate-900">₹{{ "%.2f"|format(p.gross_salary) }}</td>
+                        <td class="py-4 px-6 font-bold text-rose-600">₹{{ "%.2f"|format(p.total_deductions) }}</td>
+                        <td class="py-4 px-6 font-extrabold text-emerald-700">₹{{ "%.2f"|format(p.net_salary) }}</td>
+                        <td class="py-4 px-6">
+                            {% if p.status == 'PAID' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">PAID</span>
+                            <div class="text-[10px] text-slate-400 mt-0.5">{{ p.payment_method }}</div>
+                            {% elif p.status == 'APPROVED' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">APPROVED</span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">GENERATED</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 text-right whitespace-nowrap">
+                            <div class="inline-flex items-center justify-end gap-1.5">
+                                <a href="{{ url_for('payroll.salary_slip', payroll_id=p.id) }}" 
+                                   class="px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 font-bold text-xs">
+                                    Slip
+                                </a>
+
+                                {% if p.status == 'GENERATED' %}
+                                <form action="{{ url_for('payroll.approve_payroll_route', payroll_id=p.id) }}" method="POST">
+                                    <button type="submit" class="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs shadow-xs">
+                                        Approve
+                                    </button>
+                                </form>
+                                {% endif %}
+
+                                {% if p.status in ('GENERATED', 'APPROVED') %}
+                                <!-- Record Payment Modal / Quick Trigger Form -->
+                                <form action="{{ url_for('payroll.record_payment_route', payroll_id=p.id) }}" method="POST" class="inline-flex items-center space-x-1">
+                                    <input type="text" name="payment_reference" placeholder="UTR/Ref #" required class="w-24 px-2 py-1 border border-slate-300 rounded text-[11px]">
+                                    <button type="submit" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs">
+                                        Pay
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="py-8 text-center text-slate-400 font-medium">No payroll records matching criteria for period '{{ selected_period }}'.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, date
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, abort
 from app.utils.decorators import login_required, role_required
@@ -132,7 +133,7 @@ def create_structure():
         except ValueError as e:
             flash(str(e), "danger")
 
-    classes = get_classes_for_session()
+    classes = get_classes_for_session(session_id=sess_id)
     fee_types = get_all_fee_types(active_only=True)
     return render_template('fees/structure_form.html', classes=classes, fee_types=fee_types, active_session=act_sess)
 
@@ -159,7 +160,7 @@ def invoices_list():
         status=status,
         search_query=search_q
     )
-    classes = get_classes_for_session()
+    classes = get_classes_for_session(session_id=sess_id)
 
     return render_template(
         'fees/invoices_list.html',
@@ -209,10 +210,46 @@ def generate_invoices():
             except ValueError as e:
                 flash(str(e), "danger")
 
-    classes = get_classes_for_session()
+    classes = get_classes_for_session(session_id=sess_id)
     students = get_all_students()
     return render_template('fees/generate_invoices.html', classes=classes, students=students, active_session=act_sess)
 
+
+def resolve_current_student_id():
+    """Helper to resolve current logged in student's ID from session/user."""
+    user_id = session.get('user_id')
+    linked_id = session.get('linked_entity_id')
+    if linked_id:
+        return linked_id
+    if user_id:
+        from app.models import User
+        u = User.query.get(user_id)
+        if u and u.linked_entity_id:
+            return u.linked_entity_id
+        if u:
+            s = Student.query.filter((Student.registration_number == u.username) | (Student.email_address == u.username)).first()
+            if s:
+                return s.id
+    stu = Student.query.first()
+    return stu.id if stu else 1
+
+def resolve_current_guardian_id():
+    """Helper to resolve current logged in parent/guardian's ID from session/user."""
+    user_id = session.get('user_id')
+    linked_id = session.get('linked_entity_id')
+    if linked_id:
+        return linked_id
+    if user_id:
+        from app.models import User
+        u = User.query.get(user_id)
+        if u and u.linked_entity_id:
+            return u.linked_entity_id
+        if u:
+            g = Guardian.query.filter((Guardian.registration_number == u.username) | (Guardian.email_address == u.username)).first()
+            if g:
+                return g.id
+    gdn = Guardian.query.first()
+    return gdn.id if gdn else 1
 
 @fees_bp.route('/invoices/<int:invoice_id>')
 @login_required
@@ -222,12 +259,12 @@ def invoice_detail(invoice_id):
     curr_role = str(session.get('user_role', '')).lower()
 
     if curr_role in ('parent', 'guardian'):
-        guardian_id = session.get('guardian_id')
+        guardian_id = resolve_current_guardian_id()
         if not verify_parent_invoice_access(guardian_id, inv.id):
             flash("Unauthorized access to invoice record.", "danger")
             return redirect(url_for('parent.dashboard'))
     elif curr_role == 'student':
-        student_id = session.get('student_id')
+        student_id = resolve_current_student_id()
         if inv.student_id != student_id:
             flash("Unauthorized access to invoice record.", "danger")
             return redirect(url_for('student.dashboard'))
@@ -307,6 +344,54 @@ def record_payment_route():
     )
 
 
+@fees_bp.route('/pay/<int:invoice_id>', methods=['GET', 'POST'])
+@login_required
+def pay_invoice_online(invoice_id):
+    """Self-service online fee payment portal for Students, Parents, or Admins."""
+    inv = FeeInvoice.query.get_or_404(invoice_id)
+    curr_role = str(session.get('user_role', '')).lower()
+
+    if inv.status == 'PAID':
+        flash("This fee invoice has already been fully paid.", "info")
+        return redirect(url_for('fees.invoice_detail', invoice_id=inv.id))
+
+    # IDOR Security Validation
+    if curr_role in ('parent', 'guardian'):
+        guardian_id = resolve_current_guardian_id()
+        if not verify_parent_invoice_access(guardian_id, inv.id):
+            flash("Unauthorized access to fee invoice.", "danger")
+            return redirect(url_for('parent.dashboard'))
+    elif curr_role == 'student':
+        student_id = resolve_current_student_id()
+        if inv.student_id != student_id:
+            flash("Unauthorized access to fee invoice.", "danger")
+            return redirect(url_for('student.dashboard'))
+
+    if request.method == 'POST':
+        amt = request.form.get('amount')
+        p_method = request.form.get('payment_method', 'ONLINE')
+        upi_id = request.form.get('upi_id', '').strip()
+        
+        tx_ref = f"GATEWAY/{p_method}/{uuid.uuid4().hex[:8].upper()}"
+        if upi_id:
+            tx_ref += f" ({upi_id})"
+
+        try:
+            pay = record_payment(
+                invoice_id=inv.id,
+                amount=amt,
+                payment_method=p_method,
+                transaction_reference=tx_ref,
+                notes=f"Online Self-Service Fee Payment via {p_method}"
+            )
+            flash(f"🎉 Payment of ₹{pay.amount:.2f} completed successfully! Official Receipt #{pay.receipt.receipt_number} issued.", "success")
+            return redirect(url_for('fees.receipt_view', receipt_id=pay.receipt.id))
+        except ValueError as e:
+            flash(str(e), "danger")
+
+    return render_template('fees/pay_online.html', invoice=inv)
+
+
 @fees_bp.route('/receipt/<int:receipt_id>')
 @login_required
 def receipt_view(receipt_id):
@@ -318,12 +403,12 @@ def receipt_view(receipt_id):
 
     curr_role = str(session.get('user_role', '')).lower()
     if curr_role in ('parent', 'guardian'):
-        guardian_id = session.get('guardian_id')
+        guardian_id = resolve_current_guardian_id()
         if not verify_parent_receipt_access(guardian_id, rec.id):
             flash("Unauthorized access to receipt document.", "danger")
             return redirect(url_for('parent.dashboard'))
     elif curr_role == 'student':
-        student_id = session.get('student_id')
+        student_id = resolve_current_student_id()
         if rec.payment.student_id != student_id:
             flash("Unauthorized access to receipt document.", "danger")
             return redirect(url_for('student.dashboard'))
@@ -338,20 +423,25 @@ def receipt_view(receipt_id):
 @fees_bp.route('/my-account')
 @login_required
 def student_fee_account():
-    """Fee ledger for logged in Student."""
+    """Fee ledger for logged in Student or Parent."""
     curr_role = str(session.get('user_role', '')).lower()
     student_id = None
 
     if curr_role == 'student':
-        student_id = session.get('student_id')
+        student_id = resolve_current_student_id()
     elif curr_role in ('parent', 'guardian'):
-        guardian_id = session.get('guardian_id')
-        link = GuardianStudent.query.filter_by(guardian_id=guardian_id).first()
-        if link:
-            student_id = link.student_id
+        guardian_id = resolve_current_guardian_id()
+        if guardian_id:
+            link = GuardianStudent.query.filter_by(guardian_id=guardian_id).first()
+            if link:
+                student_id = link.student_id
 
     if not student_id:
         flash("No linked student record found for fee account.", "warning")
+        if curr_role in ('parent', 'guardian'):
+            return redirect(url_for('parent.dashboard'))
+        elif curr_role == 'student':
+            return redirect(url_for('student.dashboard'))
         return redirect(url_for('admin.dashboard'))
 
     act_sess = get_active_academic_session()
@@ -368,10 +458,12 @@ def child_fee_account(student_id):
     curr_role = str(session.get('user_role', '')).lower()
     if curr_role not in ('parent', 'guardian', 'admin'):
         flash("Unauthorized access.", "danger")
+        if curr_role == 'student':
+            return redirect(url_for('student.dashboard'))
         return redirect(url_for('admin.dashboard'))
 
     if curr_role in ('parent', 'guardian'):
-        guardian_id = session.get('guardian_id')
+        guardian_id = resolve_current_guardian_id()
         link = GuardianStudent.query.filter_by(guardian_id=guardian_id, student_id=student_id).first()
         if not link:
             flash("Unauthorized access to student fee ledger.", "danger")

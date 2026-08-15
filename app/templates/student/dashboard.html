@@ -94,6 +94,22 @@
                 📅
             </div>
         </div>
+
+        <!-- Fee Ledger & Direct Pay Banner -->
+        <div class="bg-gradient-to-r from-emerald-800 to-teal-900 p-5 rounded-2xl text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 col-span-1 sm:col-span-2 lg:col-span-4 border border-emerald-700">
+            <div class="space-y-1">
+                <div class="flex items-center space-x-2 text-[10px] font-extrabold uppercase tracking-wider text-emerald-300">
+                    <span>💳 Student Fee Account</span>
+                    <span>•</span>
+                    <span>Online Self-Service Payment</span>
+                </div>
+                <h4 class="text-lg font-black text-white">View Outstanding Dues & Pay School Invoices</h4>
+                <p class="text-xs text-emerald-100">Pay term fees via UPI, Credit/Debit Card, or Net Banking with instant official receipt generation.</p>
+            </div>
+            <a href="{{ url_for('fees.student_fee_account') }}" class="px-5 py-2.5 bg-white text-emerald-900 hover:bg-emerald-50 font-black text-xs rounded-xl shadow-xs transition-all flex items-center space-x-1.5 whitespace-nowrap">
+                <span>💳 Fee Ledger & Pay Now</span>
+            </a>
+        </div>
     </div>
 
     <!-- Active Class Homework Roster -->

@@ -33,6 +33,18 @@ from app.services.fee_service import (
     get_student_fee_summary, get_collection_summary,
     verify_parent_invoice_access, verify_parent_receipt_access, VALID_PAYMENT_METHODS
 )
+from app.services.finance_service import (
+    get_all_categories, create_category, update_category, toggle_category_status,
+    create_manual_transaction, sync_single_payment_to_finance, sync_all_fee_payments_to_finance,
+    get_financial_transactions, get_finance_dashboard_summary, cancel_transaction
+)
+from app.services.payroll_service import (
+    get_all_salary_components, create_salary_component, toggle_salary_component_status,
+    get_all_salary_structures, create_salary_structure, assign_salary_structure,
+    get_employee_active_assignment, calculate_employee_salary_snapshot,
+    generate_batch_payroll, approve_payroll, record_salary_payment,
+    sync_payroll_to_finance_expense, get_payroll_records, get_payroll_summary_metrics
+)
 
 __all__ = [
     'get_active_academic_session',
@@ -116,5 +128,29 @@ __all__ = [
     'get_collection_summary',
     'verify_parent_invoice_access',
     'verify_parent_receipt_access',
-    'VALID_PAYMENT_METHODS'
+    'VALID_PAYMENT_METHODS',
+    'get_all_categories',
+    'create_category',
+    'update_category',
+    'toggle_category_status',
+    'create_manual_transaction',
+    'sync_single_payment_to_finance',
+    'sync_all_fee_payments_to_finance',
+    'get_financial_transactions',
+    'get_finance_dashboard_summary',
+    'cancel_transaction',
+    'get_all_salary_components',
+    'create_salary_component',
+    'toggle_salary_component_status',
+    'get_all_salary_structures',
+    'create_salary_structure',
+    'assign_salary_structure',
+    'get_employee_active_assignment',
+    'calculate_employee_salary_snapshot',
+    'generate_batch_payroll',
+    'approve_payroll',
+    'record_salary_payment',
+    'sync_payroll_to_finance_expense',
+    'get_payroll_records',
+    'get_payroll_summary_metrics'
 ]

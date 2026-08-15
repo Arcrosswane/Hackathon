@@ -250,3 +250,47 @@ def toggle_status(guardian_id):
     except Exception as e:
         flash(str(e), 'danger')
     return redirect(request.referrer or url_for('guardians.index'))
+
+
+@guardians_bp.route('/<int:guardian_id>/create-credentials', methods=['POST'])
+@login_required
+@role_required('admin')
+def create_credentials(guardian_id):
+    """Admin route to create or reset parent/guardian portal credentials."""
+    guardian = get_guardian_by_id(guardian_id)
+    if not guardian:
+        flash('Guardian record not found.', 'danger')
+        return redirect(url_for('guardians.index'))
+
+    username = request.form.get('username', '').strip() or f"par_{guardian.registration_number.lower()}"
+    password = request.form.get('password', '').strip() or "Parent@123"
+
+    user = User.query.filter_by(linked_entity_id=guardian.id, user_type='Parent').first()
+    if not user:
+        user = User.query.filter_by(linked_entity_id=guardian.id, user_type='Guardian').first()
+    if not user:
+        user = User.query.filter_by(username=username).first()
+
+    if user:
+        user.username = username
+        user.set_password(password)
+        user.linked_entity_id = guardian.id
+        user.user_type = 'Parent'
+        user.is_active = True
+        flash(f'Parent portal credentials updated for {guardian.full_name}! Username: "{username}", Password: "{password}"', 'success')
+    else:
+        from app.models import School
+        school = School.query.first()
+        user = User(
+            username=username,
+            user_type='Parent',
+            school_id=school.id if school else None,
+            linked_entity_id=guardian.id,
+            is_active=True
+        )
+        user.set_password(password)
+        db.session.add(user)
+        flash(f'Parent portal credentials created for {guardian.full_name}! Username: "{username}", Password: "{password}"', 'success')
+
+    db.session.commit()
+    return redirect(url_for('guardians.profile', guardian_id=guardian.id))

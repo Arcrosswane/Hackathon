@@ -1,11 +1,19 @@
 from app.models import db, SchoolClass, Section
 
-def get_classes_for_session(session_id, active_only=False):
+def get_classes_for_session(session_id=None, active_only=False):
     """
     Returns an ordered list of classes for a specific academic session.
+    If session_id is None, defaults to the active academic session.
     Sorted by numeric_order ASC, then name ASC.
     """
-    query = SchoolClass.query.filter_by(academic_session_id=session_id)
+    if not session_id:
+        from app.services.academic_service import get_active_academic_session
+        act_sess = get_active_academic_session()
+        session_id = act_sess.id if act_sess else None
+
+    query = SchoolClass.query
+    if session_id:
+        query = query.filter_by(academic_session_id=session_id)
     if active_only:
         query = query.filter_by(is_active=True)
     return query.order_by(SchoolClass.numeric_order.asc(), SchoolClass.name.asc()).all()

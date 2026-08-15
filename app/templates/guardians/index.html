@@ -73,11 +73,13 @@
                         </div>
                     </div>
 
-                    {% if gdn.is_active %}
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Active</span>
-                    {% else %}
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">Inactive</span>
-                    {% endif %}
+                    <div class="flex flex-col items-end space-y-1">
+                        {% if gdn.is_active %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Active</span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">Inactive</span>
+                        {% endif %}
+                    </div>
                 </div>
 
                 <!-- Occupation & Contact -->
@@ -138,14 +140,19 @@
             </div>
 
             <!-- Actions -->
-            <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-between space-x-1.5">
                 <a href="{{ url_for('guardians.profile', guardian_id=gdn.id) }}" 
                    class="text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-colors">
-                    View Profile & Children
+                    View Profile
+                </a>
+
+                <a href="{{ url_for('guardians.profile', guardian_id=gdn.id) }}" 
+                   class="text-xs font-bold px-2.5 py-1.5 rounded-lg bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 transition-colors flex items-center space-x-1">
+                    <span>🔑 Credentials</span>
                 </a>
 
                 <a href="{{ url_for('guardians.edit', guardian_id=gdn.id) }}" 
-                   class="text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 transition-colors">
+                   class="text-xs font-bold px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 transition-colors">
                     Edit
                 </a>
             </div>

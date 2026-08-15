@@ -213,24 +213,49 @@
                 </div>
             </div>
 
-            <!-- Parent Portal Account Status Card -->
-            <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-3">
-                <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500">
-                    Parent Portal Credentials
-                </h3>
+            <!-- Parent Portal Account Status & Credentials Manager Card -->
+            <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+                        Parent Portal Credentials
+                    </h3>
+                    {% if linked_user %}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        Registered
+                    </span>
+                    {% else %}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                        No Login Account
+                    </span>
+                    {% endif %}
+                </div>
+
                 {% if linked_user %}
                 <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl space-y-1">
-                    <span class="text-xs font-bold text-emerald-900 block">✓ Linked Parent Portal Account</span>
-                    <p class="text-xs text-emerald-700 font-mono">Username: {{ linked_user.username }}</p>
-                </div>
-                {% else %}
-                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600 space-y-1">
-                    <span class="font-semibold block text-slate-800">No Login Account Linked</span>
-                    <p class="text-[11px] text-slate-500 leading-relaxed">
-                        Guardian identity exists independently of login credentials. User accounts can optionally be created in future parent portal modules.
-                    </p>
+                    <span class="text-xs font-bold text-emerald-900 block">✓ Linked Parent Account Active</span>
+                    <p class="text-xs text-emerald-800 font-mono font-bold">Username: {{ linked_user.username }}</p>
                 </div>
                 {% endif %}
+
+                <!-- Generate / Reset Parent Credentials Form -->
+                <form action="{{ url_for('guardians.create_credentials', guardian_id=guardian.id) }}" method="POST" class="space-y-3 pt-1">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700">Username</label>
+                        <input type="text" name="username" value="{{ linked_user.username if linked_user else 'par_' + guardian.registration_number.lower() }}" required
+                               class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono text-slate-900 focus:ring-2 focus:ring-pink-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700">Password</label>
+                        <input type="text" name="password" value="Parent@123" placeholder="Enter new password" required
+                               class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono text-slate-900 focus:ring-2 focus:ring-pink-500 focus:outline-none">
+                    </div>
+
+                    <button type="submit" class="w-full py-2.5 bg-pink-600 hover:bg-pink-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center space-x-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 0121 9z"></path></svg>
+                        <span>{% if linked_user %}Reset Parent Password{% else %}Generate Parent Credentials{% endif %}</span>
+                    </button>
+                </form>
             </div>
 
         </div>

@@ -738,9 +738,126 @@ def seed_database():
                         transaction_reference="UPI/884729104",
                         notes="First Term Partial Fee Payment"
                     )
-                    print(f"✓ Seeded Payment of ₹5,000.00 and Receipt #{pay.receipt.receipt_number}.")
+            # Seed Module 12 Financial Categories & Sample Transactions
+            from app.models.finance import FinanceCategory, FinancialTransaction
+            from app.services.finance_service import create_category, create_manual_transaction, sync_all_fee_payments_to_finance
+
+            income_cats = [
+                ("Student Fees", "Student tuition and academic fee collections"),
+                ("Admission Fees", "New student registration and admission fees"),
+                ("Transport Income", "School bus and transport service income"),
+                ("Event Income", "Annual sports day, cultural fest, and event income"),
+                ("Donations", "Alumni and trust financial donations"),
+                ("Miscellaneous Income", "Other non-fee school revenue")
+            ]
+            for c_name, c_desc in income_cats:
+                try:
+                    create_category(c_name, "INCOME", c_desc)
+                except ValueError:
+                    pass
+
+            expense_cats = [
+                ("Salaries", "Teacher and administrative staff payroll expenses"),
+                ("Electricity", "Campus electricity and power utility bills"),
+                ("Maintenance", "Building, plumbing, and IT infrastructure repair"),
+                ("Stationery", "Office paper, chalk, printing, and exam supplies"),
+                ("Transport", "Bus fuel, maintenance, and vehicle insurance"),
+                ("Events", "Sports day, annual function, and workshop expenses"),
+                ("Infrastructure", "Classroom furniture and lab equipment upgrades"),
+                ("Supplies", "Cleaning, sanitation, and daily operational supplies"),
+                ("Other Expenses", "Miscellaneous operational expenditures")
+            ]
+            for c_name, c_desc in expense_cats:
+                try:
+                    create_category(c_name, "EXPENSE", c_desc)
+                except ValueError:
+                    pass
+
+            # Seed sample manual income & expense transactions
+            spon_cat = FinanceCategory.query.filter_by(name="Event Income", type="INCOME").first()
+            if spon_cat and not FinancialTransaction.query.filter_by(transaction_number="TXN-2026-SPONSOR").first():
+                try:
+                    create_manual_transaction(
+                        category_id=spon_cat.id,
+                        transaction_type="INCOME",
+                        amount=25000.00,
+                        transaction_date=date.today(),
+                        description="Annual Sports Day Corporate Sponsorship",
+                        payment_method="UPI",
+                        reference_number="UPI/SPONSOR/99042",
+                        vendor_or_payer="Apex Tech Solutions",
+                        session_id=active_sess.id
+                    )
+                    print("✓ Seeded sample income transaction: Sports Day Sponsorship ₹25,000.00.")
                 except Exception as ex:
-                    print(f"⚠ Notice seeding fee invoice: {ex}")
+                    print(f"⚠ Notice seeding income txn: {ex}")
+
+            elec_cat = FinanceCategory.query.filter_by(name="Electricity", type="EXPENSE").first()
+            if elec_cat and not FinancialTransaction.query.filter_by(transaction_number="TXN-2026-ELEC").first():
+                try:
+                    create_manual_transaction(
+                        category_id=elec_cat.id,
+                        transaction_type="EXPENSE",
+                        amount=14500.00,
+                        transaction_date=date.today(),
+                        description="Campus Monthly Electricity Bill Payment",
+                        payment_method="BANK_TRANSFER",
+                        reference_number="NEFT-BESCOM-4921",
+                        vendor_or_payer="BESCOM Utility Board",
+                        session_id=active_sess.id
+                    )
+                    print("✓ Seeded sample expense transaction: Electricity Bill ₹14,500.00.")
+                except Exception as ex:
+                    print(f"⚠ Notice seeding expense txn: {ex}")
+
+            # Sync all fee payments into Module 12 Accounts & Finance income
+            synced_count = sync_all_fee_payments_to_finance(session_id=active_sess.id)
+            print(f"✓ Synced {synced_count} student fee payment(s) to financial income.")
+
+            # Seed Module 13 Salary & Payroll Components, Structure & Batch Payroll
+            from app.models.payroll import SalaryComponent, SalaryStructure, PayrollRecord
+            from app.services.payroll_service import (
+                create_salary_component, create_salary_structure, assign_salary_structure,
+                generate_batch_payroll, approve_payroll, record_salary_payment
+            )
+
+            # Components
+            c_basic = SalaryComponent.query.filter_by(name="Basic Salary").first() or create_salary_component("Basic Salary", "EARNING", "FIXED_AMOUNT", 35000.00, description="Core base salary")
+            c_hra = SalaryComponent.query.filter_by(name="House Rent Allowance (HRA)").first() or create_salary_component("House Rent Allowance (HRA)", "EARNING", "PERCENTAGE", 20.00, description="HRA allowance rate")
+            c_trans = SalaryComponent.query.filter_by(name="Transport Allowance").first() or create_salary_component("Transport Allowance", "EARNING", "FIXED_AMOUNT", 2500.00, description="Commute conveyance allowance")
+            c_ptax = SalaryComponent.query.filter_by(name="Professional Tax").first() or create_salary_component("Professional Tax", "DEDUCTION", "FIXED_AMOUNT", 200.00, description="Statutory professional tax deduction")
+
+            # Structure
+            struct = SalaryStructure.query.filter_by(name="Senior Academic Staff Grade A").first()
+            if not struct:
+                struct = create_salary_structure(
+                    "Senior Academic Staff Grade A",
+                    "Standard pay grade structure for senior teachers and department heads",
+                    component_items=[
+                        {'component_id': c_basic.id, 'calculation_type': 'FIXED_AMOUNT', 'amount_or_percentage': 35000.00},
+                        {'component_id': c_hra.id, 'calculation_type': 'PERCENTAGE', 'amount_or_percentage': 20.00},
+                        {'component_id': c_trans.id, 'calculation_type': 'FIXED_AMOUNT', 'amount_or_percentage': 2500.00},
+                        {'component_id': c_ptax.id, 'calculation_type': 'FIXED_AMOUNT', 'amount_or_percentage': 200.00}
+                    ]
+                )
+                print("✓ Seeded Senior Academic Staff Salary Structure.")
+
+            # Assign structure to teachers
+            teachers = Employee.query.filter_by(is_teacher=True, is_active=True).all()
+            for tch in teachers:
+                assign_salary_structure(tch.id, struct.id, effective_from=date.today())
+            print(f"✓ Assigned salary structure to {len(teachers)} teacher(s).")
+
+            # Generate sample payroll for current period
+            curr_period = date.today().strftime('%Y-%m')
+            payrolls = generate_batch_payroll(curr_period, session_id=active_sess.id)
+            if payrolls:
+                print(f"✓ Seeded batch payroll for {len(payrolls)} staff member(s) for period '{curr_period}'.")
+                # Approve and record salary payment for first teacher
+                p_first = payrolls[0]
+                approve_payroll(p_first.id)
+                p_paid = record_salary_payment(p_first.id, payment_method="BANK_TRANSFER", payment_reference=f"NEFT-SAL-{p_first.id:04d}")
+                print(f"✓ Seeded paid salary of ₹{p_paid.net_salary:.2f} for '{p_paid.employee.full_name}' and synced to Accounts & Finance.")
 
         db.session.commit()
         print("\n🎉 Database initialization and seeding completed successfully!")

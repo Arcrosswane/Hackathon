@@ -128,9 +128,9 @@ Maintains guardian records and links parents to their enrolled children for fami
 - **Guardian-Student Relationships (`guardian_students` table)**:
   - Multi-child linking enabling a single parent account to be connected to multiple students (e.g. a parent with children in Grade 6 and Grade 9).
   - Assigns relationship types (Father, Mother, Legal Guardian, Local Guardian) and primary contact flags.
-- **Parent Portal Integration**:
-  - Parents sign in at `/auth/login` using their credentials and access the **Parent Dashboard** (`/parent/dashboard`).
-  - Parents can seamlessly toggle between linked children to view homework assignments, submission statuses, class timetables, fee accounts, and published behaviour & skill records.
+- **Parent Portal Credentials Manager**:
+  - Admin tools on parent directory cards and profile pages (`/admin/guardians/<id>`) to generate or reset parent portal login credentials (`username` / `password`).
+  - Displays a visual **Portal Account Status Badge** (`Registered` vs `No Login Account`) on parent profile and directory cards.
 
 ---
 
@@ -234,9 +234,10 @@ Builds a complete school Fee Management system for defining fee structures, issu
 - **Discount & Concession Engine**:
   - Supports approved fee discounts and concessions (e.g. Merit Scholarships, Sibling Concessions, Staff-Child Concessions).
   - Captures discount amounts, reasons, and staff approver records.
-- **Full & Partial Payments (`/fees/payments/record`)**:
-  - Supports full and partial payment recording.
-  - Automatically updates invoice `paid_amount` and calculates the status (`PARTIALLY_PAID` vs `PAID`).
+- **Full, Partial & Self-Service Online Payments (`/fees/pay/<invoice_id>`)**:
+  - **Student & Parent Self-Service Payment Gateway**: Students and Parents can pay their pending fee invoices directly from their dashboard (`/fees/my-account`, `/fees/child/<student_id>`) via UPI, Credit/Debit Card, Net Banking, or Online Portal.
+  - **Admin Offline Payment Recording**: Admins generate invoices and record manual offline cash/cheque counter payments (`/fees/payments/record`).
+  - Automatically updates invoice `paid_amount` and calculates status (`PARTIALLY_PAID` vs `PAID`).
 - **Server-Side Overpayment & Balance Protection**:
   - All balance calculations (`payable = subtotal - discount`, `outstanding = payable - paid_amount`) are enforced strictly server-side.
   - Payments exceeding the outstanding balance or attempted on paid/cancelled invoices are rejected.
@@ -251,6 +252,72 @@ Builds a complete school Fee Management system for defining fee structures, issu
   - Server-side IDOR security checks guarantee parents (`/fees/child/<student_id>`) can only view financial records for their linked children (`GuardianStudent`).
 - **Fee Collection Summary Dashboard (`/fees/payments`)**:
   - Financial collection metrics for admin/finance staff (Total Billed, Total Collected, Total Outstanding, Overdue Dues, Paid/Partial/Unpaid counts, and daily collection summary).
+
+---
+
+### 📊 Module 12 — Accounts & Finance
+
+#### Core Objective
+Builds a school-level Accounts & Finance management system allowing authorized administrators/finance staff to track income, operational expenses, financial categories, payment references, supporting document attachments, and server-side net balance metrics, with automatic integration of student fee payments.
+
+#### Detailed Functionality
+- **School Financial Management Scope**:
+  - Centralized accounting ledger managing all school financial transactions, non-fee revenue, operational expenditures, category classification, transaction references, and supporting document uploads.
+  - Consumes Module 11 student fee payments as financial income cleanly without duplicating payment records.
+- **Configurable Financial Categories (`/accounts/categories`)**:
+  - Admins create, edit, and toggle activation for income and expense categories.
+  - Category types (`INCOME` vs `EXPENSE`) enforce validation so expense categories cannot be used for income entries and vice versa.
+  - Deactivation (`is_active = False`) preserves historical financial transaction records without breaking references.
+- **Unified Financial Transaction Model (`/accounts/transactions`)**:
+  - Central `FinancialTransaction` model recording unique transaction numbers (`TXN-2026-XXXXXX`), exact decimal amounts (`DECIMAL(12,2)`), transaction date, payment method (`CASH`, `UPI`, `CARD`, `BANK_TRANSFER`, `CHEQUE`, `ONLINE`, `OTHER`), reference numbers, vendor or payer names, source type, and status (`COMPLETED`, `CANCELLED`).
+- **Module 11 Fee Payment Integration & Uniqueness Protection**:
+  - Successful student fee payments recorded in Module 11 automatically produce derived financial income records under the **"Student Fees"** category (`source_type = 'FEE_PAYMENT'`, `source_id = payment.id`).
+  - Strict duplicate protection enforces uniqueness on `(source_type, source_id)` so no payment can create duplicate income entries.
+  - Fee payment cancellations or refunds automatically update derived transaction status to `CANCELLED`.
+- **Manual Income Recording (`/accounts/income/create`)**:
+  - Finance users record non-fee school revenue (e.g. event sponsorships, donations, transport income, grant funding) with category selection, date, payment method, reference ID, and supporting document attachments.
+- **Operational Expense Recording (`/accounts/expenses/create`)**:
+  - Finance users record school expenditures (e.g. electricity bills, maintenance, stationery supplies, bus fuel, event costs) with vendor name, bill number, notes, and file attachments.
+- **Supporting Document Storage & IDOR Protection (`/accounts/attachments/<id>`)**:
+  - Supports uploading bill receipts and invoices (PDF, PNG, JPG, JPEG, WEBP, DOC, DOCX up to 10MB) stored securely in `static/uploads/finance/`.
+  - Download route is authorization-protected with server-side tenant isolation (`school_id`).
+- **Authoritative Server-Side Financial Dashboard (`/accounts/dashboard`)**:
+  - Real-time financial metrics computed using SQL aggregation (`func.sum()`): Total Income, Total Expenses, Net Balance (`Total Income - Total Expenses`), Today's Income/Expenses, Current Month Income/Expenses, Income & Expense Category breakdowns, and Recent Financial Activity log.
+- **Filterable Financial Ledger & CSV Export (`/accounts/export/csv`)**:
+  - Filter transactions by date presets (Today, This Week, This Month, This Year, Custom Date Range), category, type, payment method, or search query.
+  - Download full filtered ledger reports in CSV format with proper totals.
+
+---
+
+### 💼 Module 13 — Salary & Payroll
+
+#### Core Objective
+Builds a school Employee Salary & Payroll Management system allowing authorized administrators/finance staff to define salary components, configure pay grade structures, assign structures to employees, generate monthly payrolls, calculate gross and net salaries, issue printable salary slips, provide employees with read-only self-service access to personal salary statements, and integrate completed salary payments into Module 12 Accounts & Finance as expense transactions.
+
+#### Detailed Functionality
+- **School Employee Payroll Scope**:
+  - Reuses Module 5's existing `Employee` model to manage staff compensation, component allowances, statutory deductions, monthly payroll generation, payment disbursements, and official salary slips.
+- **Configurable Salary Components (`/payroll/components`)**:
+  - Admins configure earning allowances (e.g. Basic Salary, HRA, Transport Allowance, Medical Allowance, Special Allowance, Bonuses) and deduction rules (e.g. Professional Tax, Advance Recovery).
+  - Supports `FIXED_AMOUNT` (fixed rupee values) and `PERCENTAGE` (calculated percentage of Basic Salary).
+- **Salary Structures Catalog (`/payroll/structures`)**:
+  - Defines reusable pay grade structures (e.g. Senior Academic Staff Grade A, Support Staff Grade B) by attaching line components with specific default values and rates.
+- **Employee Salary Assignment (`/payroll/assignments`)**:
+  - Connects employees to specific salary structures with effective start dates and notes.
+- **Immutable Historical Payroll Snapshots (`/payroll/generate`)**:
+  - Generating monthly payroll (`payroll_period = "2026-08"`) creates immutable component snapshots (`PayrollItem`).
+  - **Historical Snapshot Guarantee**: Updating an employee's salary structure in future months will **NEVER** rewrite, corrupt, or alter previously generated historical payroll records or salary slips.
+- **Controlled Workflow & Payment Processing (`/payroll/roster`)**:
+  - State transitions: `GENERATED` $\rightarrow$ `APPROVED` $\rightarrow$ `PAID`.
+  - Recording salary payment records payment date, payment method (`BANK_TRANSFER`, `CASH`, `UPI`, `CHEQUE`, `OTHER`), and transaction reference (Bank UTR / Cheque #).
+- **Module 12 Accounts & Finance Expense Integration**:
+  - Marking a payroll record as `PAID` automatically creates an expense transaction in Module 12 under the **"Salaries"** category (`source_type = 'PAYROLL_PAYMENT'`, `source_id = payroll.id`).
+  - Enforces duplicate protection so re-syncing or viewing paid records will never create duplicate financial expense entries.
+- **Printable Official Salary Slips (`/payroll/<id>/slip`)**:
+  - Printable document featuring school branding, employee registration details, department, designation, itemized earnings breakdown, itemized deductions breakdown, gross salary, total deductions, net payable salary, payment method, transaction reference number, and unique slip identifier (`PAY-2026-08-000123`).
+- **Employee Self-Service Portal (`/payroll/my-salary`)**:
+  - Teachers and staff can sign in to view their personal salary history, active pay grade, and download official salary slips.
+  - Server-side IDOR security checks guarantee employees can **ONLY** access their own salary records, and completely block Students/Parents.
 
 ---
 

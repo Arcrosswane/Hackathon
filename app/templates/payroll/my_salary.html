@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}My Salary Slips & History — StratLearn{% endblock %}
+{% block header_title %}My Salary History{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+
+    <!-- Profile & Structure Card -->
+    <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-full bg-brand-50 text-brand-700 font-black text-lg flex items-center justify-center border border-brand-200">
+                    {{ employee.first_name[0] | upper }}
+                </div>
+                <div>
+                    <h2 class="text-xl font-extrabold text-slate-900">{{ employee.full_name }}</h2>
+                    <p class="text-xs font-semibold text-slate-500">ID: {{ employee.registration_number }} | {{ employee.designation }} ({{ employee.department or 'Academic' }})</p>
+                </div>
+            </div>
+
+            <div class="px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-right">
+                <div class="text-[10px] font-extrabold uppercase text-slate-400">Assigned Pay Grade</div>
+                <div class="text-sm font-black text-brand-700">{{ active_assignment.structure.name if active_assignment and active_assignment.structure else 'Standard Grade' }}</div>
+            </div>
+        </div>
+
+        <!-- Summary Metric Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-center">
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <div class="text-[10px] font-extrabold uppercase text-slate-400">Base Salary</div>
+                <div class="text-base font-extrabold text-slate-900 mt-1">₹{{ "%.2f"|format(employee.monthly_salary or 0.0) }}/mo</div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-emerald-50/50 border border-emerald-100">
+                <div class="text-[10px] font-extrabold uppercase text-emerald-600">Total Slips Issued</div>
+                <div class="text-base font-extrabold text-emerald-700 mt-1">{{ payrolls|length }} Statements</div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-brand-50/50 border border-brand-100 col-span-2 sm:col-span-1">
+                <div class="text-[10px] font-extrabold uppercase text-brand-600">Latest Net Salary</div>
+                <div class="text-base font-extrabold text-brand-700 mt-1">
+                    {% if payrolls %}₹{{ "%.2f"|format(payrolls[0].net_salary) }}{% else %}₹0.00{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Salary Slips History Table -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="p-4 border-b border-slate-100">
+            <h3 class="text-sm font-bold text-slate-900">My Issued Salary Statements & Slips</h3>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                        <th class="py-3.5 px-6">Salary Slip #</th>
+                        <th class="py-3.5 px-6">Period</th>
+                        <th class="py-3.5 px-6">Gross Salary</th>
+                        <th class="py-3.5 px-6">Deductions</th>
+                        <th class="py-3.5 px-6">Net Payable</th>
+                        <th class="py-3.5 px-6">Status</th>
+                        <th class="py-3.5 px-6 text-right">View / Download</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+                    {% for p in payrolls %}
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                        <td class="py-4 px-6 font-extrabold text-brand-700">#{{ p.salary_slip_number }}</td>
+                        <td class="py-4 px-6 font-bold text-slate-900">{{ p.period_label }}</td>
+                        <td class="py-4 px-6 font-bold text-slate-800">₹{{ "%.2f"|format(p.gross_salary) }}</td>
+                        <td class="py-4 px-6 font-bold text-rose-600">₹{{ "%.2f"|format(p.total_deductions) }}</td>
+                        <td class="py-4 px-6 font-extrabold text-emerald-700">₹{{ "%.2f"|format(p.net_salary) }}</td>
+                        <td class="py-4 px-6">
+                            {% if p.status == 'PAID' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">PAID</span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">{{ p.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 text-right whitespace-nowrap">
+                            <a href="{{ url_for('payroll.salary_slip', payroll_id=p.id) }}" target="_blank"
+                               class="px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs shadow-xs inline-flex items-center space-x-1">
+                                <span>📄 View Slip</span>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="py-8 text-center text-slate-400 font-medium">No salary slips issued yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

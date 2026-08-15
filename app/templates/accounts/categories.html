@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Financial Categories — StratLearn{% endblock %}
+{% block header_title %}Financial Categories Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Actions -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-extrabold text-slate-900">Financial Categories</h2>
+            <p class="text-xs font-semibold text-slate-500">Configure income and operational expense categories for school accounts.</p>
+        </div>
+        <a href="{{ url_for('accounts.dashboard') }}" class="text-xs font-bold text-slate-600 hover:text-slate-900">
+            ← Back to Accounts Dashboard
+        </a>
+    </div>
+
+    <!-- Create Category Modal / Panel -->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+        <h3 class="text-sm font-bold text-slate-900">Create New Financial Category</h3>
+        
+        <form method="POST" action="{{ url_for('accounts.manage_categories') }}" class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Category Name <span class="text-rose-500">*</span></label>
+                <input type="text" name="name" placeholder="e.g., Event Sponsorship, Electricity" required
+                       class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs text-slate-900 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Category Type <span class="text-rose-500">*</span></label>
+                <select name="type" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs text-slate-900 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    <option value="INCOME">INCOME (+)</option>
+                    <option value="EXPENSE">EXPENSE (-)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Description</label>
+                <input type="text" name="description" placeholder="Brief explanation of category..."
+                       class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs text-slate-900 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+            </div>
+
+            <div class="flex items-end">
+                <button type="submit" class="w-full py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl transition-colors">
+                    + Add Category
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Categories Display Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Income Categories Table -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+                <h3 class="text-sm font-bold text-emerald-800">Income Categories</h3>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    {{ income_categories|length }} Streams
+                </span>
+            </div>
+
+            <div class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+                {% for c in income_categories %}
+                <div class="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                    <div>
+                        <div class="font-extrabold text-slate-900 flex items-center space-x-2">
+                            <span>{{ c.name }}</span>
+                            {% if not c.is_active %}
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-500">Deactivated</span>
+                            {% endif %}
+                        </div>
+                        <p class="text-[11px] text-slate-500 mt-0.5">{{ c.description or 'No description provided.' }}</p>
+                    </div>
+
+                    <form action="{{ url_for('accounts.toggle_category', category_id=c.id) }}" method="POST">
+                        <button type="submit" class="px-2.5 py-1 rounded-lg text-xs font-bold {% if c.is_active %}bg-rose-50 text-rose-700 hover:bg-rose-100{% else %}bg-emerald-50 text-emerald-700 hover:bg-emerald-100{% endif %}">
+                            {% if c.is_active %}Deactivate{% else %}Activate{% endif %}
+                        </button>
+                    </form>
+                </div>
+                {% else %}
+                <p class="text-xs text-slate-400 italic p-6 text-center">No income categories configured.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Expense Categories Table -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+                <h3 class="text-sm font-bold text-rose-800">Expense Categories</h3>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                    {{ expense_categories|length }} Categories
+                </span>
+            </div>
+
+            <div class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+                {% for c in expense_categories %}
+                <div class="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                    <div>
+                        <div class="font-extrabold text-slate-900 flex items-center space-x-2">
+                            <span>{{ c.name }}</span>
+                            {% if not c.is_active %}
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-500">Deactivated</span>
+                            {% endif %}
+                        </div>
+                        <p class="text-[11px] text-slate-500 mt-0.5">{{ c.description or 'No description provided.' }}</p>
+                    </div>
+
+                    <form action="{{ url_for('accounts.toggle_category', category_id=c.id) }}" method="POST">
+                        <button type="submit" class="px-2.5 py-1 rounded-lg text-xs font-bold {% if c.is_active %}bg-rose-50 text-rose-700 hover:bg-rose-100{% else %}bg-emerald-50 text-emerald-700 hover:bg-emerald-100{% endif %}">
+                            {% if c.is_active %}Deactivate{% else %}Activate{% endif %}
+                        </button>
+                    </form>
+                </div>
+                {% else %}
+                <p class="text-xs text-slate-400 italic p-6 text-center">No expense categories configured.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

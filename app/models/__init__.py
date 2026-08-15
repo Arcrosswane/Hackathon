@@ -28,6 +28,11 @@ from app.models.fee_management import (
     FeeType, FeeStructure, FeeComponent, StudentFeeAssignment,
     FeeInvoice, FeeInvoiceItem, Payment, Receipt
 )
+from app.models.finance import FinanceCategory, FinancialTransaction
+from app.models.payroll import (
+    SalaryComponent, SalaryStructure, SalaryStructureItem,
+    EmployeeSalaryAssignment, PayrollRecord, PayrollItem
+)
 
 __all__ = [
     'db',
@@ -64,5 +69,13 @@ __all__ = [
     'FeeInvoice',
     'FeeInvoiceItem',
     'Payment',
-    'Receipt'
+    'Receipt',
+    'FinanceCategory',
+    'FinancialTransaction',
+    'SalaryComponent',
+    'SalaryStructure',
+    'SalaryStructureItem',
+    'EmployeeSalaryAssignment',
+    'PayrollRecord',
+    'PayrollItem'
 ]

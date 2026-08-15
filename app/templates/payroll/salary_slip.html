@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salary Slip #{{ payroll.salary_slip_number }} — StratLearn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+            .print-card { border: none !important; shadow: none !important; }
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 max-w-3xl mx-auto text-slate-800 antialiased font-sans">
+
+    <!-- Print Action Bar -->
+    <div class="no-print mb-6 flex items-center justify-between">
+        <a href="javascript:history.back()" class="text-xs font-bold text-slate-600 hover:text-slate-900">
+            ← Back
+        </a>
+        <button onclick="window.print()" class="px-4 py-2 bg-slate-900 text-white font-extrabold text-xs rounded-xl shadow-md hover:bg-slate-800 transition-all flex items-center space-x-1.5">
+            <span>🖨️ Print Salary Slip</span>
+        </button>
+    </div>
+
+    <!-- Official Salary Slip Document -->
+    <div class="print-card bg-white p-8 rounded-2xl border border-slate-200/80 shadow-md space-y-6">
+
+        <!-- Header / School Info -->
+        <div class="flex justify-between items-start border-b border-slate-200 pb-6">
+            <div>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight">StratLearn School</h1>
+                <p class="text-xs text-slate-500 font-medium mt-1">Official Monthly Salary Statement & Payment Voucher</p>
+                <div class="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-brand-50 text-brand-700 border border-brand-200">
+                    Period: {{ payroll.period_label }}
+                </div>
+            </div>
+
+            <div class="text-right">
+                <div class="text-xs font-extrabold uppercase text-slate-400">Salary Slip #</div>
+                <div class="text-base font-mono font-black text-brand-700">#{{ payroll.salary_slip_number }}</div>
+                <div class="text-[11px] text-slate-500 mt-1">Generated: {{ payroll.generated_at.strftime('%b %d, %Y') }}</div>
+            </div>
+        </div>
+
+        <!-- Employee Info Grid -->
+        <div class="grid grid-cols-2 gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200/60 text-xs">
+            <div>
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-0.5">Employee Name</span>
+                <span class="font-bold text-slate-900 text-sm block">{{ payroll.employee.full_name }}</span>
+                <span class="text-slate-500 font-mono text-[11px]">ID: {{ payroll.employee.registration_number }}</span>
+            </div>
+
+            <div class="text-right">
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-0.5">Department & Designation</span>
+                <span class="font-bold text-slate-900 block">{{ payroll.employee.designation }}</span>
+                <span class="text-slate-500 text-[11px]">{{ payroll.employee.department or 'Academic' }}</span>
+            </div>
+        </div>
+
+        <!-- Earnings & Deductions Breakdown Tables -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+            <!-- Earnings Table -->
+            <div class="border border-slate-200 rounded-xl overflow-hidden">
+                <div class="bg-emerald-50/80 px-4 py-2 border-b border-emerald-100 flex justify-between items-center">
+                    <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-900">Earnings</span>
+                    <span class="text-[10px] font-extrabold uppercase text-emerald-700">Amount</span>
+                </div>
+
+                <div class="divide-y divide-slate-100 text-xs">
+                    {% set earnings = (payroll.items | selectattr('component_type', 'eq', 'EARNING') | list) %}
+                    {% for item in earnings %}
+                    <div class="px-4 py-2 flex justify-between text-slate-700">
+                        <span>{{ item.component_name }}</span>
+                        <span class="font-bold font-mono text-emerald-700">₹{{ "%.2f"|format(item.amount) }}</span>
+                    </div>
+                    {% else %}
+                    <div class="px-4 py-2 text-slate-400 italic">No earnings itemized.</div>
+                    {% endfor %}
+                </div>
+
+                <div class="bg-slate-50 px-4 py-2 border-t border-slate-200 flex justify-between font-bold text-xs">
+                    <span class="text-slate-900">Gross Salary</span>
+                    <span class="font-mono text-emerald-800">₹{{ "%.2f"|format(payroll.gross_salary) }}</span>
+                </div>
+            </div>
+
+            <!-- Deductions Table -->
+            <div class="border border-slate-200 rounded-xl overflow-hidden">
+                <div class="bg-rose-50/80 px-4 py-2 border-b border-rose-100 flex justify-between items-center">
+                    <span class="text-xs font-extrabold uppercase tracking-wider text-rose-900">Deductions</span>
+                    <span class="text-[10px] font-extrabold uppercase text-rose-700">Amount</span>
+                </div>
+
+                <div class="divide-y divide-slate-100 text-xs">
+                    {% set deductions = (payroll.items | selectattr('component_type', 'eq', 'DEDUCTION') | list) %}
+                    {% for item in deductions %}
+                    <div class="px-4 py-2 flex justify-between text-slate-700">
+                        <span>{{ item.component_name }}</span>
+                        <span class="font-bold font-mono text-rose-700">₹{{ "%.2f"|format(item.amount) }}</span>
+                    </div>
+                    {% else %}
+                    <div class="px-4 py-2 text-slate-400 italic">No deductions applied.</div>
+                    {% endfor %}
+                </div>
+
+                <div class="bg-slate-50 px-4 py-2 border-t border-slate-200 flex justify-between font-bold text-xs">
+                    <span class="text-slate-900">Total Deductions</span>
+                    <span class="font-mono text-rose-800">₹{{ "%.2f"|format(payroll.total_deductions) }}</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Net Payable Amount Highlight -->
+        <div class="p-6 rounded-2xl bg-brand-50 border border-brand-200 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-extrabold uppercase tracking-wider text-brand-900 block">Net Payable Salary</span>
+                <span class="text-[11px] text-brand-700">Gross Salary minus Total Deductions</span>
+            </div>
+            <div class="text-2xl sm:text-3xl font-black text-brand-700 font-mono">
+                ₹{{ "%.2f"|format(payroll.net_salary) }}
+            </div>
+        </div>
+
+        <!-- Payment Details & Signatures Footer -->
+        <div class="pt-6 border-t border-slate-200 text-xs space-y-6">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-slate-600">
+                <div>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Payment Status</span>
+                    <span class="font-bold text-slate-900">{{ payroll.status }}</span>
+                </div>
+
+                <div>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Payment Method</span>
+                    <span class="font-bold text-slate-900">{{ payroll.payment_method }}</span>
+                </div>
+
+                <div>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Transaction Ref #</span>
+                    <span class="font-mono text-slate-900 text-[11px]">{{ payroll.payment_reference or 'N/A' }}</span>
+                </div>
+
+                <div>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Payment Date</span>
+                    <span class="font-bold text-slate-900">{{ payroll.paid_at.strftime('%b %d, %Y') if payroll.paid_at else 'Pending' }}</span>
+                </div>
+            </div>
+
+            <!-- Signatures Line -->
+            <div class="grid grid-cols-2 gap-8 pt-8 text-center text-slate-400 text-[11px]">
+                <div>
+                    <div class="border-t border-slate-300 pt-2 font-semibold">Employer / Authorized Signatory</div>
+                </div>
+                <div>
+                    <div class="border-t border-slate-300 pt-2 font-semibold">Employee Acknowledgment Signature</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

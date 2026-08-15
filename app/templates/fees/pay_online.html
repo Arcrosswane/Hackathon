@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Pay Fee Invoice #{{ invoice.invoice_number }} — StratLearn{% endblock %}
+{% block header_title %}Secure Online Fee Payment{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Back Navigation Link -->
+    <div>
+        <a href="{{ url_for('fees.student_fee_account') if session.get('user_role') in ('Student', 'Parent', 'Guardian') else url_for('fees.invoices_list') }}" 
+           class="inline-flex items-center space-x-2 text-xs font-semibold text-brand-600 hover:text-brand-700">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            <span>Back to Fee Account</span>
+        </a>
+    </div>
+
+    <!-- Payment Container Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+
+        <!-- Invoice Summary Column -->
+        <div class="md:col-span-5 space-y-4">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-5">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                    <div>
+                        <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Invoice Reference</div>
+                        <h2 class="text-lg font-black text-slate-900">#{{ invoice.invoice_number }}</h2>
+                    </div>
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
+                        {{ invoice.status }}
+                    </span>
+                </div>
+
+                <div class="space-y-3 text-xs">
+                    <div class="flex justify-between text-slate-600">
+                        <span class="font-medium text-slate-500">Student Name:</span>
+                        <span class="font-bold text-slate-900">{{ invoice.student.full_name }}</span>
+                    </div>
+                    <div class="flex justify-between text-slate-600">
+                        <span class="font-medium text-slate-500">Class & Section:</span>
+                        <span class="font-bold text-slate-900">{{ invoice.school_class.name if invoice.school_class else 'N/A' }}</span>
+                    </div>
+                    <div class="flex justify-between text-slate-600">
+                        <span class="font-medium text-slate-500">Issue Date:</span>
+                        <span class="font-semibold text-slate-700">{{ invoice.issue_date.strftime('%b %d, %Y') }}</span>
+                    </div>
+                    <div class="flex justify-between text-slate-600">
+                        <span class="font-medium text-slate-500">Due Date:</span>
+                        <span class="font-bold text-rose-600">{{ invoice.due_date.strftime('%b %d, %Y') if invoice.due_date else 'N/A' }}</span>
+                    </div>
+                </div>
+
+                <!-- Fee Items Breakdown -->
+                <div class="pt-4 border-t border-slate-100 space-y-2">
+                    <div class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Item Breakdown</div>
+                    {% for item in invoice.items %}
+                    <div class="flex justify-between text-xs py-1">
+                        <span class="text-slate-600">{{ item.description }}</span>
+                        <span class="font-bold text-slate-800">₹{{ "%.2f"|format(item.amount) }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Financial Summary Box -->
+                <div class="pt-4 border-t border-slate-100 space-y-2 text-xs">
+                    <div class="flex justify-between text-slate-500">
+                        <span>Subtotal:</span>
+                        <span class="font-bold text-slate-800">₹{{ "%.2f"|format(invoice.subtotal) }}</span>
+                    </div>
+                    {% if invoice.discount > 0 %}
+                    <div class="flex justify-between text-emerald-600">
+                        <span>Discount / Concession:</span>
+                        <span class="font-bold">-₹{{ "%.2f"|format(invoice.discount) }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="flex justify-between text-slate-700 font-bold">
+                        <span>Total Payable:</span>
+                        <span class="text-slate-900">₹{{ "%.2f"|format(invoice.total_payable) }}</span>
+                    </div>
+                    <div class="flex justify-between text-emerald-700 font-bold">
+                        <span>Already Paid:</span>
+                        <span>₹{{ "%.2f"|format(invoice.paid_amount) }}</span>
+                    </div>
+                    <div class="flex justify-between text-base font-black text-rose-600 pt-2 border-t border-slate-200">
+                        <span>Outstanding Due:</span>
+                        <span>₹{{ "%.2f"|format(invoice.outstanding_balance) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Online Payment Form Column -->
+        <div class="md:col-span-7">
+            <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
+                <div class="flex items-center space-x-3 pb-4 border-b border-slate-100">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                        💳
+                    </div>
+                    <div>
+                        <h3 class="text-base font-extrabold text-slate-900">Select Payment Method</h3>
+                        <p class="text-xs text-slate-500">Instant processing with official receipt issuance</p>
+                    </div>
+                </div>
+
+                <form method="POST" action="{{ url_for('fees.pay_invoice_online', invoice_id=invoice.id) }}" class="space-y-6" id="payForm">
+                    
+                    <!-- Amount to Pay Input -->
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Payment Amount (₹) <span class="text-rose-500">*</span></label>
+                        <div class="relative rounded-xl shadow-xs">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 font-bold">₹</div>
+                            <input type="number" step="0.01" min="1" max="{{ invoice.outstanding_balance }}" name="amount" value="{{ "%.2f"|format(invoice.outstanding_balance) }}" required
+                                   class="block w-full pl-8 pr-4 py-3 rounded-xl border border-slate-300 text-slate-900 text-lg font-black focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <p class="text-[11px] text-slate-500">Maximum payable balance: ₹{{ "%.2f"|format(invoice.outstanding_balance) }}</p>
+                    </div>
+
+                    <!-- Payment Method Selector Cards -->
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Choose Gateway / Option</label>
+                        <div class="grid grid-cols-2 gap-3" id="methodSelector">
+                            
+                            <label class="relative flex flex-col p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50/30 cursor-pointer transition-all hover:border-emerald-600" id="card_upi">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-black text-slate-900">📱 UPI / QR Code</span>
+                                    <input type="radio" name="payment_method" value="UPI" checked class="text-emerald-600 focus:ring-emerald-500">
+                                </div>
+                                <span class="text-[11px] text-slate-500 font-medium">Google Pay, PhonePe, Paytm, BHIM</span>
+                            </label>
+
+                            <label class="relative flex flex-col p-4 rounded-xl border-2 border-slate-200 bg-white cursor-pointer transition-all hover:border-slate-300" id="card_card">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-black text-slate-900">💳 Card Payment</span>
+                                    <input type="radio" name="payment_method" value="CARD" class="text-emerald-600 focus:ring-emerald-500">
+                                </div>
+                                <span class="text-[11px] text-slate-500 font-medium">Visa, Mastercard, RuPay</span>
+                            </label>
+
+                            <label class="relative flex flex-col p-4 rounded-xl border-2 border-slate-200 bg-white cursor-pointer transition-all hover:border-slate-300" id="card_netbanking">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-black text-slate-900">🏦 Net Banking</span>
+                                    <input type="radio" name="payment_method" value="BANK_TRANSFER" class="text-emerald-600 focus:ring-emerald-500">
+                                </div>
+                                <span class="text-[11px] text-slate-500 font-medium">Direct Bank Transfer</span>
+                            </label>
+
+                            <label class="relative flex flex-col p-4 rounded-xl border-2 border-slate-200 bg-white cursor-pointer transition-all hover:border-slate-300" id="card_online">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-black text-slate-900">🌐 Online Portal</span>
+                                    <input type="radio" name="payment_method" value="ONLINE" class="text-emerald-600 focus:ring-emerald-500">
+                                </div>
+                                <span class="text-[11px] text-slate-500 font-medium">StratLearn Gateway</span>
+                            </label>
+
+                        </div>
+                    </div>
+
+                    <!-- Interactive Gateway Input Details -->
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3">
+                        <div id="upiFields" class="space-y-2">
+                            <label class="block text-xs font-bold text-slate-700">Enter UPI ID / VPA</label>
+                            <input type="text" name="upi_id" placeholder="example@upi or mobile@paytm" value="parent@upi"
+                                   class="block w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-xs text-slate-900 focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div id="cardFields" class="space-y-2 hidden">
+                            <label class="block text-xs font-bold text-slate-700">Card Number</label>
+                            <input type="text" placeholder="4532 •••• •••• 8821" 
+                                   class="block w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-xs text-slate-900 focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    </div>
+
+                    <!-- Submit Payment Button -->
+                    <button type="submit" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-xl shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                        <span>🔒 Pay ₹{{ "%.2f"|format(invoice.outstanding_balance) }} Now</span>
+                    </button>
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        document.querySelectorAll('#methodSelector label').forEach(lbl => {
+            lbl.classList.remove('border-emerald-500', 'bg-emerald-50/30');
+            lbl.classList.add('border-slate-200', 'bg-white');
+        });
+        this.closest('label').classList.add('border-emerald-500', 'bg-emerald-50/30');
+        this.closest('label').classList.remove('border-slate-200', 'bg-white');
+
+        const upiF = document.getElementById('upiFields');
+        const cardF = document.getElementById('cardFields');
+        if (this.value === 'UPI') {
+            upiF.classList.remove('hidden');
+            cardF.classList.add('hidden');
+        } else {
+            upiF.classList.add('hidden');
+            cardF.classList.remove('hidden');
+        }
+    });
+});
+</script>
+{% endblock %}

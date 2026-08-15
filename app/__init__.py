@@ -18,6 +18,8 @@ from app.routes.timetables import timetables_bp
 from app.routes.homework import homework_bp
 from app.routes.behaviour_skills import behaviour_skills_bp
 from app.routes.fees import fees_bp
+from app.routes.accounts import accounts_bp
+from app.routes.payroll import payroll_bp
 from app.utils.navigation import get_navigation_for_role
 from app.services.academic_service import get_active_academic_session
 
@@ -45,6 +47,8 @@ def create_app(config_class=Config):
     app.register_blueprint(homework_bp)
     app.register_blueprint(behaviour_skills_bp)
     app.register_blueprint(fees_bp)
+    app.register_blueprint(accounts_bp)
+    app.register_blueprint(payroll_bp)
 
     # Auto table & column check
     with app.app_context():

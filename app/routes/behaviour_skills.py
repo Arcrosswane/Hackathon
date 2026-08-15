@@ -530,12 +530,21 @@ def student_development():
 
     return render_template('behaviour_skills/student_summary.html', summary=summary_data, view_mode='student')
 
+@behaviour_skills_bp.route('/child', methods=['GET'])
 @behaviour_skills_bp.route('/child/<int:student_id>', methods=['GET'])
 @login_required
 @role_required('parent', 'guardian')
-def parent_child_development(student_id):
+def parent_child_development(student_id=None):
     guardian_id = get_current_guardian_id()
-    
+
+    if not student_id:
+        link = GuardianStudent.query.filter_by(guardian_id=guardian_id).first()
+        if link:
+            student_id = link.student_id
+        else:
+            flash("No linked children found for your guardian account.", "warning")
+            return redirect(url_for('parent.dashboard'))
+
     # IDOR Protection
     if not verify_parent_student_access(guardian_id, student_id):
         flash("Unauthorized access: You can only view records for your linked child.", "danger")

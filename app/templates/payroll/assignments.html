@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Assign Salary Structures — StratLearn{% endblock %}
+{% block header_title %}Employee Salary Structure Assignments{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Actions -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-extrabold text-slate-900">Salary Structure Assignments</h2>
+            <p class="text-xs font-semibold text-slate-500">Assign pay grade structures to teachers and staff members.</p>
+        </div>
+        <a href="{{ url_for('payroll.dashboard') }}" class="text-xs font-bold text-slate-600 hover:text-slate-900">
+            ← Back to Payroll Dashboard
+        </a>
+    </div>
+
+    <!-- Assignment Form -->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+        <h3 class="text-sm font-bold text-slate-900">Assign Salary Structure to Employee</h3>
+        
+        <form method="POST" action="{{ url_for('payroll.assignments') }}" class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Select Employee <span class="text-rose-500">*</span></label>
+                <select name="employee_id" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    <option value="">Choose Employee</option>
+                    {% for emp in employees %}
+                    <option value="{{ emp.id }}">{{ emp.full_name }} ({{ emp.registration_number }} - {{ emp.designation }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Salary Structure <span class="text-rose-500">*</span></label>
+                <select name="salary_structure_id" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    <option value="">Choose Structure</option>
+                    {% for s in structures %}
+                    <option value="{{ s.id }}">{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Effective Date <span class="text-rose-500">*</span></label>
+                <input type="date" name="effective_from" value="{{ today_date }}" required
+                       class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs text-slate-900 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+            </div>
+
+            <div class="flex items-end">
+                <button type="submit" class="w-full py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl transition-colors">
+                    Assign Structure
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Active Assignments Roster Table -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+            <h3 class="text-sm font-bold text-slate-900">Active Salary Structure Assignments</h3>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-50 text-brand-700 border border-brand-200">
+                {{ assignments|length }} Staff Assigned
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                        <th class="py-3.5 px-6">Employee</th>
+                        <th class="py-3.5 px-6">Designation</th>
+                        <th class="py-3.5 px-6">Assigned Structure</th>
+                        <th class="py-3.5 px-6">Effective From</th>
+                        <th class="py-3.5 px-6">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+                    {% for a in assignments %}
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                        <td class="py-4 px-6">
+                            <div class="font-bold text-slate-900">{{ a.employee.full_name }}</div>
+                            <div class="text-[10px] text-slate-500">{{ a.employee.registration_number }}</div>
+                        </td>
+                        <td class="py-4 px-6 text-slate-700">{{ a.employee.department or 'Academic' }} — {{ a.employee.designation }}</td>
+                        <td class="py-4 px-6 font-extrabold text-brand-700">{{ a.structure.name if a.structure else 'N/A' }}</td>
+                        <td class="py-4 px-6 text-slate-600">{{ a.effective_from.strftime('%b %d, %Y') }}</td>
+                        <td class="py-4 px-6">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">ACTIVE</span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="py-8 text-center text-slate-400 font-medium">No active salary structure assignments configured.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
