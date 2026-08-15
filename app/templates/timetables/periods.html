@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Period Time Slots — StratLearn Admin{% endblock %}
+{% block header_title %}Period & Time Slot Configuration{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Top Action Navigation -->
+    <div class="flex items-center justify-between">
+        <a href="{{ url_for('timetables.index') }}" class="inline-flex items-center space-x-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"></path></svg>
+            <span>Back to Class Timetables</span>
+        </a>
+
+        <span class="text-xs text-slate-500">
+            Academic Session: <strong class="text-slate-800">{{ active_session.name }}</strong>
+        </span>
+    </div>
+
+    <!-- Main Grid: Period List & Add/Edit Form -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- Column 1 & 2: Period Time Slots Roster Table -->
+        <div class="md:col-span-2 space-y-4">
+            <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider flex items-center space-x-2">
+                        <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span>Configured School Period Slots ({{ periods | length }})</span>
+                    </h3>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-[10px] font-extrabold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                                <th class="py-2.5 px-3">Order</th>
+                                <th class="py-2.5 px-3">Period Name</th>
+                                <th class="py-2.5 px-3">Time Range</th>
+                                <th class="py-2.5 px-3">Type</th>
+                                <th class="py-2.5 px-3 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-xs">
+                            {% for p in periods %}
+                            <tr class="hover:bg-slate-50/60 transition-colors">
+                                <td class="py-3 px-3 font-mono font-bold text-slate-900">#{{ p.period_order }}</td>
+                                <td class="py-3 px-3 font-extrabold text-slate-900">{{ p.name }}</td>
+                                <td class="py-3 px-3 font-mono text-slate-600">
+                                    {{ p.start_time.strftime('%H:%M') }} - {{ p.end_time.strftime('%H:%M') }}
+                                </td>
+                                <td class="py-3 px-3">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold 
+                                                 {% if p.period_type == 'BREAK' %}bg-amber-100 text-amber-800
+                                                 {% elif p.period_type == 'LUNCH' %}bg-rose-100 text-rose-800
+                                                 {% else %}bg-sky-100 text-sky-800{% endif %}">
+                                        {{ p.period_type }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-3 text-right">
+                                    <button onclick="editPeriod('{{ p.id }}', '{{ p.name }}', '{{ p.period_order }}', '{{ p.start_time.strftime('%H:%M') }}', '{{ p.end_time.strftime('%H:%M') }}', '{{ p.period_type }}')"
+                                            class="px-2.5 py-1 text-xs font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-lg border border-brand-200 transition-colors">
+                                        Edit
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Column 3: Add / Edit Period Form -->
+        <div class="space-y-6">
+            <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-4">
+                <h3 id="formHeading" class="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-3 uppercase tracking-wider">
+                    Add New Period Slot
+                </h3>
+
+                <form action="{{ url_for('timetables.save_period') }}" method="POST" class="space-y-4">
+                    <input type="hidden" id="period_id_field" name="period_id">
+
+                    <div>
+                        <label for="name_field" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Period Name <span class="text-rose-500">*</span></label>
+                        <input type="text" id="name_field" name="name" required placeholder="e.g. Period 1, Short Break"
+                               class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label for="order_field" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Order Index <span class="text-rose-500">*</span></label>
+                        <input type="number" id="order_field" name="period_order" min="1" required placeholder="1"
+                               class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label for="st_field" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Start Time <span class="text-rose-500">*</span></label>
+                            <input type="time" id="st_field" name="start_time" required
+                                   class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        </div>
+
+                        <div>
+                            <label for="et_field" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">End Time <span class="text-rose-500">*</span></label>
+                            <input type="time" id="et_field" name="end_time" required
+                                   class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="ptype_field" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Period Type</label>
+                        <select id="ptype_field" name="period_type"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            {% for pt in entry_types %}
+                            <option value="{{ pt }}">{{ pt }}</option>
+                            {% endfor %}
+                            <option value="LUNCH">LUNCH</option>
+                            <option value="ACTIVITY">ACTIVITY</option>
+                        </select>
+                    </div>
+
+                    <div class="pt-2 flex items-center justify-end space-x-2">
+                        <button type="button" onclick="resetForm()" class="px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50">
+                            Reset
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all">
+                            Save Period
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+function editPeriod(id, name, order, st, et, ptype) {
+    document.getElementById('formHeading').innerText = 'Edit Period Slot';
+    document.getElementById('period_id_field').value = id;
+    document.getElementById('name_field').value = name;
+    document.getElementById('order_field').value = order;
+    document.getElementById('st_field').value = st;
+    document.getElementById('et_field').value = et;
+    document.getElementById('ptype_field').value = ptype;
+}
+
+function resetForm() {
+    document.getElementById('formHeading').innerText = 'Add New Period Slot';
+    document.getElementById('period_id_field').value = '';
+    document.getElementById('name_field').value = '';
+    document.getElementById('order_field').value = '';
+    document.getElementById('st_field').value = '';
+    document.getElementById('et_field').value = '';
+    document.getElementById('ptype_field').value = 'CLASS';
+}
+</script>
+{% endblock %}

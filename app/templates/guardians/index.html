@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Parent & Guardian Directory — StratLearn{% endblock %}
+{% block header_title %}Parents & Guardians Management{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Header & Action Bar -->
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-bold bg-pink-50 text-pink-800 border border-pink-200 mb-2">
+                <span>Module 07 — Parent & Guardian Directory</span>
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Parents & Guardians</h2>
+            <p class="text-xs text-slate-500 mt-1">Manage parent profiles, multi-student family relationships, emergency contacts, and communication permissions</p>
+        </div>
+
+        <a href="{{ url_for('guardians.create') }}" 
+           class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center space-x-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            <span>Add Parent / Guardian</span>
+        </a>
+    </div>
+
+    <!-- Search & Filters -->
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs">
+        <form action="{{ url_for('guardians.index') }}" method="GET" class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+            <div class="sm:col-span-8 relative">
+                <input type="text" name="q" value="{{ search_q }}" placeholder="Search by guardian name, code, email, phone, or child student name..."
+                       class="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+
+            <div class="sm:col-span-2">
+                <select name="status" onchange="this.form.submit()"
+                        class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <option value="">All Statuses</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active Only</option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive Only</option>
+                </select>
+            </div>
+
+            <div class="sm:col-span-2 flex items-center space-x-2">
+                <button type="submit" class="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all">
+                    Filter
+                </button>
+                {% if search_q or status_filter %}
+                <a href="{{ url_for('guardians.index') }}" class="px-2 py-2 text-xs font-bold text-slate-500 hover:text-slate-900">Clear</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Guardian Cards Grid -->
+    {% if guardians_list %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for gdn in guardians_list %}
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between space-y-4">
+            
+            <div class="space-y-3">
+                <!-- Guardian Identity Header -->
+                <div class="flex items-start justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-11 h-11 rounded-xl bg-pink-100 text-pink-700 font-bold text-sm flex items-center justify-center border border-pink-200 shadow-xs">
+                            {{ gdn.first_name[0] }}{{ gdn.last_name[0] if gdn.last_name else '' }}
+                        </div>
+                        <div>
+                            <h3 class="text-base font-extrabold text-slate-900 tracking-tight leading-tight">{{ gdn.full_name }}</h3>
+                            <span class="text-[11px] font-extrabold font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 inline-block mt-0.5">
+                                {{ gdn.registration_number }}
+                            </span>
+                        </div>
+                    </div>
+
+                    {% if gdn.is_active %}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Active</span>
+                    {% else %}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">Inactive</span>
+                    {% endif %}
+                </div>
+
+                <!-- Occupation & Contact -->
+                <div class="text-xs space-y-1 pt-1">
+                    {% if gdn.occupation %}
+                    <div class="flex items-center justify-between text-slate-600">
+                        <span class="text-slate-400">Occupation:</span>
+                        <span class="font-bold text-slate-800">{{ gdn.occupation }}</span>
+                    </div>
+                    {% endif %}
+                    {% if gdn.mobile_phone_number %}
+                    <div class="flex items-center justify-between text-slate-600">
+                        <span class="text-slate-400">Mobile Phone:</span>
+                        <span class="font-bold text-slate-800">{{ gdn.mobile_phone_number }}</span>
+                    </div>
+                    {% endif %}
+                    {% if gdn.email_address %}
+                    <div class="flex items-center justify-between text-slate-600 truncate">
+                        <span class="text-slate-400">Email:</span>
+                        <span class="font-medium text-slate-700 truncate max-w-[170px]">{{ gdn.email_address }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Children / Sibling Roster Cards -->
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Associated Children</span>
+                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-pink-100 text-pink-800">{{ gdn.student_links | length }} Students</span>
+                    </div>
+
+                    {% if gdn.student_links %}
+                    <div class="space-y-1.5">
+                        {% for link in gdn.student_links %}
+                        {% set child_en = link.student.get_current_enrollment() %}
+                        <div class="flex items-center justify-between bg-white px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs">
+                            <div class="truncate pr-2">
+                                <a href="{{ url_for('students.profile', student_id=link.student.id) }}" class="font-bold text-slate-900 hover:text-brand-600 truncate block">
+                                    {{ link.student.full_name }}
+                                </a>
+                                <span class="text-[10px] text-slate-500">
+                                    {{ link.relationship }} {% if link.is_primary %}<span class="text-emerald-600 font-bold">(Primary)</span>{% endif %}
+                                </span>
+                            </div>
+
+                            {% if child_en %}
+                            <span class="px-2 py-0.5 bg-slate-100 border border-slate-200 rounded text-[10px] font-bold text-slate-700 flex-shrink-0">
+                                {{ child_en.school_class.display_name }}{% if child_en.section %} {{ child_en.section.name }}{% endif %}
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-[11px] text-slate-400 italic">No student links established yet</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+                <a href="{{ url_for('guardians.profile', guardian_id=gdn.id) }}" 
+                   class="text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-colors">
+                    View Profile & Children
+                </a>
+
+                <a href="{{ url_for('guardians.edit', guardian_id=gdn.id) }}" 
+                   class="text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 transition-colors">
+                    Edit
+                </a>
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.pages > 1 %}
+    <div class="flex items-center justify-between bg-white px-4 py-3 border border-slate-200/90 rounded-2xl shadow-xs">
+        <div class="text-xs text-slate-500 font-medium">
+            Showing page {{ pagination.page }} of {{ pagination.pages }} ({{ pagination.total }} total guardians)
+        </div>
+        <div class="flex items-center space-x-2">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('guardians.index', page=pagination.prev_num, q=search_q, status=status_filter) }}" 
+               class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50">
+                Previous
+            </a>
+            {% endif %}
+            {% if pagination.has_next %}
+            <a href="{{ url_for('guardians.index', page=pagination.next_num, q=search_q, status=status_filter) }}" 
+               class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50">
+                Next
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-12 text-center max-w-md mx-auto space-y-3 shadow-xs">
+        <div class="w-12 h-12 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center mx-auto text-xl font-bold">
+            👨‍👩‍👧‍👦
+        </div>
+        <h3 class="text-base font-bold text-slate-900">No Guardians Found</h3>
+        <p class="text-xs text-slate-500">Register parent/guardian profiles and link them to students to establish school family rosters.</p>
+        <a href="{{ url_for('guardians.create') }}" 
+           class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all inline-flex items-center space-x-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            <span>Add First Guardian</span>
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Homework Management — StratLearn{% endblock %}
+{% block header_title %}Class Homework & Assignments{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Top Action & Filter Bar -->
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        
+        <!-- Filter Form -->
+        <form method="GET" action="{{ url_for('homework.manage') }}" class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            <div>
+                <label for="class_id" class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Filter Class</label>
+                <select name="class_id" onchange="this.form.submit()"
+                        class="px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <option value="">All Classes</option>
+                    {% for c in classes %}
+                    <option value="{{ c.id }}" {% if selected_class_id and selected_class_id|int == c.id|int %}selected{% endif %}>{{ c.display_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {% if sections %}
+            <div>
+                <label for="section_id" class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Filter Section</label>
+                <select name="section_id" onchange="this.form.submit()"
+                        class="px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <option value="">All Sections</option>
+                    {% for sec in sections %}
+                    <option value="{{ sec.id }}" {% if selected_section_id and selected_section_id|int == sec.id|int %}selected{% endif %}>{{ sec.display_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <div>
+                <label for="status" class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Status</label>
+                <select name="status" onchange="this.form.submit()"
+                        class="px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <option value="">All Statuses</option>
+                    <option value="PUBLISHED" {% if selected_status == 'PUBLISHED' %}selected{% endif %}>Published</option>
+                    <option value="DRAFT" {% if selected_status == 'DRAFT' %}selected{% endif %}>Draft</option>
+                    <option value="ARCHIVED" {% if selected_status == 'ARCHIVED' %}selected{% endif %}>Archived</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="q" class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Search</label>
+                <div class="relative">
+                    <input type="text" name="q" value="{{ search_q }}" placeholder="Title or keyword..."
+                           class="pl-8 pr-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none min-w-[160px]">
+                    <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+            </div>
+        </form>
+
+        <!-- Create Button -->
+        <a href="{{ url_for('homework.create') }}"
+           class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center space-x-1.5 shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            <span>Create Homework</span>
+        </a>
+    </div>
+
+    <!-- Homework Roster List -->
+    {% if hw_data %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {% for item in hw_data %}
+        {% set hw = item.homework %}
+        {% set summary = item.summary %}
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs hover:border-brand-300 transition-all flex flex-col justify-between space-y-4">
+            
+            <div class="space-y-3">
+                <!-- Top Badges -->
+                <div class="flex items-center justify-between text-xs">
+                    <div class="flex items-center space-x-1.5">
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold 
+                                     {% if hw.status == 'PUBLISHED' %}bg-emerald-100 text-emerald-800 border border-emerald-300
+                                     {% elif hw.status == 'DRAFT' %}bg-amber-100 text-amber-800 border border-amber-300
+                                     {% else %}bg-slate-100 text-slate-700 border border-slate-300{% endif %}">
+                            ● {{ hw.status }}
+                        </span>
+
+                        {% if hw.evaluation_type == 'AI' %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-900 border border-purple-300 flex items-center space-x-1">
+                            <span>🤖 AI Checked</span>
+                        </span>
+                        {% else %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-200">
+                            👨‍🏫 Manual
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-brand-50 text-brand-700 border border-brand-200">
+                        {{ hw.subject.code if hw.subject and hw.subject.code else hw.subject.name }}
+                    </span>
+                </div>
+
+                <!-- Homework Title & Info -->
+                <div>
+                    <h3 class="font-extrabold text-slate-900 text-base leading-snug line-clamp-2">
+                        {{ hw.title }}
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-1 font-medium">
+                        Target: <strong class="text-slate-800">{{ hw.school_class.display_name }}</strong>
+                        {% if hw.section %} — <strong class="text-slate-800">{{ hw.section.display_name }}</strong>{% endif %}
+                    </p>
+                </div>
+
+                <!-- Assigned & Due Dates -->
+                <div class="grid grid-cols-2 gap-2 text-[11px] bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                    <div>
+                        <span class="text-slate-400 font-medium block">Assigned:</span>
+                        <strong class="text-slate-700">{{ hw.assigned_date.strftime('%b %d, %Y') }}</strong>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 font-medium block">Due Date:</span>
+                        <strong class="{% if hw.due_date < active_session.start_date %}text-rose-600{% else %}text-slate-900{% endif %}">
+                            {{ hw.due_date.strftime('%b %d, %Y') }}
+                        </strong>
+                    </div>
+                </div>
+
+                <!-- Submission Progress Bar -->
+                <div class="space-y-1">
+                    <div class="flex items-center justify-between text-[11px] font-bold text-slate-600">
+                        <span>Submissions Roster</span>
+                        <span>{{ summary.submitted_count }} / {{ summary.total_enrolled }}</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden flex">
+                        {% set submitted_pct = (summary.submitted_count / summary.total_enrolled * 100) if summary.total_enrolled > 0 else 0 %}
+                        <div class="bg-brand-600 h-2 rounded-full" style="width: {{ submitted_pct }}%"></div>
+                    </div>
+                    <div class="flex items-center justify-between text-[10px] text-slate-400 font-medium pt-0.5">
+                        <span>Reviewed: {{ summary.reviewed_count }}</span>
+                        <span>Missing: {{ summary.missing_count }}</span>
+                    </div>
+                </div>
+
+                {% if hw.attachments %}
+                <div class="flex items-center space-x-1.5 text-[11px] text-slate-500 font-medium pt-1">
+                    <svg class="w-3.5 h-3.5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                    <span>{{ hw.attachments | length }} Attachment(s)</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Footer Action Controls -->
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                <a href="{{ url_for('homework.submissions', homework_id=hw.id) }}"
+                   class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl transition-all flex items-center space-x-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Submissions</span>
+                </a>
+
+                <div class="flex items-center space-x-1">
+                    {% if hw.status == 'DRAFT' %}
+                    <form action="{{ url_for('homework.publish', homework_id=hw.id) }}" method="POST" class="inline">
+                        <button type="submit" class="px-2.5 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg">
+                            Publish
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    <a href="{{ url_for('homework.edit', homework_id=hw.id) }}"
+                       class="px-2.5 py-1 text-xs font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-lg">
+                        Edit
+                    </a>
+
+                    <form action="{{ url_for('homework.delete', homework_id=hw.id) }}" method="POST" class="inline"
+                          onsubmit="return confirm('Delete or archive this homework assignment?')">
+                        <button type="submit" class="px-2 py-1 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-lg">
+                            Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-12 text-center space-y-4">
+        <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto text-slate-400">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+        </div>
+        <div>
+            <h3 class="text-base font-extrabold text-slate-900">No Homework Assignments Found</h3>
+            <p class="text-xs text-slate-500 mt-1">Get started by creating a new homework assignment for your class.</p>
+        </div>
+        <a href="{{ url_for('homework.create') }}" class="inline-flex items-center space-x-1.5 px-4 py-2 bg-brand-600 text-white font-extrabold text-xs rounded-xl shadow-xs">
+            <span>+ Create First Assignment</span>
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

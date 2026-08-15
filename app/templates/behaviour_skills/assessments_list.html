@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Skill Assessments - StratLearn{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header & Action Bar -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span class="text-xs font-semibold text-brand-600">StratLearn</span>
+                <span class="text-slate-300">/</span>
+                <span class="text-xs font-semibold text-slate-500">Behaviour & Skills</span>
+            </div>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight mt-1">Student Skill Assessments</h1>
+            <p class="text-xs font-medium text-slate-500">Track student progress across communication, teamwork, problem solving, and leadership skills.</p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <a href="{{ url_for('behaviour_skills.bulk_assessments') }}"
+               class="px-4 py-2.5 bg-gradient-to-r from-purple-700 to-purple-600 hover:from-purple-800 hover:to-purple-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center space-x-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                <span>⚡ Class Bulk Skill Assessment</span>
+            </a>
+
+            <a href="{{ url_for('behaviour_skills.create_assessment') }}"
+               class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center space-x-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                <span>+ Single Rating</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+        <form method="GET" action="{{ url_for('behaviour_skills.assessments_index') }}" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            
+            <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Class</label>
+                <select name="class_id" onchange="this.form.submit()" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <option value="">All Classes</option>
+                    {% for c in classes %}
+                    <option value="{{ c.id }}" {% if selected_class_id == c.id %}selected{% endif %}>{{ c.display_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Skill Criteria</label>
+                <select name="skill_id" onchange="this.form.submit()" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <option value="">All Skills</option>
+                    {% for s in skills %}
+                    <option value="{{ s.id }}" {% if selected_skill_id == s.id %}selected{% endif %}>{{ s.name }} ({{ s.group_name }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex items-end">
+                <button type="submit" class="w-full py-2 bg-slate-900 text-white font-bold text-xs rounded-xl hover:bg-slate-800">Apply Filters</button>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- Assessment Records Table -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="text-sm font-extrabold text-slate-900">Recorded Skill Ratings ({{ assessments|length }})</h2>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-700 font-extrabold uppercase tracking-wider text-[10px] border-b border-slate-200">
+                    <tr>
+                        <th class="p-4">Student</th>
+                        <th class="p-4">Class</th>
+                        <th class="p-4">Skill</th>
+                        <th class="p-4 text-center">Rating (1-5)</th>
+                        <th class="p-4">Observation Notes</th>
+                        <th class="p-4">Assessed By</th>
+                        <th class="p-4 text-right">Date</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for ass in assessments %}
+                    <tr class="hover:bg-slate-50/60 transition-all">
+                        <td class="p-4 font-extrabold text-slate-900">
+                            <a href="{{ url_for('behaviour_skills.student_summary_view', student_id=ass.student_id) }}" class="text-brand-600 hover:underline">
+                                {{ ass.student.full_name }}
+                            </a>
+                            <span class="block text-[10px] font-medium text-slate-400">ID: #{{ ass.student.registration_number or ass.student_id }}</span>
+                        </td>
+                        <td class="p-4 font-semibold text-slate-700">
+                            {{ ass.school_class.display_name }}
+                        </td>
+                        <td class="p-4 font-bold text-slate-900">
+                            {{ ass.skill.name }}
+                            <span class="block text-[10px] text-purple-600 font-medium">{{ ass.skill.group_name }}</span>
+                        </td>
+                        <td class="p-4 text-center">
+                            <span class="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-black
+                                {% if ass.rating >= 4 %}bg-emerald-100 text-emerald-800 border border-emerald-300
+                                {% elif ass.rating == 3 %}bg-blue-100 text-blue-800 border border-blue-300
+                                {% else %}bg-amber-100 text-amber-800 border border-amber-300{% endif %}">
+                                ⭐ {{ ass.rating }} / 5
+                            </span>
+                        </td>
+                        <td class="p-4 text-slate-600 max-w-xs truncate">
+                            {{ ass.observation or '—' }}
+                        </td>
+                        <td class="p-4 font-medium text-slate-700">
+                            {{ ass.assessor.full_name }}
+                        </td>
+                        <td class="p-4 text-right font-medium text-slate-500">
+                            {{ ass.assessment_date.strftime('%b %d, %Y') }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="p-12 text-center text-slate-500 font-bold">
+                            No skill assessments found for the selected filters.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

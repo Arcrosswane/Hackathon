@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Student Development Summary - {{ summary.student.full_name }} - StratLearn{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Card -->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center space-x-4">
+            <div class="w-14 h-14 rounded-2xl bg-brand-50 border border-brand-200 flex items-center justify-center font-black text-brand-700 text-xl">
+                {{ summary.student.first_name[0] if summary.student.first_name else 'S' }}
+            </div>
+            <div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs font-semibold text-brand-600">Student Profile</span>
+                    <span class="text-slate-300">/</span>
+                    <span class="text-xs font-semibold text-slate-500">Non-Academic Development</span>
+                </div>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight mt-0.5">{{ summary.student.full_name }}</h1>
+                <p class="text-xs font-medium text-slate-500">
+                    Registration No: <strong class="text-slate-700">#{{ summary.student.registration_number or summary.student.id }}</strong>
+                    {% if summary.enrollment %}
+                    | Class: <strong class="text-slate-700">{{ summary.enrollment.school_class.display_name }}{% if summary.enrollment.section %} - {{ summary.enrollment.section.display_name }}{% endif %}</strong>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        {% if view_mode == 'staff' %}
+        <div class="flex items-center space-x-2">
+            <a href="{{ url_for('behaviour_skills.create_behaviour') }}" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs rounded-xl transition-all">
+                + Add Observation
+            </a>
+            <a href="{{ url_for('behaviour_skills.create_assessment') }}" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs rounded-xl transition-all">
+                + Rate Skill
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Overview Statistics Badges -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-xl font-black">
+                🌟
+            </div>
+            <div>
+                <span class="text-[10px] text-slate-400 font-bold uppercase block">Positive Observations</span>
+                <span class="text-2xl font-black text-slate-900">{{ summary.behaviour_summary.positive_count }}</span>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="p-3 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl text-xl font-black">
+                🎯
+            </div>
+            <div>
+                <span class="text-[10px] text-slate-400 font-bold uppercase block">Improvement Areas</span>
+                <span class="text-2xl font-black text-slate-900">{{ summary.behaviour_summary.improvement_count }}</span>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="p-3 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl text-xl font-black">
+                📋
+            </div>
+            <div>
+                <span class="text-[10px] text-slate-400 font-bold uppercase block">Total Observations</span>
+                <span class="text-2xl font-black text-slate-900">{{ summary.behaviour_summary.total_count }}</span>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="p-3 bg-purple-50 border border-purple-200 text-purple-700 rounded-xl text-xl font-black">
+                ⭐
+            </div>
+            <div>
+                <span class="text-[10px] text-slate-400 font-bold uppercase block">Overall Skill Rating Avg</span>
+                <span class="text-2xl font-black text-slate-900">
+                    {% if summary.skills_summary.overall_average %}
+                    {{ summary.skills_summary.overall_average }} <span class="text-xs text-slate-400 font-bold">/ 5</span>
+                    {% else %}
+                    —
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Skills Competency Ratings Matrix -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="text-base font-extrabold text-slate-900">Core Skill Competency Ratings</h2>
+            <span class="text-xs font-medium text-slate-400">Assessed by School Staff</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-5">
+            {% for item in summary.skills_summary.skills_data %}
+            <div class="p-4 rounded-xl border border-slate-200/80 bg-slate-50/50 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-purple-100 text-purple-800 rounded-md">
+                        {{ item.skill.group_name }}
+                    </span>
+                    {% if item.latest_assessment %}
+                    <span class="text-xs font-black text-slate-900 bg-white px-2 py-1 rounded-lg border border-slate-200 shadow-2xs">
+                        ⭐ {{ item.latest_assessment.rating }} / 5
+                    </span>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <h3 class="text-sm font-extrabold text-slate-900">{{ item.skill.name }}</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">{{ item.skill.description or 'No criteria notes.' }}</p>
+                </div>
+
+                {% if item.latest_assessment %}
+                <div class="pt-2 border-t border-slate-200/60 space-y-1">
+                    <div class="flex items-center justify-between text-[11px] font-semibold text-slate-700">
+                        <span>Latest: {{ item.rating_label }}</span>
+                        <span class="text-[10px] text-slate-400">{{ item.latest_assessment.assessment_date.strftime('%b %d, %Y') }}</span>
+                    </div>
+                    {% if item.latest_assessment.observation %}
+                    <p class="text-[11px] text-slate-600 italic">"{{ item.latest_assessment.observation }}"</p>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="pt-2 border-t border-slate-200/60 text-center">
+                    <span class="text-xs font-bold text-slate-400">Not Assessed Yet</span>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Behaviour Observations Timeline -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="text-base font-extrabold text-slate-900">Recorded Observations Timeline</h2>
+            <span class="text-xs font-medium text-slate-400">Chronological Development History</span>
+        </div>
+
+        <div class="divide-y divide-slate-100 p-2">
+            {% for rec in summary.behaviour_summary.all_records %}
+            <div class="p-4 hover:bg-slate-50/60 transition-all flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div class="space-y-1 flex-1">
+                    <div class="flex items-center space-x-2">
+                        {% if rec.type == 'POSITIVE' %}
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            🌟 Positive
+                        </span>
+                        {% elif rec.type == 'IMPROVEMENT' %}
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
+                            🎯 Improvement Area
+                        </span>
+                        {% else %}
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200">
+                            📋 General Observation
+                        </span>
+                        {% endif %}
+
+                        <span class="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700">
+                            {{ rec.category.name }}
+                        </span>
+                    </div>
+
+                    <h3 class="text-sm font-extrabold text-slate-900">{{ rec.title }}</h3>
+                    <p class="text-xs text-slate-600">{{ rec.description or 'No details provided.' }}</p>
+
+                    <div class="flex items-center space-x-4 text-[11px] text-slate-400 font-medium pt-1">
+                        <span>👨‍🏫 {{ rec.assessor.full_name }}</span>
+                        <span>📅 {{ rec.date.strftime('%b %d, %Y') }}</span>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="p-12 text-center text-slate-500 font-bold">
+                No published behaviour observations recorded for this student yet.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

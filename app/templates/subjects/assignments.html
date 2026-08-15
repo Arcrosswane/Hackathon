@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Class-Subject Assignments — StratLearn{% endblock %}
+{% block header_title %}Class-Subject Assignments Matrix{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Header Banner -->
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200 mb-2">
+                <span>Module 04 — Curriculum Assignment</span>
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Class-Subject Assignments</h2>
+            <p class="text-xs text-slate-500 mt-1">Determine which subjects are taught to each academic class for the selected session</p>
+        </div>
+
+        <a href="{{ url_for('subjects.index') }}" 
+           class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center space-x-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"></path></svg>
+            <span>Back to Subjects Catalog</span>
+        </a>
+    </div>
+
+    <!-- Academic Session & Class Selector Bar -->
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs space-y-4">
+        <form action="{{ url_for('subjects.assignments') }}" method="GET" class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-end">
+            <!-- Academic Session Dropdown -->
+            <div class="sm:col-span-5">
+                <label for="session_id" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                    Academic Session
+                </label>
+                <select id="session_id" name="session_id" onchange="this.form.submit()"
+                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    {% for sess in sessions_list %}
+                    <option value="{{ sess.id }}" {% if selected_session_id == sess.id %}selected{% endif %}>
+                        Academic Session {{ sess.name }} {% if sess.is_active %}(Active Session){% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Target Class Dropdown -->
+            <div class="sm:col-span-5">
+                <label for="class_id" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                    Target Class
+                </label>
+                <select id="class_id" name="class_id" onchange="this.form.submit()"
+                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    {% if classes_list %}
+                        {% for cls in classes_list %}
+                        <option value="{{ cls.id }}" {% if selected_class_id == cls.id %}selected{% endif %}>
+                            {{ cls.display_name }} ({{ cls.sections | length }} Sections)
+                        </option>
+                        {% endfor %}
+                    {% else %}
+                        <option value="">No classes in this session</option>
+                    {% endif %}
+                </select>
+            </div>
+
+            <div class="sm:col-span-2">
+                <button type="submit" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all">
+                    Select Class
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Main Assignment Workspace -->
+    {% if selected_class %}
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div>
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-slate-900 text-white font-bold text-sm flex items-center justify-center shadow-xs">
+                        {{ selected_class.name }}
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-extrabold text-slate-900 tracking-tight">{{ selected_class.display_name }}</h3>
+                        <p class="text-xs text-slate-500">
+                            Session: <span class="font-semibold text-slate-800">{{ selected_class.academic_session.name }}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-purple-50 border border-purple-200 px-3.5 py-2 rounded-xl text-xs text-purple-800 flex items-center space-x-2">
+                <svg class="w-4 h-4 text-purple-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>All <strong>{{ selected_class.sections | length }} sections</strong> ({{ selected_class.sections | map(attribute='display_name') | join(', ') }}) automatically inherit these subjects.</span>
+            </div>
+        </div>
+
+        <form action="{{ url_for('subjects.assignments') }}" method="POST" class="space-y-6">
+            <input type="hidden" name="class_id" value="{{ selected_class.id }}">
+
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+                        Subject Selection Matrix (Check to assign)
+                    </h4>
+                    <span class="text-xs font-bold text-brand-600">
+                        {{ assigned_subject_ids | length }} of {{ all_subjects | length }} Subjects Assigned
+                    </span>
+                </div>
+
+                {% if all_subjects %}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {% for sub in all_subjects %}
+                    {% set is_assigned = sub.id in assigned_subject_ids %}
+                    <label class="p-4 rounded-xl border transition-all cursor-pointer flex items-start space-x-3
+                                  {% if is_assigned %}bg-brand-50/40 border-brand-300 shadow-2xs{% else %}bg-slate-50 border-slate-200 hover:border-slate-300{% endif %}">
+                        <input type="checkbox" name="subject_ids" value="{{ sub.id }}" {% if is_assigned %}checked{% endif %}
+                               class="mt-1 w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500">
+                        <div class="flex-1 space-y-1">
+                            <div class="flex items-center justify-between">
+                                <span class="font-extrabold text-slate-900 text-sm">{{ sub.name }}</span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold font-mono bg-slate-900 text-white">
+                                    {{ sub.code or 'N/A' }}
+                                </span>
+                            </div>
+                            <div class="flex items-center space-x-2 text-xs text-slate-500">
+                                <span>Short: <strong>{{ sub.short_name or sub.name }}</strong></span>
+                                <span>•</span>
+                                <span class="capitalize font-semibold text-slate-700">{{ sub.subject_type.replace('_', ' ') }}</span>
+                            </div>
+                            {% if not sub.is_active %}
+                            <span class="inline-block text-[9px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
+                                Inactive Subject
+                            </span>
+                            {% endif %}
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-xs text-slate-500 italic">No subjects available in catalog. Create subjects first.</p>
+                {% endif %}
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                <a href="{{ url_for('subjects.assignments', session_id=selected_session_id, class_id=selected_class.id) }}"
+                   class="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold transition-all">
+                    Reset Selection
+                </a>
+                <button type="submit"
+                        class="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all">
+                    Save Subject Assignments for {{ selected_class.display_name }}
+                </button>
+            </div>
+        </form>
+
+    </div>
+    {% else %}
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-12 text-center max-w-md mx-auto space-y-3 shadow-xs">
+        <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center mx-auto text-xl font-bold">
+            🏫
+        </div>
+        <h3 class="text-base font-bold text-slate-900">No Classes Available</h3>
+        <p class="text-xs text-slate-500">Configure academic classes in Module 3 first before making subject assignments.</p>
+        <a href="{{ url_for('classes.index') }}" class="px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-xl transition-all inline-block">
+            Go to Classes Management
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

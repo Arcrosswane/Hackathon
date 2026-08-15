@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Students Directory — StratLearn{% endblock %}
+{% block header_title %}Students Directory & Enrollment{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Header & Action Bar -->
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 mb-2">
+                <span>Module 06 — Student Roster & Enrollment</span>
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Students Directory</h2>
+            <p class="text-xs text-slate-500 mt-1">Manage student admissions, academic placements, section rosters, and enrollment history</p>
+        </div>
+
+        <a href="{{ url_for('students.create') }}" 
+           class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center space-x-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+            <span>Admit New Student</span>
+        </a>
+    </div>
+
+    <!-- Search & Multi-Level Academic Filters -->
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs">
+        <form action="{{ url_for('students.index') }}" method="GET" class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+            <div class="sm:col-span-3 relative">
+                <input type="text" name="q" value="{{ search_q }}" placeholder="Search name, admission #, phone or guardian..."
+                       class="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+
+            <div class="sm:col-span-3">
+                <select name="session_id" onchange="this.form.submit()"
+                        class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <option value="">All Academic Sessions</option>
+                    {% for sess in sessions_list %}
+                    <option value="{{ sess.id }}" {% if selected_session_id == sess.id %}selected{% endif %}>
+                        Session {{ sess.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="sm:col-span-2">
+                <select name="class_id" onchange="this.form.submit()"
+                        class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <option value="">All Classes</option>
+                    {% for cls in classes_list %}
+                    <option value="{{ cls.id }}" {% if selected_class_id == cls.id %}selected{% endif %}>{{ cls.display_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="sm:col-span-2">
+                <select name="section_id" onchange="this.form.submit()"
+                        class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <option value="">All Sections</option>
+                    {% for sec in sections_list %}
+                    <option value="{{ sec.id }}" {% if selected_section_id == sec.id %}selected{% endif %}>{{ sec.display_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="sm:col-span-2 flex items-center space-x-2">
+                <button type="submit" class="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all">
+                    Filter
+                </button>
+                {% if search_q or selected_class_id or selected_section_id or status_filter %}
+                <a href="{{ url_for('students.index') }}" class="px-2 py-2 text-xs font-bold text-slate-500 hover:text-slate-900">Clear</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Student Cards Grid -->
+    {% if students_list %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for stu in students_list %}
+        {% set curr_en = stu.get_current_enrollment() %}
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between space-y-4">
+            
+            <div class="space-y-3">
+                <!-- Avatar & Admission # Header -->
+                <div class="flex items-start justify-between">
+                    <div class="flex items-center space-x-3">
+                        {% if stu.profile_photo %}
+                        <img src="{{ url_for('static', filename=stu.profile_photo) }}" alt="{{ stu.full_name }}" class="w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-xs">
+                        {% else %}
+                        <div class="w-12 h-12 rounded-xl bg-amber-500 text-white font-bold text-sm flex items-center justify-center shadow-xs">
+                            {{ stu.first_name[0] }}{{ stu.last_name[0] if stu.last_name else '' }}
+                        </div>
+                        {% endif %}
+
+                        <div>
+                            <h3 class="text-base font-extrabold text-slate-900 tracking-tight leading-tight">{{ stu.full_name }}</h3>
+                            <span class="text-[11px] font-extrabold font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 inline-block mt-0.5">
+                                Adm # {{ stu.registration_number }}
+                            </span>
+                        </div>
+                    </div>
+
+                    {% if stu.status == 'Active' %}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Active</span>
+                    {% else %}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">{{ stu.status }}</span>
+                    {% endif %}
+                </div>
+
+                <!-- Academic Placement Info -->
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1 text-xs">
+                    {% if curr_en %}
+                    <div class="flex items-center justify-between font-bold text-slate-900">
+                        <span>{{ curr_en.school_class.display_name }}</span>
+                        {% if curr_en.section %}
+                        <span class="px-2 py-0.5 bg-white border border-slate-200 rounded text-[11px]">{{ curr_en.section.display_name }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="flex items-center justify-between text-[11px] text-slate-500">
+                        <span>Roll Number: <strong class="text-slate-800">{{ curr_en.roll_number or 'N/A' }}</strong></span>
+                        <span>Session {{ curr_en.academic_session.name }}</span>
+                    </div>
+                    {% else %}
+                    <p class="text-[11px] text-slate-400 italic">No active placement assigned</p>
+                    {% endif %}
+                </div>
+
+                <!-- Guardian & Portal Credentials Info -->
+                <div class="pt-1 text-xs space-y-1.5">
+                    {% set linked_u = user_map.get(stu.id) %}
+                    {% if linked_u %}
+                    <div class="p-2 bg-emerald-50 border border-emerald-200 rounded-lg text-xs flex items-center justify-between">
+                        <span class="text-slate-500 font-medium">Portal Login:</span>
+                        <span class="font-extrabold text-emerald-800 font-mono">🔑 {{ linked_u.username }}</span>
+                    </div>
+                    {% else %}
+                    <div class="p-2 bg-amber-50/70 border border-amber-200 rounded-lg text-xs flex items-center justify-between">
+                        <span class="text-amber-800 font-medium text-[11px]">No Login Linked</span>
+                        <form action="{{ url_for('students.create_credentials', student_id=stu.id) }}" method="POST" class="inline">
+                            <button type="submit" class="px-2 py-0.5 bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-[10px] rounded-md transition-colors">
+                                + Create Login
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    {% if stu.guardian_name %}
+                    <div class="flex items-center justify-between text-slate-600 pt-0.5">
+                        <span class="text-slate-400">Guardian:</span>
+                        <span class="font-bold text-slate-800">{{ stu.guardian_name }} ({{ stu.guardian_relation or 'Parent' }})</span>
+                    </div>
+                    {% endif %}
+                    {% if stu.mobile_phone_number or stu.guardian_phone %}
+                    <div class="flex items-center justify-between text-slate-600">
+                        <span class="text-slate-400">Contact:</span>
+                        <span class="font-semibold text-slate-800">{{ stu.guardian_phone or stu.mobile_phone_number }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Card Actions -->
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+                <a href="{{ url_for('students.profile', student_id=stu.id) }}" 
+                   class="text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-colors">
+                    View Profile
+                </a>
+
+                <div class="flex items-center space-x-1">
+                    <a href="{{ url_for('students.transfer', student_id=stu.id) }}" 
+                       title="Transfer Section/Class"
+                       class="text-xs font-bold px-2.5 py-1.5 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 transition-colors">
+                        Transfer
+                    </a>
+
+                    <a href="{{ url_for('students.edit', student_id=stu.id) }}" 
+                       class="text-xs font-bold px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 transition-colors">
+                        Edit
+                    </a>
+                </div>
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.pages > 1 %}
+    <div class="flex items-center justify-between bg-white px-4 py-3 border border-slate-200/90 rounded-2xl shadow-xs">
+        <div class="text-xs text-slate-500 font-medium">
+            Showing page {{ pagination.page }} of {{ pagination.pages }} ({{ pagination.total }} total students)
+        </div>
+        <div class="flex items-center space-x-2">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('students.index', page=pagination.prev_num, q=search_q, session_id=selected_session_id, class_id=selected_class_id, section_id=selected_section_id, status=status_filter) }}" 
+               class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50">
+                Previous
+            </a>
+            {% endif %}
+            {% if pagination.has_next %}
+            <a href="{{ url_for('students.index', page=pagination.next_num, q=search_q, session_id=selected_session_id, class_id=selected_class_id, section_id=selected_section_id, status=status_filter) }}" 
+               class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50">
+                Next
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-12 text-center max-w-md mx-auto space-y-3 shadow-xs">
+        <div class="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mx-auto text-xl font-bold">
+            🎓
+        </div>
+        <h3 class="text-base font-bold text-slate-900">No Students Found</h3>
+        <p class="text-xs text-slate-500">Admit students into classes and sections to build your school enrollment roster.</p>
+        <a href="{{ url_for('students.create') }}" 
+           class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all inline-flex items-center space-x-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            <span>Admit First Student</span>
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}Parent Portal Dashboard — StratLearn{% endblock %}
+{% block header_title %}Parent Overview Dashboard{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Top Identity & Session Banner -->
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="flex items-center space-x-4">
+            <div class="w-14 h-14 rounded-2xl bg-pink-500 text-white font-extrabold text-xl flex items-center justify-center border border-pink-400 shadow-md">
+                {{ guardian.first_name[0] if guardian else 'P' }}{{ guardian.last_name[0] if guardian and guardian.last_name else '' }}
+            </div>
+            <div>
+                <div class="inline-flex items-center space-x-2 px-3 py-0.5 rounded-full text-[11px] font-extrabold bg-pink-50 text-pink-700 border border-pink-200 mb-1">
+                    <span>Parent Portal Active</span>
+                </div>
+                <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">
+                    Welcome, {{ guardian.full_name if guardian else current_username }}!
+                </h2>
+                <p class="text-xs text-slate-500 mt-0.5">
+                    🏫 {{ current_school.name if current_school else 'TPS School' }} | Active Session: <strong class="text-slate-800">{{ active_session.name if active_session else '2026-2027' }}</strong>
+                </p>
+            </div>
+        </div>
+
+        {% if guardian %}
+        <div class="flex flex-col items-start md:items-end">
+            <span class="text-xs font-mono font-extrabold px-3 py-1 bg-slate-900 text-white rounded-lg shadow-2xs">
+                Guardian Code: {{ guardian.registration_number }}
+            </span>
+            <span class="text-[11px] text-slate-500 mt-1 font-medium">{{ children_data | length }} Children Linked</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Left 2 Columns: Children / Sibling Roster Cards -->
+        <div class="lg:col-span-2 space-y-6">
+
+            <div class="flex items-center justify-between border-b border-slate-200/90 pb-3">
+                <h3 class="text-base font-extrabold text-slate-900 tracking-tight flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <span>My Children & Academic Placements</span>
+                </h3>
+                <span class="text-xs font-semibold text-slate-500">{{ children_data | length }} Total Children</span>
+            </div>
+
+            {% if children_data %}
+            <div class="space-y-6">
+                {% for item in children_data %}
+                {% set child = item.student %}
+                {% set en = item.current_enrollment %}
+                {% set link = item.link %}
+
+                <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-5 hover:border-slate-300 transition-all">
+                    
+                    <!-- Child Header Card -->
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                        <div class="flex items-center space-x-4">
+                            {% if child.profile_photo %}
+                            <img src="{{ url_for('static', filename=child.profile_photo) }}" alt="{{ child.full_name }}" class="w-14 h-14 rounded-2xl object-cover border border-slate-200 shadow-xs">
+                            {% else %}
+                            <div class="w-14 h-14 rounded-2xl bg-amber-500 text-white font-extrabold text-lg flex items-center justify-center shadow-xs">
+                                {{ child.first_name[0] }}{{ child.last_name[0] if child.last_name else '' }}
+                            </div>
+                            {% endif %}
+
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <h4 class="text-lg font-extrabold text-slate-900 tracking-tight">{{ child.full_name }}</h4>
+                                    <span class="px-2 py-0.5 rounded text-[11px] font-extrabold font-mono bg-slate-100 text-slate-800 border border-slate-200">
+                                        Adm # {{ child.registration_number }}
+                                    </span>
+                                </div>
+                                <div class="flex items-center space-x-2 mt-1">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-pink-100 text-pink-800">
+                                        {{ link.relationship }}
+                                    </span>
+                                    {% if link.is_primary %}
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                        Primary Contact
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Placement Badge -->
+                        {% if en %}
+                        <div class="p-3 bg-purple-50 border border-purple-200 rounded-xl text-right w-full sm:w-auto">
+                            <span class="text-xs font-extrabold text-purple-900 block">{{ en.school_class.display_name }}</span>
+                            <span class="text-[11px] font-bold text-purple-700">
+                                {{ en.section.display_name if en.section else 'All Sections' }} 
+                                {% if en.roll_number %}(Roll #{{ en.roll_number }}){% endif %}
+                            </span>
+                            <span class="text-[10px] text-purple-600 block mt-0.5">Session {{ en.academic_session.name }}</span>
+                        </div>
+                        {% else %}
+                        <span class="text-xs text-slate-400 italic">No Active Placement Assigned</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Curriculum Subjects Grid -->
+                    <div class="space-y-2">
+                        <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500 block">
+                            Enrolled Class Curriculum Subjects ({{ item.subjects | length }})
+                        </span>
+                        {% if item.subjects %}
+                        <div class="flex flex-wrap gap-2">
+                            {% for sub in item.subjects %}
+                            <span class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-50 border border-slate-200 text-slate-800 flex items-center space-x-2">
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-900 text-white">{{ sub.code or 'SUB' }}</span>
+                                <span>{{ sub.name }}</span>
+                            </span>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-xs text-slate-400 italic">No curriculum subjects assigned to class yet.</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Academic Modules Quick Status Bar -->
+                    <div class="pt-3 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+                        <div class="p-2 bg-slate-50 border border-slate-200 rounded-xl">
+                            <span class="text-[10px] font-bold text-slate-400 block uppercase">Attendance</span>
+                            <span class="font-extrabold text-slate-700">Records Ready</span>
+                        </div>
+                        <div class="p-2 bg-slate-50 border border-slate-200 rounded-xl">
+                            <span class="text-[10px] font-bold text-slate-400 block uppercase">Homework</span>
+                            <span class="font-extrabold text-slate-700">Tasks Ready</span>
+                        </div>
+                        <div class="p-2 bg-slate-50 border border-slate-200 rounded-xl">
+                            <span class="text-[10px] font-bold text-slate-400 block uppercase">Report Cards</span>
+                            <span class="font-extrabold text-slate-700">Grades Ready</span>
+                        </div>
+                        <div class="p-2 bg-slate-50 border border-slate-200 rounded-xl">
+                            <span class="text-[10px] font-bold text-slate-400 block uppercase">Fees</span>
+                            <span class="font-extrabold text-slate-700">Portal Active</span>
+                        </div>
+                    </div>
+
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="bg-white border border-slate-200/90 rounded-2xl p-12 text-center max-w-md mx-auto space-y-3 shadow-xs">
+                <div class="w-12 h-12 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center mx-auto text-xl font-bold">
+                    🎓
+                </div>
+                <h3 class="text-base font-bold text-slate-900">No Children Currently Linked</h3>
+                <p class="text-xs text-slate-500">Contact the school administration to link your registered children to your Parent Portal account.</p>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- Right Column: Parent Profile & Contact Details -->
+        <div class="space-y-6">
+
+            <!-- Parent Profile Identity Card -->
+            <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-4">
+                <h3 class="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-3 uppercase tracking-wider flex items-center space-x-2">
+                    <svg class="w-4 h-4 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    <span>Parent Profile Identity</span>
+                </h3>
+
+                {% if guardian %}
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <span class="text-slate-400 block font-medium">Guardian Name</span>
+                        <span class="font-bold text-slate-900 text-sm">{{ guardian.full_name }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block font-medium">Guardian Code</span>
+                        <span class="font-bold font-mono text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 inline-block">
+                            {{ guardian.registration_number }}
+                        </span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block font-medium">Occupation</span>
+                        <span class="font-bold text-slate-900">{{ guardian.occupation or 'Parent / Guardian' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block font-medium">Mobile Phone</span>
+                        <span class="font-bold text-slate-900">{{ guardian.mobile_phone_number or 'Not Provided' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block font-medium">Email Address</span>
+                        <span class="font-bold text-slate-900">{{ guardian.email_address or 'Not Provided' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block font-medium">Address</span>
+                        <span class="font-medium text-slate-800">
+                            {{ guardian.home_address or '' }}
+                            {% if guardian.city %}, {{ guardian.city }}{% endif %}
+                            {% if guardian.state %}, {{ guardian.state }}{% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-xs text-slate-400 italic">No parent profile linked to portal login account.</p>
+                {% endif %}
+            </div>
+
+            <!-- School Support & Notices Card -->
+            <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-3">
+                <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+                    School Helpdesk & Information
+                </h3>
+                <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 text-xs text-slate-700">
+                    <span class="font-bold text-slate-900 block">Need assistance?</span>
+                    <p class="text-slate-600 text-[11px] leading-relaxed">
+                        For any queries regarding student admissions, class section transfers, or fee updates, reach out to the school administrative desk.
+                    </p>
+                    <div class="pt-1 text-[11px] text-slate-500 font-mono">
+                        <div>Email: contact@tps.edu</div>
+                        <div>Phone: +91 98765 43210</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,619 @@
+{% extends "base.html" %}
+
+{% block title %}Class Timetables — StratLearn Admin{% endblock %}
+{% block header_title %}Weekly Timetable Management{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Top Action & Selection Bar -->
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        
+        <!-- Class & Section Selector Form -->
+        <form method="GET" action="{{ url_for('timetables.index') }}" class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            <div>
+                <label for="class_id_select" class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Select Class</label>
+                <select id="class_id_select" name="class_id" onchange="this.form.submit()"
+                        class="px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none min-w-[140px]">
+                    {% for c in classes %}
+                    <option value="{{ c.id }}" {% if selected_class and selected_class.id == c.id %}selected{% endif %}>
+                        {{ c.display_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {% if sections %}
+            <div>
+                <label for="section_id_select" class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Select Section</label>
+                <select id="section_id_select" name="section_id" onchange="this.form.submit()"
+                        class="px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none min-w-[140px]">
+                    <option value="">All Sections</option>
+                    {% for sec in sections %}
+                    <option value="{{ sec.id }}" {% if selected_section and selected_section.id == sec.id %}selected{% endif %}>
+                        {{ sec.display_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+        </form>
+
+        <!-- Right Action Controls -->
+        <div class="flex flex-wrap items-center gap-2">
+            {% if selected_class %}
+            <button onclick="openImportModal()" 
+                    class="px-3.5 py-2 text-xs font-bold rounded-xl border border-emerald-300 hover:bg-emerald-50 text-emerald-800 transition-colors flex items-center space-x-1.5">
+                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                <span>Import Excel / CSV</span>
+            </button>
+
+            <a href="{{ url_for('timetables.export_csv', class_id=selected_class.id, section_id=selected_section.id if selected_section else '') }}" 
+               class="px-3.5 py-2 text-xs font-bold rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 transition-colors flex items-center space-x-1.5">
+                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                <span>Export CSV</span>
+            </a>
+
+            <button onclick="openCopyDayModal()" 
+                    class="px-3.5 py-2 text-xs font-bold rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 transition-colors flex items-center space-x-1.5">
+                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                <span>Copy Day Schedule</span>
+            </button>
+            {% endif %}
+
+            <a href="{{ url_for('timetables.period_settings') }}" 
+               class="px-3.5 py-2 text-xs font-bold rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 transition-colors flex items-center space-x-1.5">
+                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>Period Time Slots</span>
+            </a>
+
+            {% if selected_class %}
+            <form action="{{ url_for('timetables.publish') }}" method="POST" class="inline"
+                  onsubmit="return confirm('Publish timetable for {{ selected_class.display_name }}? Conflict checks will be re-run.')">
+                <input type="hidden" name="class_id" value="{{ selected_class.id }}">
+                <input type="hidden" name="section_id" value="{{ selected_section.id if selected_section else '' }}">
+                <button type="submit" 
+                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center space-x-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Publish Schedule</span>
+                </button>
+            </form>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- Active Class Timetable Header Card -->
+    {% if selected_class %}
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-3">
+                <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">
+                    {{ selected_class.display_name }}
+                    {% if selected_section %} — {{ selected_section.display_name }}{% endif %}
+                </h2>
+                {% if is_published %}
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    ● PUBLISHED SCHEDULE
+                </span>
+                {% else %}
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-300">
+                    ● DRAFT TIMETABLE
+                </span>
+                {% endif %}
+            </div>
+            <p class="text-xs text-slate-500 mt-1">
+                Academic Session: <strong class="text-slate-800">{{ active_session.name }}</strong> | 
+                Total Scheduled Periods: <strong class="text-slate-800">{{ matrix | length }}</strong>
+            </p>
+        </div>
+
+        <button onclick="openEntryModal()" 
+                class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center space-x-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            <span>Add Schedule Entry</span>
+        </button>
+    </div>
+
+    <!-- Weekly Schedule Grid Matrix -->
+    <div class="bg-white border border-slate-200/90 rounded-2xl shadow-xs overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[900px]">
+                <thead>
+                    <tr class="bg-slate-900 text-white text-xs font-extrabold uppercase tracking-wider divide-x divide-slate-800">
+                        <th class="py-3.5 px-4 w-44">Period / Time</th>
+                        {% for d in days %}
+                        <th class="py-3.5 px-4 text-center">{{ d }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 text-xs">
+                    {% for p in periods %}
+                    <tr class="divide-x divide-slate-100 hover:bg-slate-50/50 transition-colors">
+                        
+                        <!-- Period Label Column -->
+                        <td class="p-3 font-bold text-slate-900 bg-slate-50/80 border-r border-slate-200">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-1.5">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-extrabold bg-slate-900 text-white">#{{ p.period_order }}</span>
+                                    <span class="font-extrabold text-slate-900">{{ p.name }}</span>
+                                </div>
+                                <a href="{{ url_for('timetables.period_settings') }}" title="Edit Period Slot"
+                                   class="text-slate-400 hover:text-brand-600 p-1 transition-colors">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                </a>
+                            </div>
+                            <span class="text-[10px] text-slate-500 font-mono block mt-1">
+                                {{ p.start_time.strftime('%H:%M') }} - {{ p.end_time.strftime('%H:%M') }}
+                            </span>
+                            <span class="inline-block text-[9px] font-bold px-1.5 py-0.2 rounded mt-1 
+                                         {% if p.period_type == 'BREAK' %}bg-amber-100 text-amber-800
+                                         {% elif p.period_type == 'LUNCH' %}bg-rose-100 text-rose-800
+                                         {% else %}bg-sky-100 text-sky-800{% endif %}">
+                                {{ p.period_type }}
+                            </span>
+                        </td>
+
+                        <!-- Days Columns -->
+                        {% for d in days %}
+                        {% set key = d ~ '_' ~ p.id %}
+                        {% set entry = matrix.get(key) %}
+                        
+                        <td class="p-2 text-center align-top relative group min-h-[90px]">
+                            {% if entry %}
+                                {% if entry.entry_type == 'CLASS' %}
+                                <div class="bg-white border border-brand-200 rounded-xl p-2.5 shadow-2xs space-y-1.5 hover:border-brand-400 transition-all text-left">
+                                    
+                                    <div class="flex items-center justify-between">
+                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-brand-50 text-brand-700 border border-brand-200">
+                                            {{ entry.subject.code if entry.subject and entry.subject.code else 'SUB' }}
+                                        </span>
+                                        {% if entry.room_number %}
+                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                            {{ entry.room_number }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+
+                                    <span class="font-extrabold text-slate-900 text-xs block leading-tight">
+                                        {{ entry.subject.name if entry.subject else 'Class Subject' }}
+                                    </span>
+
+                                    <div class="flex items-center space-x-1.5 text-[10px] text-slate-600 border-t border-slate-100 pt-1">
+                                        <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                        <span class="truncate font-semibold">{{ entry.teacher.full_name if entry.teacher else 'Teacher' }}</span>
+                                    </div>
+
+                                    <!-- Actions -->
+                                    <div class="flex items-center justify-end space-x-1 pt-1 border-t border-slate-100">
+                                        <button onclick="openDuplicateModal('{{ entry.id }}', '{{ entry.subject.name if entry.subject else '' }}', '{{ entry.teacher.full_name if entry.teacher else '' }}', '{{ entry.day_of_week }}', '{{ entry.period_id }}')"
+                                                class="px-1.5 py-0.5 text-[10px] font-bold text-amber-700 hover:bg-amber-50 rounded">
+                                            Copy
+                                        </button>
+                                        <button onclick="editEntry('{{ entry.id }}', '{{ entry.day_of_week }}', '{{ entry.period_id }}', '{{ entry.subject_id or '' }}', '{{ entry.employee_id or '' }}', '{{ entry.room_number or '' }}', '{{ entry.entry_type }}')"
+                                                class="px-1.5 py-0.5 text-[10px] font-bold text-brand-700 hover:bg-brand-50 rounded">
+                                            Edit
+                                        </button>
+                                        <form action="{{ url_for('timetables.delete_entry', entry_id=entry.id) }}" method="POST" class="inline"
+                                              onsubmit="return confirm('Delete schedule entry?')">
+                                            <input type="hidden" name="class_id" value="{{ selected_class.id }}">
+                                            <input type="hidden" name="section_id" value="{{ selected_section.id if selected_section else '' }}">
+                                            <button type="submit" class="px-1.5 py-0.5 text-[10px] font-bold text-rose-600 hover:bg-rose-50 rounded">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                </div>
+                                {% elif entry.entry_type in ['BREAK', 'LUNCH'] %}
+                                <div class="bg-amber-50/80 border border-amber-200 rounded-xl p-2.5 text-center space-y-1.5 hover:border-amber-300 transition-all">
+                                    <span class="font-extrabold text-amber-900 text-xs block">☕ {{ p.name }}</span>
+                                    <span class="text-[10px] text-amber-700 block">Non-Teaching Break</span>
+                                    
+                                    <!-- Actions for Break Entry -->
+                                    <div class="flex items-center justify-center space-x-1 pt-1 border-t border-amber-200/60">
+                                        <button onclick="editEntry('{{ entry.id }}', '{{ entry.day_of_week }}', '{{ entry.period_id }}', '', '', '', '{{ entry.entry_type }}')"
+                                                class="px-2 py-0.5 text-[10px] font-bold text-amber-800 hover:bg-amber-100 rounded">
+                                            Edit
+                                        </button>
+                                        <form action="{{ url_for('timetables.delete_entry', entry_id=entry.id) }}" method="POST" class="inline"
+                                              onsubmit="return confirm('Delete break entry?')">
+                                            <input type="hidden" name="class_id" value="{{ selected_class.id }}">
+                                            <input type="hidden" name="section_id" value="{{ selected_section.id if selected_section else '' }}">
+                                            <button type="submit" class="px-2 py-0.5 text-[10px] font-bold text-rose-600 hover:bg-rose-100 rounded">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-center space-y-1.5 hover:border-slate-300 transition-all">
+                                    <span class="font-bold text-slate-700 text-xs block">Free Period</span>
+                                    
+                                    <!-- Actions for Free Period Entry -->
+                                    <div class="flex items-center justify-center space-x-1 pt-1 border-t border-slate-200/60">
+                                        <button onclick="editEntry('{{ entry.id }}', '{{ entry.day_of_week }}', '{{ entry.period_id }}', '', '', '', '{{ entry.entry_type }}')"
+                                                class="px-2 py-0.5 text-[10px] font-bold text-brand-700 hover:bg-brand-50 rounded">
+                                            Edit
+                                        </button>
+                                        <form action="{{ url_for('timetables.delete_entry', entry_id=entry.id) }}" method="POST" class="inline"
+                                              onsubmit="return confirm('Delete free period entry?')">
+                                            <input type="hidden" name="class_id" value="{{ selected_class.id }}">
+                                            <input type="hidden" name="section_id" value="{{ selected_section.id if selected_section else '' }}">
+                                            <button type="submit" class="px-2 py-0.5 text-[10px] font-bold text-rose-600 hover:bg-rose-50 rounded">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% else %}
+                                <!-- Empty Slot Add Button -->
+                                <button onclick="quickAdd('{{ d }}', '{{ p.id }}')" 
+                                        class="w-full h-full min-h-[75px] rounded-xl border border-dashed border-slate-200 hover:border-brand-400 hover:bg-brand-50/30 transition-all flex flex-col items-center justify-center text-slate-400 hover:text-brand-600 p-2 group">
+                                    <span class="text-xs font-bold">+ Schedule</span>
+                                </button>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Modal: Add / Edit Timetable Entry -->
+<div id="entryModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl p-6 max-w-lg w-full space-y-5 shadow-2xl border border-slate-200">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 id="modalTitle" class="text-base font-extrabold text-slate-900">Add Timetable Entry</h3>
+            <button onclick="closeEntryModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">×</button>
+        </div>
+
+        <!-- AJAX Real-Time Conflict Warning Box -->
+        <div id="conflictAlertBox" class="hidden p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 font-medium space-y-1">
+            <span class="font-extrabold block">⚠ Conflict Detected:</span>
+            <ul id="conflictList" class="list-disc pl-4 space-y-0.5"></ul>
+        </div>
+
+        <form id="entryForm" action="{{ url_for('timetables.save_entry') }}" method="POST" class="space-y-4">
+            <input type="hidden" id="entry_id_input" name="entry_id">
+            <input type="hidden" name="class_id" value="{{ selected_class.id if selected_class else '' }}">
+            <input type="hidden" name="section_id" value="{{ selected_section.id if selected_section else '' }}">
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label for="day_of_week_input" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Day of Week <span class="text-rose-500">*</span></label>
+                    <select id="day_of_week_input" name="day_of_week" required onchange="triggerConflictCheck()"
+                            class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        {% for d in days %}
+                        <option value="{{ d }}">{{ d }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="period_id_input" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Period Time Slot <span class="text-rose-500">*</span></label>
+                    <select id="period_id_input" name="period_id" required onchange="triggerConflictCheck()"
+                            class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        {% for p in periods %}
+                        <option value="{{ p.id }}">{{ p.name }} ({{ p.start_time.strftime('%H:%M') }}-{{ p.end_time.strftime('%H:%M') }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label for="entry_type_input" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Entry Type</label>
+                <select id="entry_type_input" name="entry_type" onchange="toggleTeachingFields()"
+                        class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <option value="CLASS">Teaching Class Period</option>
+                    <option value="BREAK">Short Break / Lunch</option>
+                    <option value="FREE">Free Period</option>
+                </select>
+            </div>
+
+            <div id="teachingFields" class="space-y-4">
+                <div>
+                    <label for="subject_id_input" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Subject <span class="text-rose-500">*</span></label>
+                    <select id="subject_id_input" name="subject_id" onchange="triggerConflictCheck()"
+                            class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        <option value="">Select Subject</option>
+                        {% for sub in class_subjects %}
+                        <option value="{{ sub.id }}">{{ sub.name }} ({{ sub.code or 'SUB' }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="employee_id_input" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Teacher / Instructor <span class="text-rose-500">*</span></label>
+                    <select id="employee_id_input" name="employee_id" onchange="triggerConflictCheck()"
+                            class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        <option value="">Select Teacher</option>
+                        {% for t in teachers %}
+                        <option value="{{ t.id }}">{{ t.full_name }} ({{ t.designation or 'Teacher' }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="room_number_input" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Room / Location (Optional)</label>
+                    <input type="text" id="room_number_input" name="room_number" placeholder="e.g. Room 204, Lab 1" onblur="triggerConflictCheck()"
+                           class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                <button type="button" onclick="closeEntryModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50">
+                    Cancel
+                </button>
+                <button type="submit" id="saveSubmitBtn" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all">
+                    Save Timetable Entry
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Import Excel / CSV -->
+<div id="importModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl p-6 max-w-md w-full space-y-5 shadow-2xl border border-slate-200">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-base font-extrabold text-slate-900">Bulk Import Timetable (Excel / CSV)</h3>
+            <button onclick="closeImportModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">×</button>
+        </div>
+
+        <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 space-y-1.5">
+            <span class="font-extrabold block">📌 Supported File Formats: .xlsx, .csv</span>
+            <p class="text-emerald-700 text-[11px]">Upload your class schedule in bulk. Conflict checks are enforced automatically.</p>
+            <a href="{{ url_for('timetables.sample_template', class_id=selected_class.id if selected_class else '') }}" 
+               class="inline-block text-brand-700 hover:underline font-bold text-[11px]">
+                📥 Download Sample Excel/CSV Template
+            </a>
+        </div>
+
+        <form action="{{ url_for('timetables.import_excel') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <input type="hidden" name="class_id" value="{{ selected_class.id if selected_class else '' }}">
+            <input type="hidden" name="section_id" value="{{ selected_section.id if selected_section else '' }}">
+
+            <div>
+                <label for="file_input" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Select Excel / CSV File <span class="text-rose-500">*</span></label>
+                <input type="file" id="file_input" name="file" accept=".xlsx, .xls, .csv" required
+                       class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-extrabold file:bg-emerald-50 file:text-emerald-700">
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                <button type="button" onclick="closeImportModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50">
+                    Cancel
+                </button>
+                <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all">
+                    Upload & Import Timetable
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Duplicate Single Entry -->
+<div id="duplicateModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl p-6 max-w-md w-full space-y-5 shadow-2xl border border-slate-200">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-base font-extrabold text-slate-900">Duplicate Schedule Entry</h3>
+            <button onclick="closeDuplicateModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">×</button>
+        </div>
+
+        <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs space-y-1">
+            <span class="font-extrabold text-amber-900 block" id="dupSourceInfo">Subject / Teacher</span>
+            <p class="text-amber-700 text-[11px]">Select target day(s) to clone this exact schedule entry.</p>
+        </div>
+
+        <form id="duplicateForm" method="POST" action="" class="space-y-4">
+            <input type="hidden" name="class_id" value="{{ selected_class.id if selected_class else '' }}">
+            <input type="hidden" name="section_id" value="{{ selected_section.id if selected_section else '' }}">
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Select Target Day(s)</label>
+                <div class="grid grid-cols-2 gap-2 text-xs font-medium text-slate-700">
+                    {% for d in days %}
+                    <label class="flex items-center space-x-2 p-2 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-100">
+                        <input type="checkbox" name="target_days" value="{{ d }}" class="w-4 h-4 text-brand-600 rounded">
+                        <span>{{ d }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div>
+                <label for="target_period_id_input" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Target Period Slot</label>
+                <select id="target_period_id_input" name="target_period_id"
+                        class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    {% for p in periods %}
+                    <option value="{{ p.id }}">{{ p.name }} ({{ p.start_time.strftime('%H:%M') }}-{{ p.end_time.strftime('%H:%M') }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                <button type="button" onclick="closeDuplicateModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50">
+                    Cancel
+                </button>
+                <button type="submit" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all">
+                    Duplicate Entry
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Copy Entire Day Schedule -->
+<div id="copyDayModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl p-6 max-w-md w-full space-y-5 shadow-2xl border border-slate-200">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-base font-extrabold text-slate-900">Copy Entire Day Schedule</h3>
+            <button onclick="closeCopyDayModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">×</button>
+        </div>
+
+        <form action="{{ url_for('timetables.copy_day') }}" method="POST" class="space-y-4">
+            <input type="hidden" name="class_id" value="{{ selected_class.id if selected_class else '' }}">
+            <input type="hidden" name="section_id" value="{{ selected_section.id if selected_section else '' }}">
+
+            <div>
+                <label for="source_day_select" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Source Day <span class="text-rose-500">*</span></label>
+                <select id="source_day_select" name="source_day" required
+                        class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    {% for d in days %}
+                    <option value="{{ d }}">{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Target Day(s) to Copy To</label>
+                <div class="grid grid-cols-2 gap-2 text-xs font-medium text-slate-700">
+                    {% for d in days %}
+                    <label class="flex items-center space-x-2 p-2 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-100">
+                        <input type="checkbox" name="target_days" value="{{ d }}" class="w-4 h-4 text-brand-600 rounded">
+                        <span>{{ d }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                <button type="button" onclick="closeCopyDayModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50">
+                    Cancel
+                </button>
+                <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all">
+                    Copy Day Schedule
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+const activeSessionId = "{{ active_session.id if active_session else '' }}";
+const currentClassId = "{{ selected_class.id if selected_class else '' }}";
+const currentSectionId = "{{ selected_section.id if selected_section else '' }}";
+
+function openEntryModal() {
+    document.getElementById('modalTitle').innerText = 'Add Timetable Entry';
+    document.getElementById('entry_id_input').value = '';
+    document.getElementById('entryForm').reset();
+    toggleTeachingFields();
+    hideConflicts();
+    document.getElementById('entryModal').classList.remove('hidden');
+}
+
+function quickAdd(day, periodId) {
+    openEntryModal();
+    document.getElementById('day_of_week_input').value = day;
+    document.getElementById('period_id_input').value = periodId;
+    triggerConflictCheck();
+}
+
+function editEntry(id, day, periodId, subjectId, teacherId, room, entryType) {
+    openEntryModal();
+    document.getElementById('modalTitle').innerText = 'Edit Timetable Entry';
+    document.getElementById('entry_id_input').value = id;
+    document.getElementById('day_of_week_input').value = day;
+    document.getElementById('period_id_input').value = periodId;
+    document.getElementById('entry_type_input').value = entryType;
+    
+    toggleTeachingFields();
+    if (entryType === 'CLASS') {
+        document.getElementById('subject_id_input').value = subjectId;
+        document.getElementById('employee_id_input').value = teacherId;
+        document.getElementById('room_number_input').value = room;
+    }
+    triggerConflictCheck();
+}
+
+function closeEntryModal() {
+    document.getElementById('entryModal').classList.add('hidden');
+}
+
+function openImportModal() {
+    document.getElementById('importModal').classList.remove('hidden');
+}
+
+function closeImportModal() {
+    document.getElementById('importModal').classList.add('hidden');
+}
+
+function openDuplicateModal(entryId, subjectName, teacherName, currentDay, currentPeriodId) {
+    document.getElementById('dupSourceInfo').innerText = `${subjectName || 'Schedule Entry'} (${teacherName || 'Teacher'}) — Current: ${currentDay}`;
+    document.getElementById('duplicateForm').action = `/admin/academics/timetables/${entryId}/duplicate`;
+    document.getElementById('target_period_id_input').value = currentPeriodId;
+    document.getElementById('duplicateModal').classList.remove('hidden');
+}
+
+function closeDuplicateModal() {
+    document.getElementById('duplicateModal').classList.add('hidden');
+}
+
+function openCopyDayModal() {
+    document.getElementById('copyDayModal').classList.remove('hidden');
+}
+
+function closeCopyDayModal() {
+    document.getElementById('copyDayModal').classList.add('hidden');
+}
+
+function toggleTeachingFields() {
+    const type = document.getElementById('entry_type_input').value;
+    const fields = document.getElementById('teachingFields');
+    if (type === 'CLASS') {
+        fields.classList.remove('hidden');
+    } else {
+        fields.classList.add('hidden');
+    }
+    triggerConflictCheck();
+}
+
+function hideConflicts() {
+    document.getElementById('conflictAlertBox').classList.add('hidden');
+    document.getElementById('conflictList').innerHTML = '';
+}
+
+function triggerConflictCheck() {
+    const day = document.getElementById('day_of_week_input').value;
+    const periodId = document.getElementById('period_id_input').value;
+    const entryType = document.getElementById('entry_type_input').value;
+    const teacherId = document.getElementById('employee_id_input').value;
+    const room = document.getElementById('room_number_input').value;
+    const entryId = document.getElementById('entry_id_input').value;
+
+    if (!activeSessionId || !currentClassId || !day || !periodId) return;
+
+    fetch("{{ url_for('timetables.validate_conflict_api') }}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            session_id: activeSessionId,
+            class_id: currentClassId,
+            section_id: currentSectionId,
+            day_of_week: day,
+            period_id: periodId,
+            teacher_id: entryType === 'CLASS' ? teacherId : null,
+            room_number: room,
+            entry_id: entryId
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.has_conflict) {
+            document.getElementById('conflictAlertBox').classList.remove('hidden');
+            document.getElementById('conflictList').innerHTML = data.conflicts.map(c => `<li>${c}</li>`).join('');
+        } else {
+            hideConflicts();
+        }
+    })
+    .catch(e => console.error(e));
+}
+</script>
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Invoice #{{ invoice.invoice_number }} — StratLearn{% endblock %}
+{% block header_title %}Fee Invoice {{ invoice.invoice_number }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <a href="{{ url_for('fees.invoices_list') }}" class="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            </a>
+            <div>
+                <h2 class="text-xl font-bold text-slate-900 tracking-tight">Invoice #{{ invoice.invoice_number }}</h2>
+                <p class="text-xs font-medium text-slate-500">Issued on {{ invoice.issue_date.strftime('%B %d, %Y') }}</p>
+            </div>
+        </div>
+
+        {% if invoice.status != 'PAID' and invoice.status != 'CANCELLED' and current_user_role in ('Admin', 'admin') %}
+        <a href="{{ url_for('fees.record_payment_route', invoice_id=invoice.id) }}" 
+           class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md">
+            Record Payment
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Main Invoice Card -->
+    <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
+        <!-- Header Info -->
+        <div class="flex flex-col sm:flex-row justify-between pb-6 border-b border-slate-100 gap-4">
+            <div>
+                <span class="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700">Student Info</span>
+                <h3 class="text-lg font-extrabold text-slate-900 mt-2">{{ invoice.student.first_name }} {{ invoice.student.last_name or '' }}</h3>
+                <p class="text-xs text-slate-500">Class: {{ invoice.school_class.name }} | Reg: {{ invoice.student.registration_number }}</p>
+            </div>
+
+            <div class="sm:text-right">
+                <div class="mb-1">
+                    {% if invoice.status == 'PAID' %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">PAID IN FULL</span>
+                    {% elif invoice.status == 'PARTIALLY_PAID' %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">PARTIALLY PAID</span>
+                    {% else %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">UNPAID (ISSUED)</span>
+                    {% endif %}
+                </div>
+                <p class="text-xs text-slate-500">Due Date: <span class="font-bold text-slate-800">{{ invoice.due_date.strftime('%B %d, %Y') if invoice.due_date else 'N/A' }}</span></p>
+            </div>
+        </div>
+
+        <!-- Line Items Table -->
+        <div class="space-y-3">
+            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Fee Line Items</h4>
+            <div class="overflow-x-auto border border-slate-100 rounded-xl">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-[11px] font-extrabold uppercase text-slate-500 border-b border-slate-100">
+                            <th class="py-3 px-4">Item Description</th>
+                            <th class="py-3 px-4 text-right">Amount (₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs">
+                        {% for item in invoice.items %}
+                        <tr>
+                            <td class="py-3 px-4 font-semibold text-slate-800">{{ item.description }}</td>
+                            <td class="py-3 px-4 text-right font-bold text-slate-900">₹{{ "%.2f"|format(item.amount) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Totals Summary -->
+        <div class="pt-4 border-t border-slate-100 flex flex-col items-end space-y-2 text-xs">
+            <div class="flex justify-between w-64 text-slate-600">
+                <span>Subtotal:</span>
+                <span class="font-bold">₹{{ "%.2f"|format(invoice.subtotal) }}</span>
+            </div>
+            <div class="flex justify-between w-64 text-emerald-600">
+                <span>Discount / Concession:</span>
+                <span class="font-bold">- ₹{{ "%.2f"|format(invoice.discount) }}</span>
+            </div>
+            <div class="flex justify-between w-64 text-slate-900 text-sm font-extrabold pt-2 border-t border-slate-200">
+                <span>Total Payable:</span>
+                <span>₹{{ "%.2f"|format(invoice.total_payable) }}</span>
+            </div>
+            <div class="flex justify-between w-64 text-emerald-700 font-bold">
+                <span>Amount Paid:</span>
+                <span>₹{{ "%.2f"|format(invoice.paid_amount) }}</span>
+            </div>
+            <div class="flex justify-between w-64 text-rose-600 font-extrabold text-xs pt-1">
+                <span>Remaining Balance:</span>
+                <span>₹{{ "%.2f"|format(invoice.outstanding_balance) }}</span>
+            </div>
+        </div>
+
+        <!-- Payment History -->
+        {% if invoice.payments %}
+        <div class="pt-6 border-t border-slate-100 space-y-3">
+            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Payment Transactions</h4>
+            <div class="space-y-2">
+                {% for p in invoice.payments %}
+                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/60 text-xs">
+                    <div>
+                        <div class="font-bold text-slate-900">₹{{ "%.2f"|format(p.amount) }} via {{ p.payment_method }}</div>
+                        <div class="text-[10px] text-slate-400">Date: {{ p.payment_date.strftime('%b %d, %Y') }} | Ref: {{ p.transaction_reference or 'N/A' }}</div>
+                    </div>
+                    {% if p.receipt %}
+                    <a href="{{ url_for('fees.receipt_view', receipt_id=p.receipt.id) }}" class="px-3 py-1 rounded-lg bg-indigo-50 text-indigo-700 font-bold hover:bg-indigo-100 border border-indigo-200">
+                        View Receipt #{{ p.receipt.receipt_number }}
+                    </a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

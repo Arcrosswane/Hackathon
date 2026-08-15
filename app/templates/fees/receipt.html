@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt #{{ receipt.receipt_number }} — StratLearn</title>
+    <!-- Google Fonts & Tailwind -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 p-4 sm:p-8 min-h-screen flex flex-col items-center justify-center">
+
+    <!-- Print Button Bar -->
+    <div class="no-print max-w-2xl w-full mb-4 flex justify-between items-center">
+        <a href="javascript:history.back()" class="text-xs font-bold text-slate-600 hover:text-slate-900 bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-xs">
+            ← Back
+        </a>
+        <button onclick="window.print()" class="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-5 py-2 rounded-xl shadow-md flex items-center space-x-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+            <span>Print Receipt</span>
+        </button>
+    </div>
+
+    <!-- Official Receipt Container -->
+    <div class="max-w-2xl w-full bg-white rounded-2xl border border-slate-200/90 shadow-xl p-8 sm:p-12 space-y-6">
+        <!-- School & Receipt Header -->
+        <div class="flex justify-between items-start pb-6 border-b border-slate-200">
+            <div>
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white font-black text-xl flex items-center justify-center shadow-md">
+                        S
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-black text-slate-900 tracking-tight">StratLearn International School</h1>
+                        <p class="text-[11px] font-semibold text-slate-400">Official Payment Receipt</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-right">
+                <div class="text-xs font-black text-indigo-700 bg-indigo-50 px-3 py-1 rounded-lg border border-indigo-100 inline-block">
+                    {{ receipt.receipt_number }}
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1">Date: {{ receipt.issued_at.strftime('%B %d, %Y') }}</p>
+            </div>
+        </div>
+
+        <!-- Student & Payment Particulars -->
+        <div class="grid grid-cols-2 gap-6 bg-slate-50 p-4 rounded-xl border border-slate-100 text-xs">
+            <div>
+                <span class="text-[10px] font-extrabold uppercase text-slate-400 block mb-1">Student Details</span>
+                <p class="font-extrabold text-slate-900 text-sm">{{ receipt.payment.student.first_name }} {{ receipt.payment.student.last_name or '' }}</p>
+                <p class="text-slate-500">Reg #: <span class="font-bold text-slate-800">{{ receipt.payment.student.registration_number }}</span></p>
+                <p class="text-slate-500">Class: <span class="font-bold text-slate-800">{{ receipt.payment.student.school_class.name if receipt.payment.student.school_class else 'N/A' }}</span></p>
+            </div>
+
+            <div>
+                <span class="text-[10px] font-extrabold uppercase text-slate-400 block mb-1">Payment Reference</span>
+                <p class="font-bold text-slate-800">Invoice: <span class="text-indigo-600">#{{ receipt.payment.invoice.invoice_number }}</span></p>
+                <p class="text-slate-500">Method: <span class="font-bold text-slate-800">{{ receipt.payment.payment_method }}</span></p>
+                <p class="text-slate-500">Txn Ref: <span class="font-bold text-slate-800">{{ receipt.payment.transaction_reference or 'N/A' }}</span></p>
+            </div>
+        </div>
+
+        <!-- Line Breakdown -->
+        <div class="space-y-2">
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Payment Breakdown</h3>
+            <div class="border border-slate-100 rounded-xl overflow-hidden text-xs">
+                <div class="flex justify-between bg-slate-50 p-3 font-bold text-slate-600 border-b border-slate-100">
+                    <span>Description</span>
+                    <span>Amount Received</span>
+                </div>
+                <div class="flex justify-between p-3 font-bold text-slate-900">
+                    <span>Fee Payment towards Invoice #{{ receipt.payment.invoice.invoice_number }}</span>
+                    <span class="text-emerald-700">₹{{ "%.2f"|format(receipt.payment.amount) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Totals -->
+        <div class="pt-4 border-t border-slate-200 flex flex-col items-end space-y-1.5 text-xs">
+            <div class="flex justify-between w-64 text-slate-600 font-semibold">
+                <span>Invoice Total Payable:</span>
+                <span>₹{{ "%.2f"|format(receipt.payment.invoice.total_payable) }}</span>
+            </div>
+            <div class="flex justify-between w-64 text-emerald-700 font-extrabold text-sm py-1 border-y border-slate-100">
+                <span>Amount Paid Now:</span>
+                <span>₹{{ "%.2f"|format(receipt.payment.amount) }}</span>
+            </div>
+            <div class="flex justify-between w-64 text-rose-600 font-bold">
+                <span>Remaining Due Balance:</span>
+                <span>₹{{ "%.2f"|format(receipt.payment.invoice.outstanding_balance) }}</span>
+            </div>
+        </div>
+
+        <!-- Signature Footer -->
+        <div class="pt-8 flex justify-between items-end text-[11px] text-slate-400">
+            <div>
+                <p>Received By: <span class="font-bold text-slate-700">{{ receipt.generated_by.first_name if receipt.generated_by else 'System Accounts' }}</span></p>
+                <p class="text-[9px]">Computer Generated Official Receipt</p>
+            </div>
+
+            <div class="text-right border-t border-slate-300 pt-2 w-36">
+                <p class="font-bold text-slate-700">Authorized Signatory</p>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

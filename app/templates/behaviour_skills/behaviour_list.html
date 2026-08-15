@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Behaviour Observations - StratLearn{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header & Action Bar -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span class="text-xs font-semibold text-brand-600">StratLearn</span>
+                <span class="text-slate-300">/</span>
+                <span class="text-xs font-semibold text-slate-500">Behaviour & Skills</span>
+            </div>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight mt-1">Student Behaviour Observations</h1>
+            <p class="text-xs font-medium text-slate-500">Record positive conduct, classroom observations, and constructive improvement notes.</p>
+        </div>
+
+        <a href="{{ url_for('behaviour_skills.create_behaviour') }}"
+           class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center space-x-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            <span>+ Record Observation</span>
+        </a>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+        <form method="GET" action="{{ url_for('behaviour_skills.behaviour_index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+            
+            <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Class</label>
+                <select name="class_id" onchange="this.form.submit()" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <option value="">All Classes</option>
+                    {% for c in classes %}
+                    <option value="{{ c.id }}" {% if selected_class_id == c.id %}selected{% endif %}>{{ c.display_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Category</label>
+                <select name="category_id" onchange="this.form.submit()" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if selected_category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Type</label>
+                <select name="type" onchange="this.form.submit()" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <option value="">All Types</option>
+                    <option value="POSITIVE" {% if selected_type == 'POSITIVE' %}selected{% endif %}>Positive</option>
+                    <option value="OBSERVATION" {% if selected_type == 'OBSERVATION' %}selected{% endif %}>Observation</option>
+                    <option value="IMPROVEMENT" {% if selected_type == 'IMPROVEMENT' %}selected{% endif %}>Improvement Needed</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Severity / Impact</label>
+                <select name="severity" onchange="this.form.submit()" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <option value="">All Levels</option>
+                    <option value="LOW" {% if selected_severity == 'LOW' %}selected{% endif %}>Low</option>
+                    <option value="MEDIUM" {% if selected_severity == 'MEDIUM' %}selected{% endif %}>Medium</option>
+                    <option value="HIGH" {% if selected_severity == 'HIGH' %}selected{% endif %}>High</option>
+                </select>
+            </div>
+
+            <div class="lg:col-span-2">
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Search</label>
+                <div class="flex space-x-2">
+                    <input type="text" name="q" value="{{ search_q }}" placeholder="Search title or student name..."
+                           class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <button type="submit" class="px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-xl hover:bg-slate-800">Filter</button>
+                </div>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- Observations List -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="text-sm font-extrabold text-slate-900">Observation Records ({{ records|length }})</h2>
+        </div>
+
+        <div class="divide-y divide-slate-100">
+            {% for rec in records %}
+            <div class="p-5 hover:bg-slate-50/60 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
+                
+                <div class="space-y-2 flex-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <!-- Type Badge -->
+                        {% if rec.type == 'POSITIVE' %}
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            🌟 Positive
+                        </span>
+                        {% elif rec.type == 'IMPROVEMENT' %}
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
+                            🎯 Improvement Area
+                        </span>
+                        {% else %}
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200">
+                            📋 General Observation
+                        </span>
+                        {% endif %}
+
+                        <!-- Category -->
+                        <span class="px-2.5 py-0.5 rounded-md text-[10px] font-extrabold bg-slate-100 text-slate-700">
+                            {{ rec.category.name }}
+                        </span>
+
+                        <!-- Visibility -->
+                        <span class="text-[10px] font-bold text-slate-400">
+                            👁️ Visibility: {{ rec.visibility|replace('_', ' ')|title }}
+                        </span>
+                    </div>
+
+                    <h3 class="text-base font-extrabold text-slate-900">{{ rec.title }}</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">{{ rec.description or 'No observation notes provided.' }}</p>
+
+                    <div class="flex flex-wrap items-center text-[11px] font-medium text-slate-500 gap-x-4 gap-y-1">
+                        <span>🎓 <strong>Student:</strong> <a href="{{ url_for('behaviour_skills.student_summary_view', student_id=rec.student_id) }}" class="text-brand-600 font-bold hover:underline">{{ rec.student.full_name }}</a></span>
+                        <span>🏫 <strong>Class:</strong> {{ rec.school_class.display_name }}{% if rec.section %} - {{ rec.section.display_name }}{% endif %}</span>
+                        <span>👨‍🏫 <strong>Staff:</strong> {{ rec.assessor.full_name }}</span>
+                        <span>📅 <strong>Date:</strong> {{ rec.date.strftime('%b %d, %Y') }}</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2 border-t md:border-t-0 pt-3 md:pt-0 border-slate-100 justify-end">
+                    <a href="{{ url_for('behaviour_skills.edit_behaviour', record_id=rec.id) }}"
+                       class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl">
+                        Edit
+                    </a>
+                    <form action="{{ url_for('behaviour_skills.delete_behaviour', record_id=rec.id) }}" method="POST" onsubmit="return confirm('Delete this observation record?');" class="inline">
+                        <button type="submit" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl">
+                            Delete
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+            {% else %}
+            <div class="p-12 text-center">
+                <p class="text-sm font-bold text-slate-600">No behaviour observation records found matching your filters.</p>
+                <p class="text-xs text-slate-400 mt-1">Click "+ Record Observation" to document student behaviour observations.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

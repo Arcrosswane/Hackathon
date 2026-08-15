@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Fee Invoices — StratLearn{% endblock %}
+{% block header_title %}Fee Invoices & Demands{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Top Action Bar & Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+        <div>
+            <h2 class="text-xl font-bold text-slate-900 tracking-tight">Fee Invoices Roster</h2>
+            <p class="text-xs font-medium text-slate-500 mt-1">Issued fee demands and student payment status tracking.</p>
+        </div>
+
+        <a href="{{ url_for('fees.generate_invoices') }}" 
+           class="inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md shadow-brand-600/20 transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            <span>Generate Invoices</span>
+        </a>
+    </div>
+
+    <!-- Filter Bar -->
+    <form method="GET" action="{{ url_for('fees.invoices_list') }}" class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs grid grid-cols-1 sm:grid-cols-4 gap-3">
+        <div>
+            <input type="text" name="q" value="{{ search_query or '' }}" placeholder="Search invoice # or notes..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:ring-2 focus:ring-brand-500 focus:outline-none">
+        </div>
+
+        <div>
+            <select name="class_id" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                <option value="">All Classes</option>
+                {% for c in classes %}
+                <option value="{{ c.id }}" {% if selected_class_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <select name="status" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                <option value="">All Payment Statuses</option>
+                <option value="ISSUED" {% if selected_status == 'ISSUED' %}selected{% endif %}>ISSUED (Unpaid)</option>
+                <option value="PARTIALLY_PAID" {% if selected_status == 'PARTIALLY_PAID' %}selected{% endif %}>PARTIALLY PAID</option>
+                <option value="PAID" {% if selected_status == 'PAID' %}selected{% endif %}>PAID</option>
+                <option value="CANCELLED" {% if selected_status == 'CANCELLED' %}selected{% endif %}>CANCELLED</option>
+            </select>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            <button type="submit" class="w-full py-2 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition-colors">Apply Filters</button>
+            <a href="{{ url_for('fees.invoices_list') }}" class="px-3 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs hover:bg-slate-200">Reset</a>
+        </div>
+    </form>
+
+    <!-- Invoices Table -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                        <th class="py-3.5 px-6">Invoice #</th>
+                        <th class="py-3.5 px-6">Student</th>
+                        <th class="py-3.5 px-6">Issue / Due Date</th>
+                        <th class="py-3.5 px-6">Subtotal</th>
+                        <th class="py-3.5 px-6">Discount</th>
+                        <th class="py-3.5 px-6">Total Payable</th>
+                        <th class="py-3.5 px-6">Paid / Outstanding</th>
+                        <th class="py-3.5 px-6">Status</th>
+                        <th class="py-3.5 px-6 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+                    {% for inv in invoices %}
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                        <td class="py-4 px-6 font-extrabold text-brand-700">
+                            <a href="{{ url_for('fees.invoice_detail', invoice_id=inv.id) }}" class="hover:underline">{{ inv.invoice_number }}</a>
+                        </td>
+                        <td class="py-4 px-6">
+                            <div class="font-extrabold text-slate-900">{{ inv.student.first_name }} {{ inv.student.last_name or '' }}</div>
+                            <div class="text-[10px] text-slate-400">Class: {{ inv.school_class.name }} | Reg: {{ inv.student.registration_number }}</div>
+                        </td>
+                        <td class="py-4 px-6">
+                            <div class="text-slate-800">{{ inv.issue_date.strftime('%b %d, %Y') }}</div>
+                            <div class="text-[10px] font-bold text-rose-600">Due: {{ inv.due_date.strftime('%b %d, %Y') if inv.due_date else 'N/A' }}</div>
+                        </td>
+                        <td class="py-4 px-6 font-semibold text-slate-600">₹{{ "%.2f"|format(inv.subtotal) }}</td>
+                        <td class="py-4 px-6 font-semibold text-emerald-600">₹{{ "%.2f"|format(inv.discount) }}</td>
+                        <td class="py-4 px-6 font-extrabold text-slate-900">₹{{ "%.2f"|format(inv.total_payable) }}</td>
+                        <td class="py-4 px-6">
+                            <div class="text-emerald-700 font-bold">Paid: ₹{{ "%.2f"|format(inv.paid_amount) }}</div>
+                            <div class="text-rose-600 font-bold">Due: ₹{{ "%.2f"|format(inv.outstanding_balance) }}</div>
+                        </td>
+                        <td class="py-4 px-6">
+                            {% if inv.status == 'PAID' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">PAID</span>
+                            {% elif inv.status == 'PARTIALLY_PAID' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">PARTIAL</span>
+                            {% elif inv.status == 'CANCELLED' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">CANCELLED</span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">ISSUED</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 text-right space-x-1">
+                            <a href="{{ url_for('fees.invoice_detail', invoice_id=inv.id) }}" class="px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 font-bold">View</a>
+                            {% if inv.status != 'PAID' and inv.status != 'CANCELLED' %}
+                            <a href="{{ url_for('fees.record_payment_route', invoice_id=inv.id) }}" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700">Pay</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="py-8 text-center text-slate-400 font-medium">No fee invoices found matching criteria.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

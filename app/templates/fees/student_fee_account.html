@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}My Fee Account — StratLearn{% endblock %}
+{% block header_title %}Student Fee Account & Dues{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+
+    <!-- Student Info & Summary Card -->
+    <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-full bg-brand-50 text-brand-700 font-black text-lg flex items-center justify-center border border-brand-200">
+                    {{ data.student.first_name[0] | upper }}
+                </div>
+                <div>
+                    <h2 class="text-xl font-extrabold text-slate-900">{{ data.student.first_name }} {{ data.student.last_name or '' }}</h2>
+                    <p class="text-xs font-semibold text-slate-500">Registration #: {{ data.student.registration_number }} | Class: {{ data.student.school_class.name if data.student.school_class else 'N/A' }}</p>
+                </div>
+            </div>
+
+            {% if data.summary.total_outstanding > 0 %}
+            <div class="px-4 py-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-right">
+                <div class="text-[10px] font-extrabold uppercase">Outstanding Dues</div>
+                <div class="text-lg font-black">₹{{ "%.2f"|format(data.summary.total_outstanding) }}</div>
+            </div>
+            {% else %}
+            <div class="px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-right">
+                <div class="text-[10px] font-extrabold uppercase">Fee Status</div>
+                <div class="text-sm font-black">ALL DUES PAID</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Ledger Summary Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <div class="text-[10px] font-extrabold uppercase text-slate-400">Total Billed</div>
+                <div class="text-base font-extrabold text-slate-900 mt-1">₹{{ "%.2f"|format(data.summary.total_subtotal) }}</div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-emerald-50/50 border border-emerald-100">
+                <div class="text-[10px] font-extrabold uppercase text-emerald-600">Discount Concession</div>
+                <div class="text-base font-extrabold text-emerald-700 mt-1">₹{{ "%.2f"|format(data.summary.total_discount) }}</div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <div class="text-[10px] font-extrabold uppercase text-brand-600">Total Payable</div>
+                <div class="text-base font-extrabold text-brand-700 mt-1">₹{{ "%.2f"|format(data.summary.total_payable) }}</div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-emerald-50/80 border border-emerald-200">
+                <div class="text-[10px] font-extrabold uppercase text-emerald-700">Total Paid</div>
+                <div class="text-base font-extrabold text-emerald-800 mt-1">₹{{ "%.2f"|format(data.summary.total_paid) }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fee Invoices Section -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="p-4 border-b border-slate-100">
+            <h3 class="text-sm font-bold text-slate-900">Fee Invoices & Demands</h3>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                        <th class="py-3.5 px-6">Invoice #</th>
+                        <th class="py-3.5 px-6">Issue Date</th>
+                        <th class="py-3.5 px-6">Due Date</th>
+                        <th class="py-3.5 px-6">Total Payable</th>
+                        <th class="py-3.5 px-6">Paid</th>
+                        <th class="py-3.5 px-6">Balance</th>
+                        <th class="py-3.5 px-6">Status</th>
+                        <th class="py-3.5 px-6 text-right">View</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+                    {% for inv in data.invoices %}
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                        <td class="py-4 px-6 font-extrabold text-brand-700">#{{ inv.invoice_number }}</td>
+                        <td class="py-4 px-6 text-slate-700">{{ inv.issue_date.strftime('%b %d, %Y') }}</td>
+                        <td class="py-4 px-6 font-bold text-rose-600">{{ inv.due_date.strftime('%b %d, %Y') if inv.due_date else 'N/A' }}</td>
+                        <td class="py-4 px-6 font-extrabold text-slate-900">₹{{ "%.2f"|format(inv.total_payable) }}</td>
+                        <td class="py-4 px-6 font-bold text-emerald-700">₹{{ "%.2f"|format(inv.paid_amount) }}</td>
+                        <td class="py-4 px-6 font-bold text-rose-600">₹{{ "%.2f"|format(inv.outstanding_balance) }}</td>
+                        <td class="py-4 px-6">
+                            {% if inv.status == 'PAID' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">PAID</span>
+                            {% elif inv.status == 'PARTIALLY_PAID' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">PARTIAL</span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">UNPAID</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 text-right">
+                            <a href="{{ url_for('fees.invoice_detail', invoice_id=inv.id) }}" class="px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 font-bold hover:bg-slate-100">Details</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="py-8 text-center text-slate-400 font-medium">No fee invoices issued yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Payments & Receipts Section -->
+    {% if data.payments %}
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="p-4 border-b border-slate-100">
+            <h3 class="text-sm font-bold text-slate-900">Payment Receipts History</h3>
+        </div>
+
+        <div class="p-4 space-y-2">
+            {% for p in data.payments %}
+            <div class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200/60 text-xs">
+                <div>
+                    <div class="font-extrabold text-slate-900">₹{{ "%.2f"|format(p.amount) }} via {{ p.payment_method }}</div>
+                    <div class="text-[10px] text-slate-500">Paid on {{ p.payment_date.strftime('%B %d, %Y') }} | Ref: {{ p.transaction_reference or 'N/A' }}</div>
+                </div>
+                {% if p.receipt %}
+                <a href="{{ url_for('fees.receipt_view', receipt_id=p.receipt.id) }}" target="_blank" class="px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 font-bold hover:bg-indigo-100 border border-indigo-200 flex items-center space-x-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    <span>Print Receipt #{{ p.receipt.receipt_number }}</span>
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

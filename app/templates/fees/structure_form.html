@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Create Fee Structure — StratLearn{% endblock %}
+{% block header_title %}Create Fee Structure{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Back Button & Card -->
+    <div class="flex items-center space-x-3">
+        <a href="{{ url_for('fees.structures_list') }}" class="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+        </a>
+        <h2 class="text-xl font-bold text-slate-900 tracking-tight">Create Fee Structure</h2>
+    </div>
+
+    <form action="{{ url_for('fees.create_structure') }}" method="POST" class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Target Class *</label>
+                <select name="class_id" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    <option value="">-- Select Class --</option>
+                    {% for c in classes %}
+                    <option value="{{ c.id }}">{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Structure Name *</label>
+                <input type="text" name="name" required placeholder="e.g. Standard Annual Fee Structure 2026-27" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:ring-2 focus:ring-brand-500 focus:outline-none">
+            </div>
+
+            <div class="sm:col-span-2">
+                <label class="block text-xs font-bold text-slate-700 mb-1">Description</label>
+                <input type="text" name="description" placeholder="Additional notes regarding this fee structure..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:ring-2 focus:ring-brand-500 focus:outline-none">
+            </div>
+        </div>
+
+        <!-- Dynamic Components Table -->
+        <div class="space-y-3 pt-4 border-t border-slate-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900">Fee Components Breakdown</h3>
+                    <p class="text-xs text-slate-500">Define individual fee items, amounts, and payment frequencies.</p>
+                </div>
+                <button type="button" onclick="addComponentRow()" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all">
+                    + Add Fee Item
+                </button>
+            </div>
+
+            <div class="overflow-x-auto border border-slate-200/80 rounded-xl">
+                <table class="w-full text-left border-collapse" id="components-table">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200/80 text-[11px] font-extrabold uppercase text-slate-500">
+                            <th class="py-3 px-4">Fee Type</th>
+                            <th class="py-3 px-4">Amount (₹)</th>
+                            <th class="py-3 px-4">Frequency</th>
+                            <th class="py-3 px-4">Due Date</th>
+                            <th class="py-3 px-4 text-center">Remove</th>
+                        </tr>
+                    </thead>
+                    <tbody id="components-tbody" class="divide-y divide-slate-100 text-xs">
+                        <tr class="component-row">
+                            <td class="py-2.5 px-4">
+                                <select name="fee_type_id[]" required class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold">
+                                    {% for ft in fee_types %}
+                                    <option value="{{ ft.id }}">{{ ft.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td class="py-2.5 px-4">
+                                <input type="number" step="0.01" name="amount[]" required placeholder="0.00" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold">
+                            </td>
+                            <td class="py-2.5 px-4">
+                                <select name="frequency[]" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold">
+                                    <option value="YEARLY">Yearly</option>
+                                    <option value="HALF_YEARLY">Half Yearly</option>
+                                    <option value="QUARTERLY">Quarterly</option>
+                                    <option value="MONTHLY">Monthly</option>
+                                    <option value="ONE_TIME">One Time</option>
+                                </select>
+                            </td>
+                            <td class="py-2.5 px-4">
+                                <input type="date" name="due_date[]" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold">
+                            </td>
+                            <td class="py-2.5 px-4 text-center">
+                                <button type="button" onclick="this.closest('tr').remove()" class="text-rose-500 hover:text-rose-700 font-bold">×</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="flex justify-end space-x-3 pt-4">
+            <a href="{{ url_for('fees.structures_list') }}" class="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200">Cancel</a>
+            <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 shadow-md">Save Fee Structure</button>
+        </div>
+    </form>
+
+</div>
+
+<script>
+function addComponentRow() {
+    const tbody = document.getElementById('components-tbody');
+    const firstRow = tbody.querySelector('.component-row');
+    if (firstRow) {
+        const clone = firstRow.cloneNode(true);
+        clone.querySelectorAll('input').forEach(i => i.value = '');
+        tbody.appendChild(clone);
+    }
+}
+</script>
+{% endblock %}

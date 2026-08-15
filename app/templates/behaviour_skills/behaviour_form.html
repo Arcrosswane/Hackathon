@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}{% if record %}Edit Behaviour Record{% else %}Record Behaviour Observation{% endif %} - StratLearn{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+
+    <!-- Header -->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <div>
+            <div class="flex items-center space-x-2">
+                <a href="{{ url_for('behaviour_skills.behaviour_index') }}" class="text-xs font-semibold text-brand-600 hover:text-brand-700">← Back to Records</a>
+            </div>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight mt-1">
+                {% if record %}Edit Behaviour Observation{% else %}Record Student Behaviour Observation{% endif %}
+            </h1>
+            <p class="text-xs font-medium text-slate-500">Document student conduct, classroom participation, or constructive developmental notes.</p>
+        </div>
+    </div>
+
+    <!-- Form Container -->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+        <form method="POST" action="{% if record %}{{ url_for('behaviour_skills.edit_behaviour', record_id=record.id) }}{% else %}{{ url_for('behaviour_skills.create_behaviour') }}{% endif %}" class="space-y-5">
+            
+            {% if not record %}
+            <!-- Class & Student Selection -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-700 mb-1">Select Class *</label>
+                    <select id="class_select" onchange="fetchStudentsForClass(this.value)" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        <option value="">-- Choose Class --</option>
+                        {% for c in classes %}
+                        <option value="{{ c.id }}">{{ c.display_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-700 mb-1">Select Student *</label>
+                    <select id="student_id" name="student_id" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        <option value="">-- Select Class First --</option>
+                    </select>
+                </div>
+            </div>
+            {% else %}
+            <!-- Fixed Student Display -->
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                <span class="text-[10px] font-bold text-slate-400 uppercase block">Target Student</span>
+                <span class="text-sm font-extrabold text-slate-900">{{ record.student.full_name }}</span>
+                <span class="text-xs text-slate-500 block">Class: {{ record.school_class.display_name }}</span>
+            </div>
+            {% endif %}
+
+            <!-- Category & Type -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-700 mb-1">Behaviour Category *</label>
+                    <select name="category_id" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}" {% if record and record.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-700 mb-1">Observation Type *</label>
+                    <select name="type" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        <option value="POSITIVE" {% if record and record.type == 'POSITIVE' %}selected{% endif %}>🌟 Positive Observation</option>
+                        <option value="OBSERVATION" {% if record and record.type == 'OBSERVATION' %}selected{% endif %}>📋 General Observation</option>
+                        <option value="IMPROVEMENT" {% if record and record.type == 'IMPROVEMENT' %}selected{% endif %}>🎯 Needs Improvement</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Title -->
+            <div>
+                <label class="block text-xs font-bold uppercase text-slate-700 mb-1">Observation Title *</label>
+                <input type="text" name="title" required value="{{ record.title if record else '' }}" placeholder="e.g. Active participation in group activity, Prompt assignment completion..."
+                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+            </div>
+
+            <!-- Severity, Visibility & Date -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-700 mb-1">Severity / Impact</label>
+                    <select name="severity" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        <option value="LOW" {% if record and record.severity == 'LOW' %}selected{% endif %}>Low</option>
+                        <option value="MEDIUM" {% if record and record.severity == 'MEDIUM' %}selected{% endif %}>Medium</option>
+                        <option value="HIGH" {% if record and record.severity == 'HIGH' %}selected{% endif %}>High</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-700 mb-1">Visibility Permission *</label>
+                    <select name="visibility" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        <option value="BOTH" {% if not record or record.visibility == 'BOTH' %}selected{% endif %}>Visible to Both Student & Parent</option>
+                        <option value="PARENT_VISIBLE" {% if record and record.visibility == 'PARENT_VISIBLE' %}selected{% endif %}>Visible to Parent Only</option>
+                        <option value="STUDENT_VISIBLE" {% if record and record.visibility == 'STUDENT_VISIBLE' %}selected{% endif %}>Visible to Student Only</option>
+                        <option value="INTERNAL" {% if record and record.visibility == 'INTERNAL' %}selected{% endif %}>🔒 Staff Internal Note Only</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-700 mb-1">Observation Date *</label>
+                    <input type="date" name="date" required value="{{ today_date }}"
+                           class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label class="block text-xs font-bold uppercase text-slate-700 mb-1">Detailed Context / Notes</label>
+                <textarea name="description" rows="4" placeholder="Explain what happened, student's conduct, or specific constructive guidance given..."
+                          class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">{{ record.description if record else '' }}</textarea>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                <a href="{{ url_for('behaviour_skills.behaviour_index') }}"
+                   class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all">Cancel</a>
+                <button type="submit" class="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all">
+                    {% if record %}Update Observation{% else %}Save Observation Record{% endif %}
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+
+<script>
+function fetchStudentsForClass(classId) {
+    const studentSelect = document.getElementById('student_id');
+    studentSelect.innerHTML = '<option value="">Loading students...</option>';
+    if (!classId) {
+        studentSelect.innerHTML = '<option value="">-- Select Class First --</option>';
+        return;
+    }
+
+    fetch(`/behaviour-skills/api/classes/${classId}/students`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.length === 0) {
+                studentSelect.innerHTML = '<option value="">No students found in this class</option>';
+                return;
+            }
+            studentSelect.innerHTML = '<option value="">-- Choose Student --</option>';
+            data.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = `${s.full_name} (${s.registration_number || 'ID:' + s.id})`;
+                studentSelect.appendChild(opt);
+            });
+        })
+        .catch(err => {
+            studentSelect.innerHTML = '<option value="">Error loading students</option>';
+        });
+}
+</script>
+{% endblock %}

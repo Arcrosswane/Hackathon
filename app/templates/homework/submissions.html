@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Submissions Roster — {{ homework.title }}{% endblock %}
+{% block header_title %}Student Submissions & Evaluation{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Header Summary Card -->
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2 text-xs text-slate-500 mb-1">
+                <a href="{{ url_for('homework.manage') }}" class="font-bold text-brand-600 hover:underline">← Back to Homework Manager</a>
+                <span>/</span>
+                <span>{{ homework.school_class.display_name }} {% if homework.section %}({{ homework.section.display_name }}){% endif %}</span>
+            </div>
+            <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">{{ homework.title }}</h2>
+            <p class="text-xs text-slate-500 mt-1">
+                Subject: <strong class="text-slate-800">{{ homework.subject.name }}</strong> | 
+                Due Date: <strong class="text-slate-800">{{ homework.due_date.strftime('%b %d, %Y') }}</strong> | 
+                Max Marks: <strong class="text-slate-800">{{ homework.max_marks or 100 }}</strong>
+            </p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <form action="{{ url_for('homework.ai_evaluate_all', homework_id=homework.id) }}" method="POST" class="inline">
+                <button type="submit" class="px-4 py-2.5 bg-gradient-to-r from-purple-700 to-purple-600 hover:from-purple-800 hover:to-purple-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-purple-700/20 transition-all flex items-center space-x-1.5">
+                    <span>🤖 Run AI Auto-Grading for All</span>
+                </button>
+            </form>
+
+            <!-- Summary Statistics Badges -->
+            <div class="grid grid-cols-4 gap-2 text-center text-xs">
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase block">Enrolled</span>
+                    <strong class="text-base text-slate-900 font-extrabold">{{ summary.total_enrolled }}</strong>
+                </div>
+                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5">
+                    <span class="text-[10px] text-emerald-700 font-bold uppercase block">Submitted</span>
+                    <strong class="text-base text-emerald-900 font-extrabold">{{ summary.submitted_count }}</strong>
+                </div>
+                <div class="bg-sky-50 border border-sky-200 rounded-xl p-2.5">
+                    <span class="text-[10px] text-sky-700 font-bold uppercase block">Reviewed</span>
+                    <strong class="text-base text-sky-900 font-extrabold">{{ summary.reviewed_count }}</strong>
+                </div>
+                <div class="bg-rose-50 border border-rose-200 rounded-xl p-2.5">
+                    <span class="text-[10px] text-rose-700 font-bold uppercase block">Missing</span>
+                    <strong class="text-base text-rose-900 font-extrabold">{{ summary.missing_count }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Submissions Roster Table -->
+    <div class="bg-white border border-slate-200/90 rounded-2xl shadow-xs overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[800px]">
+                <thead>
+                    <tr class="bg-slate-900 text-white text-xs font-extrabold uppercase tracking-wider divide-x divide-slate-800">
+                        <th class="py-3.5 px-4 w-12 text-center">#</th>
+                        <th class="py-3.5 px-4">Student Name</th>
+                        <th class="py-3.5 px-4">Admission #</th>
+                        <th class="py-3.5 px-4 text-center">Submission Status</th>
+                        <th class="py-3.5 px-4">Submitted At</th>
+                        <th class="py-3.5 px-4">Attachment</th>
+                        <th class="py-3.5 px-4 text-center">Marks</th>
+                        <th class="py-3.5 px-4 text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 text-xs">
+                    {% for item in roster %}
+                    {% set student = item.student %}
+                    {% set en = item.enrollment %}
+                    {% set sub = item.submission %}
+                    {% set st = item.status %}
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                        
+                        <td class="p-4 text-center font-mono font-extrabold text-slate-400">
+                            {{ en.roll_number or loop.index }}
+                        </td>
+
+                        <td class="p-4 font-bold text-slate-900">
+                            {{ student.full_name }}
+                        </td>
+
+                        <td class="p-4 font-mono text-slate-600">
+                            {{ student.registration_number }}
+                        </td>
+
+                        <td class="p-4 text-center space-y-1">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold block
+                                         {% if st == 'REVIEWED' %}bg-sky-100 text-sky-800 border border-sky-300
+                                         {% elif st == 'SUBMITTED' %}bg-emerald-100 text-emerald-800 border border-emerald-300
+                                         {% elif st == 'LATE' %}bg-amber-100 text-amber-800 border border-amber-300
+                                         {% elif st == 'MISSING' %}bg-rose-100 text-rose-800 border border-rose-300
+                                         {% else %}bg-slate-100 text-slate-600 border border-slate-200{% endif %}">
+                                {{ st }}
+                            </span>
+                            {% if sub and sub.ai_evaluated %}
+                            <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-purple-100 text-purple-900 border border-purple-200 inline-block" title="{{ sub.ai_reasoning or 'AI Evaluated' }}">
+                                🤖 AI Checked
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="p-4 text-slate-600 font-medium">
+                            {% if sub %}
+                            {{ sub.submitted_at.strftime('%b %d, %Y %H:%M') }}
+                            {% else %}
+                            <span class="text-slate-400">—</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="p-4">
+                            {% if sub and sub.attachment_path %}
+                            <a href="{{ url_for('homework.download_submission', submission_id=sub.id) }}"
+                               class="inline-flex items-center space-x-1 px-2.5 py-1 bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold rounded-lg text-[11px]">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h55.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                <span class="truncate max-w-[120px]">{{ sub.original_filename }}</span>
+                            </a>
+                            {% else %}
+                            <span class="text-slate-400">—</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="p-4 text-center font-bold text-slate-900">
+                            {% if sub and sub.marks is not none %}
+                            <span class="text-emerald-700 font-extrabold text-sm">{{ sub.marks }}</span> / {{ homework.max_marks or 100 }}
+                            {% else %}
+                            <span class="text-slate-400">—</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="p-4 text-right">
+                            {% if sub %}
+                            <div class="flex items-center justify-end space-x-1.5">
+                                <form action="{{ url_for('homework.ai_evaluate_single', submission_id=sub.id) }}" method="POST" class="inline">
+                                    <button type="submit" title="Run AI Check" class="px-2.5 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-bold text-xs rounded-xl transition-all">
+                                        🤖 AI
+                                    </button>
+                                </form>
+                                <button onclick="openReviewModal('{{ sub.id }}', '{{ student.full_name }}', '{{ sub.marks or '' }}', '{{ sub.feedback or '' }}', '{{ sub.submission_text or '' }}')"
+                                        class="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs rounded-xl shadow-2xs transition-all">
+                                    Evaluate
+                                </button>
+                            </div>
+                            {% else %}
+                            <span class="text-xs text-slate-400 font-medium">Pending Submission</span>
+                            {% endif %}
+                        </td>
+
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- Modal: Evaluate & Grade Submission -->
+<div id="reviewModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl p-6 max-w-md w-full space-y-5 shadow-2xl border border-slate-200">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-base font-extrabold text-slate-900">Evaluate Student Submission</h3>
+            <button onclick="closeReviewModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">×</button>
+        </div>
+
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+            <span class="font-extrabold text-slate-900 text-xs block" id="reviewStudentName">Student Name</span>
+            <div id="reviewTextContainer" class="hidden pt-1 border-t border-slate-200 text-xs text-slate-700 italic">
+                "<span id="reviewStudentText"></span>"
+            </div>
+        </div>
+
+        <form id="reviewForm" method="POST" action="" class="space-y-4">
+            <div>
+                <label for="marks_input" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                    Marks Awarded (Max: {{ homework.max_marks or 100 }})
+                </label>
+                <input type="number" step="0.5" id="marks_input" name="marks" min="0" max="{{ homework.max_marks or 100 }}"
+                       placeholder="e.g. 18.5"
+                       class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+            </div>
+
+            <div>
+                <label for="feedback_input" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                    Teacher Feedback & Comments
+                </label>
+                <textarea id="feedback_input" name="feedback" rows="4" placeholder="e.g. Good explanation on question 3. Please revise step 2..."
+                          class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none"></textarea>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                <button type="button" onclick="closeReviewModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50">
+                    Cancel
+                </button>
+                <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all">
+                    Save Evaluation
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openReviewModal(subId, studentName, marks, feedback, subText) {
+    document.getElementById('reviewStudentName').innerText = studentName;
+    document.getElementById('reviewForm').action = `/homework/submissions/${subId}/review`;
+    document.getElementById('marks_input').value = marks;
+    document.getElementById('feedback_input').value = feedback;
+
+    if (subText) {
+        document.getElementById('reviewTextContainer').classList.remove('hidden');
+        document.getElementById('reviewStudentText').innerText = subText;
+    } else {
+        document.getElementById('reviewTextContainer').classList.add('hidden');
+    }
+
+    document.getElementById('reviewModal').classList.remove('hidden');
+}
+
+function closeReviewModal() {
+    document.getElementById('reviewModal').classList.add('hidden');
+}
+</script>
+{% endblock %}

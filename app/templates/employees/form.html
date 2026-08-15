@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_edit %}Edit Employee Profile — {{ employee.full_name }}{% else %}Register New Employee — StratLearn{% endif %}{% endblock %}
+{% block header_title %}{% if is_edit %}Edit Employee Profile{% else %}Register New Employee{% endif %}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Header Banner -->
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200 mb-2">
+                <span>Human Resources Module</span>
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">
+                {% if is_edit %}Edit Employee Profile{% else %}Register New Staff Member{% endif %}
+            </h2>
+            <p class="text-xs text-slate-500 mt-1">Configure staff identity, employment classification, contact info, and profile photo</p>
+        </div>
+
+        <a href="{{ url_for('employees.index') }}" 
+           class="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-bold transition-all shadow-xs flex items-center space-x-1.5">
+            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"></path></svg>
+            <span>Back to Staff Directory</span>
+        </a>
+    </div>
+
+    <!-- Main Registration Form Card -->
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-8 shadow-xs">
+        <form action="{% if is_edit %}{{ url_for('employees.edit', employee_id=employee.id) }}{% else %}{{ url_for('employees.create') }}{% endif %}" 
+              method="POST" enctype="multipart/form-data" class="space-y-8">
+
+            <!-- Section 1: Employment & Role Identity -->
+            <div class="space-y-4">
+                <div class="border-b border-slate-100 pb-3">
+                    <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
+                        <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 1321 13 7 14 7 7-7-7 7 7v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        <span>1. Employment & Role Identity</span>
+                    </h3>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                    <div>
+                        <label for="registration_number" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Employee Code / ID <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" id="registration_number" name="registration_number" 
+                               value="{{ employee.registration_number if is_edit else '' }}" required
+                               {% if is_edit %}readonly class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-100 font-mono text-sm font-bold text-slate-600 cursor-not-allowed"{% else %}placeholder="e.g. EMP001, TCH001" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold font-mono text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none"{% endif %}>
+                    </div>
+
+                    <div>
+                        <label for="first_name" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            First Name <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" id="first_name" name="first_name" 
+                               value="{{ employee.first_name if is_edit else '' }}" required placeholder="First Name"
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label for="middle_name" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Middle Name
+                        </label>
+                        <input type="text" id="middle_name" name="middle_name" 
+                               value="{{ employee.middle_name if is_edit else '' }}" placeholder="Middle Name"
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label for="last_name" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Last Name
+                        </label>
+                        <input type="text" id="last_name" name="last_name" 
+                               value="{{ employee.last_name if is_edit else '' }}" placeholder="Last Name"
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label for="department" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Department
+                        </label>
+                        <select id="department" name="department" 
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            {% for dept in departments %}
+                            <option value="{{ dept }}" {% if is_edit and employee.department == dept %}selected{% endif %}>{{ dept }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="designation" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Designation / Role Title <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" id="designation" name="designation" 
+                               value="{{ employee.designation if is_edit else 'Teacher' }}" required placeholder="e.g. Mathematics Teacher"
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label for="employment_type" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Employment Type
+                        </label>
+                        <select id="employment_type" name="employment_type" 
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            {% for etype in employment_types %}
+                            <option value="{{ etype }}" {% if is_edit and employee.employment_type == etype %}selected{% endif %}>{{ etype }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="date_of_joining" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Joining Date
+                        </label>
+                        <input type="date" id="date_of_joining" name="date_of_joining" 
+                               value="{{ employee.date_of_joining.strftime('%Y-%m-%d') if is_edit and employee.date_of_joining else '' }}"
+                               class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+
+                    <div class="sm:col-span-1 flex items-center pt-6">
+                        <label class="inline-flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" name="is_teacher" {% if (not is_edit) or (is_edit and employee.is_teacher) %}checked{% endif %}
+                                   class="w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500">
+                            <span class="text-xs font-bold text-slate-800">Identify as Teaching Staff</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Contact & Personal Details -->
+            <div class="space-y-4 pt-2">
+                <div class="border-b border-slate-100 pb-3">
+                    <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
+                        <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        <span>2. Contact & Personal Information</span>
+                    </h3>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                    <div>
+                        <label for="email_address" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Email Address
+                        </label>
+                        <input type="email" id="email_address" name="email_address" 
+                               value="{{ employee.email_address if is_edit else '' }}" placeholder="staff@school.edu"
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label for="mobile_phone_number" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Mobile Phone
+                        </label>
+                        <input type="text" id="mobile_phone_number" name="mobile_phone_number" 
+                               value="{{ employee.mobile_phone_number if is_edit else '' }}" placeholder="+91 98765 43210"
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label for="alternate_phone" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Alternate Phone
+                        </label>
+                        <input type="text" id="alternate_phone" name="alternate_phone" 
+                               value="{{ employee.alternate_phone if is_edit else '' }}" placeholder="Emergency Phone"
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label for="gender" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Gender</label>
+                        <select id="gender" name="gender" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            <option value="">Select Gender</option>
+                            <option value="Male" {% if is_edit and employee.gender == 'Male' %}selected{% endif %}>Male</option>
+                            <option value="Female" {% if is_edit and employee.gender == 'Female' %}selected{% endif %}>Female</option>
+                            <option value="Other" {% if is_edit and employee.gender == 'Other' %}selected{% endif %}>Other</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="date_of_birth" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Date of Birth</label>
+                        <input type="date" id="date_of_birth" name="date_of_birth" 
+                               value="{{ employee.date_of_birth.strftime('%Y-%m-%d') if is_edit and employee.date_of_birth else '' }}"
+                               class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label for="educational_qualification" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Qualification</label>
+                        <input type="text" id="educational_qualification" name="educational_qualification" 
+                               value="{{ employee.educational_qualification if is_edit else '' }}" placeholder="e.g. M.Sc. Mathematics, B.Ed"
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Location Address -->
+            <div class="space-y-4 pt-2">
+                <div class="border-b border-slate-100 pb-3">
+                    <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
+                        <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <span>3. Location Address</span>
+                    </h3>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label for="home_address" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Residential Address</label>
+                        <textarea id="home_address" name="home_address" rows="2" placeholder="Street Address"
+                                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">{{ employee.home_address if is_edit else '' }}</textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div>
+                            <label for="city" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">City</label>
+                            <input type="text" id="city" name="city" value="{{ employee.city if is_edit else '' }}" placeholder="City"
+                                   class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-medium focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        </div>
+                        <div>
+                            <label for="state" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">State</label>
+                            <input type="text" id="state" name="state" value="{{ employee.state if is_edit else '' }}" placeholder="State"
+                                   class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-medium focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        </div>
+                        <div>
+                            <label for="country" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Country</label>
+                            <input type="text" id="country" name="country" value="{{ (employee.country if is_edit else 'India') or 'India' }}" placeholder="Country"
+                                   class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-medium focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        </div>
+                        <div>
+                            <label for="postal_code" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Postal Code</label>
+                            <input type="text" id="postal_code" name="postal_code" value="{{ employee.postal_code if is_edit else '' }}" placeholder="Postal Code"
+                                   class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-medium focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Profile Photo Upload -->
+            <div class="space-y-4 pt-2">
+                <div class="border-b border-slate-100 pb-3">
+                    <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
+                        <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <span>4. Profile Avatar Photo</span>
+                    </h3>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    {% if is_edit and employee.profile_photo %}
+                    <img src="{{ url_for('static', filename=employee.profile_photo) }}" alt="Avatar" class="w-16 h-16 rounded-xl object-cover border border-slate-200 shadow-xs">
+                    {% endif %}
+                    <div class="flex-1">
+                        <label for="profile_photo" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                            Upload Avatar Image (JPG, PNG, WEBP)
+                        </label>
+                        <input type="file" id="profile_photo" name="profile_photo" accept="image/png, image/jpeg, image/webp"
+                               class="w-full px-3 py-2 text-xs text-slate-600 border border-slate-300 rounded-xl bg-slate-50 cursor-pointer focus:outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="pt-6 border-t border-slate-100 flex items-center justify-end space-x-3">
+                <a href="{{ url_for('employees.index') }}" 
+                   class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold transition-all">
+                    Cancel
+                </a>
+                <button type="submit" 
+                        class="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all">
+                    {% if is_edit %}Update Employee Profile{% else %}Save Employee Profile{% endif %}
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+{% endblock %}

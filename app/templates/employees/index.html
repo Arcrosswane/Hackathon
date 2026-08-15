@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Employees & Staff Directory — StratLearn{% endblock %}
+{% block header_title %}Employees & Staff Directory{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Header & Action Bar -->
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200 mb-2">
+                <span>Module 05 — Human Resources</span>
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Employees & Staff Directory</h2>
+            <p class="text-xs text-slate-500 mt-1">Manage teaching personnel, administrative staff, departments, and employee profiles</p>
+        </div>
+
+        <a href="{{ url_for('employees.create') }}" 
+           class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center space-x-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+            <span>Register New Employee</span>
+        </a>
+    </div>
+
+    <!-- Search & Filters -->
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs">
+        <form action="{{ url_for('employees.index') }}" method="GET" class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+            <div class="sm:col-span-4 relative">
+                <input type="text" name="q" value="{{ search_q }}" placeholder="Search by name, code, email, phone or designation..."
+                       class="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+
+            <div class="sm:col-span-3">
+                <select name="department" onchange="this.form.submit()"
+                        class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <option value="">All Departments</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept }}" {% if department_filter == dept %}selected{% endif %}>{{ dept }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="sm:col-span-2">
+                <select name="teacher" onchange="this.form.submit()"
+                        class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <option value="">All Roles</option>
+                    <option value="yes" {% if teacher_filter == 'yes' %}selected{% endif %}>Teachers Only</option>
+                    <option value="no" {% if teacher_filter == 'no' %}selected{% endif %}>Non-Teaching Staff</option>
+                </select>
+            </div>
+
+            <div class="sm:col-span-2">
+                <select name="status" onchange="this.form.submit()"
+                        class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <option value="">All Statuses</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active Only</option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive Only</option>
+                </select>
+            </div>
+
+            <div class="sm:col-span-1 flex items-center space-x-1">
+                <button type="submit" class="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all">
+                    Filter
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Employee Cards Grid -->
+    {% if employees_list %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for emp in employees_list %}
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between space-y-4">
+            
+            <div class="space-y-3">
+                <!-- Avatar & Code Header -->
+                <div class="flex items-start justify-between">
+                    <div class="flex items-center space-x-3">
+                        {% if emp.profile_photo %}
+                        <img src="{{ url_for('static', filename=emp.profile_photo) }}" alt="{{ emp.full_name }}" class="w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-xs">
+                        {% else %}
+                        <div class="w-12 h-12 rounded-xl bg-slate-900 text-white font-bold text-sm flex items-center justify-center shadow-xs">
+                            {{ emp.first_name[0] }}{{ emp.last_name[0] if emp.last_name else '' }}
+                        </div>
+                        {% endif %}
+
+                        <div>
+                            <h3 class="text-base font-extrabold text-slate-900 tracking-tight leading-tight">{{ emp.full_name }}</h3>
+                            <span class="text-[11px] font-extrabold font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 inline-block mt-0.5">
+                                {{ emp.registration_number }}
+                            </span>
+                        </div>
+                    </div>
+
+                    {% if emp.is_active %}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Active</span>
+                    {% else %}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">Inactive</span>
+                    {% endif %}
+                </div>
+
+                <!-- Designation & Department -->
+                <div class="space-y-1 pt-1">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-500">Designation:</span>
+                        <span class="font-bold text-slate-900">{{ emp.designation }}</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-500">Department:</span>
+                        <span class="font-semibold text-slate-700 px-2 py-0.5 rounded bg-slate-50 border border-slate-200">{{ emp.department }}</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-500">Role Classification:</span>
+                        {% if emp.is_teacher %}
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">Teaching Staff</span>
+                        {% else %}
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">Administrative</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Contact Info -->
+                <div class="pt-2 border-t border-slate-100 space-y-1 text-xs text-slate-600">
+                    {% if emp.email_address %}
+                    <div class="flex items-center space-x-2 truncate">
+                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        <span class="truncate">{{ emp.email_address }}</span>
+                    </div>
+                    {% endif %}
+                    {% if emp.mobile_phone_number %}
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                        <span>{{ emp.mobile_phone_number }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Card Footer Buttons -->
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+                <a href="{{ url_for('employees.profile', employee_id=emp.id) }}" 
+                   class="text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-colors">
+                    View Profile
+                </a>
+
+                <div class="flex items-center space-x-1.5">
+                    <form action="{{ url_for('employees.toggle_status', employee_id=emp.id) }}" method="POST" class="inline">
+                        <button type="submit" class="text-xs font-bold px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors">
+                            {% if emp.is_active %}Deactivate{% else %}Activate{% endif %}
+                        </button>
+                    </form>
+
+                    <a href="{{ url_for('employees.edit', employee_id=emp.id) }}" 
+                       class="text-xs font-bold px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 transition-colors">
+                        Edit
+                    </a>
+                </div>
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.pages > 1 %}
+    <div class="flex items-center justify-between bg-white px-4 py-3 border border-slate-200/90 rounded-2xl shadow-xs">
+        <div class="text-xs text-slate-500 font-medium">
+            Showing page {{ pagination.page }} of {{ pagination.pages }} ({{ pagination.total }} total staff)
+        </div>
+        <div class="flex items-center space-x-2">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('employees.index', page=pagination.prev_num, q=search_q, department=department_filter, teacher=teacher_filter, status=status_filter) }}" 
+               class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50">
+                Previous
+            </a>
+            {% endif %}
+            {% if pagination.has_next %}
+            <a href="{{ url_for('employees.index', page=pagination.next_num, q=search_q, department=department_filter, teacher=teacher_filter, status=status_filter) }}" 
+               class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50">
+                Next
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-12 text-center max-w-md mx-auto space-y-3 shadow-xs">
+        <div class="w-12 h-12 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center mx-auto text-xl font-bold">
+            👥
+        </div>
+        <h3 class="text-base font-bold text-slate-900">No Employees Found</h3>
+        <p class="text-xs text-slate-500">Register teachers and administrative personnel to build your school staff directory.</p>
+        <a href="{{ url_for('employees.create') }}" 
+           class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all inline-flex items-center space-x-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            <span>Register First Employee</span>
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

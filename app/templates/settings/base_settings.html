@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}System Settings — StratLearn{% endblock %}
+{% block header_title %}System Settings & Configuration{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Header Title & Active Session Badge -->
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-bold bg-brand-50 text-brand-700 border border-brand-200 mb-2">
+                <span>Module 2: Configuration & Setup</span>
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">School Setup & Settings</h2>
+            <p class="text-xs text-slate-500 mt-1">Manage institute details, active academic sessions, and global preferences</p>
+        </div>
+
+        <div class="bg-slate-50 border border-slate-200 px-4 py-3 rounded-xl text-xs flex items-center space-x-3">
+            <span class="font-bold text-slate-600">Active Academic Session:</span>
+            {% if active_session %}
+                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
+                    {{ active_session.name }}
+                </span>
+            {% else %}
+                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300">
+                    No Active Session
+                </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sub Navigation Tabs -->
+    <div class="bg-white rounded-xl border border-slate-200/90 p-1.5 flex flex-wrap gap-1 shadow-xs">
+        <a href="{{ url_for('settings.school_profile') }}" 
+           class="flex items-center space-x-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all
+           {% if active_tab == 'school' %}
+               bg-slate-900 text-white shadow-sm
+           {% else %}
+               text-slate-600 hover:bg-slate-100 hover:text-slate-900
+           {% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m3 0h1m-1-4h.01M9 16h.01M9 12h.01M9 8h.01M15 16h.01M15 12h.01M15 8h.01"></path></svg>
+            <span>School Profile & Logo</span>
+        </a>
+
+        <a href="{{ url_for('settings.academic_sessions') }}" 
+           class="flex items-center space-x-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all
+           {% if active_tab == 'sessions' %}
+               bg-slate-900 text-white shadow-sm
+           {% else %}
+               text-slate-600 hover:bg-slate-100 hover:text-slate-900
+           {% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <span>Academic Sessions</span>
+        </a>
+
+        <a href="{{ url_for('settings.general_settings') }}" 
+           class="flex items-center space-x-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all
+           {% if active_tab == 'general' %}
+               bg-slate-900 text-white shadow-sm
+           {% else %}
+               text-slate-600 hover:bg-slate-100 hover:text-slate-900
+           {% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
+            <span>General Preferences</span>
+        </a>
+
+        <a href="{{ url_for('settings.academic_settings') }}" 
+           class="flex items-center space-x-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all
+           {% if active_tab == 'academic' %}
+               bg-slate-900 text-white shadow-sm
+           {% else %}
+               text-slate-600 hover:bg-slate-100 hover:text-slate-900
+           {% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+            <span>Academic Rules</span>
+        </a>
+    </div>
+
+    <!-- Main Settings Form Content Area -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 shadow-xs">
+        {% block settings_content %}{% endblock %}
+    </div>
+
+</div>
+{% endblock %}

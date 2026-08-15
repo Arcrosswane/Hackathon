@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard — StratLearn{% endblock %}
+{% block header_title %}Student Learning Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Welcome Hero Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 rounded-2xl p-6 sm:p-8 text-white shadow-lg border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div class="space-y-1">
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>Student Learning Portal</span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                Welcome, {{ student.full_name if student else 'Student' }}
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-300">StratLearn Learning Portal & Class Homework</p>
+        </div>
+
+        <div class="bg-white/10 backdrop-blur-md border border-white/15 p-4 rounded-xl text-xs space-y-1.5 min-w-[220px]">
+            <div class="flex items-center justify-between gap-4">
+                <span class="text-slate-300">Admission No:</span>
+                <span class="font-bold text-white font-mono">{{ student.registration_number if student else 'N/A' }}</span>
+            </div>
+            <div class="flex items-center justify-between gap-4">
+                <span class="text-slate-300">Class & Section:</span>
+                <span class="font-bold text-emerald-300 font-mono">
+                    {% if enrollment %}
+                        {{ enrollment.school_class.display_name }} {% if enrollment.section %}({{ enrollment.section.display_name }}){% endif %}
+                    {% else %}
+                        Grade 9 (Section A)
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Overview Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Enrolled Class & Section</p>
+                <p class="text-xl font-bold text-slate-900 mt-1">
+                    {% if enrollment %}
+                        {{ enrollment.school_class.display_name }}
+                    {% else %}
+                        Grade 9
+                    {% endif %}
+                </p>
+                <span class="text-[11px] text-emerald-600 font-extrabold">
+                    {% if enrollment and enrollment.section %}
+                        {{ enrollment.section.display_name }}
+                    {% else %}
+                        Section A
+                    {% endif %}
+                </span>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg">
+                🏫
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Pending Assignments</p>
+                <p class="text-2xl font-extrabold text-amber-600 mt-1">{{ pending_cnt }}</p>
+                <span class="text-[11px] text-amber-600 font-semibold">Action Required</span>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                ⏳
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Submitted Work</p>
+                <p class="text-2xl font-extrabold text-emerald-600 mt-1">{{ submitted_cnt }}</p>
+                <span class="text-[11px] text-emerald-600 font-semibold">Completed Coursework</span>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                ✔️
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Academic Session</p>
+                <p class="text-xl font-bold text-slate-900 mt-1">{{ active_session.name if active_session else '2026-27' }}</p>
+                <span class="text-[11px] text-slate-500 font-medium">Session Active</span>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold">
+                📅
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Class Homework Roster -->
+    <div class="space-y-4 pt-2">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-extrabold text-slate-900 tracking-tight">Active Class Assignments</h3>
+                <p class="text-xs text-slate-500">
+                    Assigned homework for 
+                    <strong class="text-slate-800">
+                        {% if enrollment %}{{ enrollment.school_class.display_name }} {% if enrollment.section %}({{ enrollment.section.display_name }}){% endif %}{% else %}Grade 9 (Section A){% endif %}
+                    </strong>
+                </p>
+            </div>
+            <a href="{{ url_for('homework.student_index') }}" class="text-xs font-bold text-brand-600 hover:underline">View All →</a>
+        </div>
+
+        {% if homework_items %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for item in homework_items %}
+            {% set hw = item.homework %}
+            {% set sub = item.submission %}
+            {% set st = item.submission_status %}
+            <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs flex flex-col justify-between space-y-3">
+                <div>
+                    <div class="flex items-center justify-between text-xs mb-2">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-brand-50 text-brand-700 border border-brand-200">
+                            {{ hw.subject.code if hw.subject and hw.subject.code else hw.subject.name }}
+                        </span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold 
+                                     {% if st == 'REVIEWED' %}bg-sky-100 text-sky-800
+                                     {% elif st == 'SUBMITTED' %}bg-emerald-100 text-emerald-800
+                                     {% elif st == 'LATE' %}bg-amber-100 text-amber-800
+                                     {% elif st == 'MISSING' %}bg-rose-100 text-rose-800
+                                     {% else %}bg-slate-100 text-slate-700{% endif %}">
+                            ● {{ st }}
+                        </span>
+                    </div>
+                    <h4 class="font-bold text-slate-900 text-sm line-clamp-1">{{ hw.title }}</h4>
+                    <p class="text-xs text-slate-500 mt-1">Due: <strong class="text-slate-900">{{ hw.due_date.strftime('%b %d, %Y') }}</strong></p>
+                </div>
+
+                <div class="pt-3 border-t border-slate-100">
+                    <a href="{{ url_for('homework.student_detail', homework_id=hw.id) }}"
+                       class="w-full py-1.5 bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs rounded-xl transition-all block text-center">
+                        View & Submit
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-8 text-center space-y-3">
+            <p class="text-xs text-slate-500 font-medium">No homework assignments posted for your class.</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}{% if homework %}Edit Homework{% else %}Create Homework{% endif %} — StratLearn{% endblock %}
+{% block header_title %}{% if homework %}Edit Homework Assignment{% else %}Create Homework Assignment{% endif %}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+
+    <!-- Header Navigation -->
+    <div class="flex items-center justify-between">
+        <a href="{{ url_for('homework.manage') }}" class="text-xs font-bold text-slate-600 hover:text-slate-900 flex items-center space-x-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            <span>Back to Homework List</span>
+        </a>
+    </div>
+
+    <!-- Main Form Card -->
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-6">
+        
+        <div class="border-b border-slate-100 pb-4">
+            <h2 class="text-lg font-extrabold text-slate-900">
+                {% if homework %}Edit Homework: {{ homework.title }}{% else %}New Homework Details{% endif %}
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">Fill in assignment details, instructions, due date, and learning materials.</p>
+        </div>
+
+        <form method="POST" action="" enctype="multipart/form-data" class="space-y-5">
+            
+            <!-- Title -->
+            <div>
+                <label for="title" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                    Homework Title <span class="text-rose-500">*</span>
+                </label>
+                <input type="text" id="title" name="title" required value="{{ homework.title if homework else '' }}"
+                       placeholder="e.g. Chapter 4 Practice Problems & Quadratic Equations"
+                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+            </div>
+
+            <!-- Target Class, Section, Subject -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="class_id" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                        Class <span class="text-rose-500">*</span>
+                    </label>
+                    <select id="class_id" name="class_id" required onchange="fetchSectionsAndSubjects(this.value)"
+                            class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        <option value="">Select Class</option>
+                        {% for c in classes %}
+                        <option value="{{ c.id }}" {% if (homework and homework.class_id == c.id) or (selected_class_id and selected_class_id|int == c.id|int) %}selected{% endif %}>{{ c.display_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="section_id" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                        Target Section
+                    </label>
+                    <select id="section_id" name="section_id"
+                            class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        <option value="">All Sections</option>
+                        {% if sections %}
+                            {% for sec in sections %}
+                            <option value="{{ sec.id }}" {% if homework and homework.section_id == sec.id %}selected{% endif %}>{{ sec.display_name }}</option>
+                            {% endfor %}
+                        {% endif %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="subject_id" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                        Subject <span class="text-rose-500">*</span>
+                    </label>
+                    <select id="subject_id" name="subject_id" required
+                            class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        <option value="">Select Subject</option>
+                        {% if subjects %}
+                            {% for sub in subjects %}
+                            <option value="{{ sub.id }}" {% if homework and homework.subject_id == sub.id %}selected{% endif %}>{{ sub.name }} ({{ sub.code or 'SUB' }})</option>
+                            {% endfor %}
+                        {% endif %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Dates & Max Marks -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="assigned_date" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                        Assigned Date <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="date" id="assigned_date" name="assigned_date" required
+                           value="{{ homework.assigned_date.strftime('%Y-%m-%d') if homework else active_session.start_date }}"
+                           class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                </div>
+
+                <div>
+                    <label for="due_date" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                        Due Date <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="date" id="due_date" name="due_date" required
+                           value="{{ homework.due_date.strftime('%Y-%m-%d') if homework else active_session.start_date }}"
+                           class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                </div>
+
+                <div>
+                    <label for="max_marks" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                        Maximum Marks
+                    </label>
+                    <input type="number" step="0.5" id="max_marks" name="max_marks" min="0" max="1000"
+                           value="{{ homework.max_marks if homework else 100 }}"
+                           class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                </div>
+            </div>
+
+            <!-- Evaluation Mode Selection (Manual vs AI Auto-Check) -->
+            <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-800">
+                    Evaluation & Checking Method <span class="text-rose-500">*</span>
+                </label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label class="cursor-pointer border-2 rounded-xl p-3.5 flex items-center space-x-3 transition-all has-[:checked]:border-brand-600 has-[:checked]:bg-white hover:bg-white border-slate-200">
+                        <input type="radio" name="evaluation_type" value="MANUAL" 
+                               {% if not homework or homework.evaluation_type == 'MANUAL' %}checked{% endif %}
+                               onchange="document.getElementById('rubricContainer').classList.add('hidden')" class="text-brand-600">
+                        <div>
+                            <span class="block text-xs font-extrabold text-slate-900">👨‍🏫 Manual Teacher Checking</span>
+                            <span class="block text-[11px] text-slate-500">Teacher reviews student submissions and assigns marks manually.</span>
+                        </div>
+                    </label>
+
+                    <label class="cursor-pointer border-2 rounded-xl p-3.5 flex items-center space-x-3 transition-all has-[:checked]:border-purple-600 has-[:checked]:bg-purple-50/50 hover:bg-white border-slate-200">
+                        <input type="radio" name="evaluation_type" value="AI" 
+                               {% if homework and homework.evaluation_type == 'AI' %}checked{% endif %}
+                               onchange="document.getElementById('rubricContainer').classList.remove('hidden')" class="text-purple-600">
+                        <div>
+                            <span class="block text-xs font-extrabold text-purple-950 flex items-center space-x-1">
+                                <span>🤖 AI Auto-Checking</span>
+                                <span class="px-1.5 py-0.2 rounded text-[9px] bg-purple-200 text-purple-900 font-mono">Automated</span>
+                            </span>
+                            <span class="block text-[11px] text-slate-500">Instant AI evaluation, rubrics scoring, and constructive feedback upon submission.</span>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Grading Rubric / Answer Key for AI -->
+                <div id="rubricContainer" class="{% if not (homework and homework.evaluation_type == 'AI') %}hidden{% endif %} pt-2 space-y-1">
+                    <label for="grading_rubric" class="block text-xs font-bold text-slate-800">
+                        AI Grading Rubric & Solution Key (Optional)
+                    </label>
+                    <textarea id="grading_rubric" name="grading_rubric" rows="3" placeholder="Enter key answer steps, required terms, or criteria for AI scoring accuracy..."
+                              class="w-full px-3.5 py-2 rounded-xl border border-purple-200 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-purple-600 focus:outline-none bg-white">{{ homework.grading_rubric if homework else '' }}</textarea>
+                    <p class="text-[10px] text-purple-700">The AI evaluator will reference this answer key when checking student submissions.</p>
+                </div>
+            </div>
+
+            <!-- Instructions / Description -->
+            <div>
+                <label for="description" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                    Instructions & Guidelines
+                </label>
+                <textarea id="description" name="description" rows="5" placeholder="Explain what students need to solve, required materials, or formatting guidelines..."
+                          class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">{{ homework.description if homework else '' }}</textarea>
+            </div>
+
+            <!-- Existing Attachments list (if editing) -->
+            {% if homework and homework.attachments %}
+            <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                <span class="block text-xs font-bold text-slate-700">Existing Attachments:</span>
+                <div class="space-y-1.5">
+                    {% for att in homework.attachments %}
+                    <label class="flex items-center justify-between text-xs p-2 bg-white rounded-lg border border-slate-200 cursor-pointer">
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" name="remove_attachment_ids" value="{{ att.id }}" class="w-4 h-4 text-rose-600 rounded">
+                            <span class="font-medium text-slate-800">{{ att.original_filename }}</span>
+                        </div>
+                        <span class="text-rose-600 text-[10px] font-bold">Check to Delete</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Upload Learning Materials -->
+            <div>
+                <label for="attachments" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                    Attach Learning Materials (PDF, Word, Images, Zip)
+                </label>
+                <input type="file" id="attachments" name="attachments" multiple accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.png,.jpg,.jpeg,.zip"
+                       class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-brand-50 file:text-brand-700">
+                <p class="text-[10px] text-slate-400 mt-1">Allowed formats: PDF, DOC, DOCX, PPT, PPTX, PNG, JPG, ZIP (Max 10MB per file).</p>
+            </div>
+
+            <!-- Status Selection & Submission Buttons -->
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+                <div>
+                    <label for="status" class="inline-flex items-center space-x-2 text-xs font-bold text-slate-700">
+                        <span>Save as:</span>
+                        <select name="status" class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            <option value="PUBLISHED" {% if not homework or homework.status == 'PUBLISHED' %}selected{% endif %}>PUBLISHED (Visible to Students)</option>
+                            <option value="DRAFT" {% if homework and homework.status == 'DRAFT' %}selected{% endif %}>DRAFT (Teacher Only)</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <a href="{{ url_for('homework.manage') }}" class="px-4 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-6 py-2 bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all">
+                        {% if homework %}Save Changes{% else %}Create Homework{% endif %}
+                    </button>
+                </div>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+async function fetchSectionsAndSubjects(classId) {
+    const sectionSelect = document.getElementById('section_id');
+    const subjectSelect = document.getElementById('subject_id');
+
+    if (!classId) {
+        sectionSelect.innerHTML = '<option value="">All Sections</option>';
+        subjectSelect.innerHTML = '<option value="">Select Subject</option>';
+        return;
+    }
+
+    try {
+        const [secRes, subRes] = await Promise.all([
+            fetch(`/homework/api/classes/${classId}/sections`),
+            fetch(`/homework/api/classes/${classId}/subjects`)
+        ]);
+
+        if (secRes.ok) {
+            const sections = await secRes.json();
+            let secHtml = '<option value="">All Sections</option>';
+            sections.forEach(s => {
+                secHtml += `<option value="${s.id}">${s.name}</option>`;
+            });
+            sectionSelect.innerHTML = secHtml;
+        }
+
+        if (subRes.ok) {
+            const subjects = await subRes.json();
+            let subHtml = '<option value="">Select Subject</option>';
+            subjects.forEach(sub => {
+                subHtml += `<option value="${sub.id}">${sub.name} (${sub.code})</option>`;
+            });
+            subjectSelect.innerHTML = subHtml;
+        }
+    } catch (err) {
+        console.error('Error fetching sections/subjects:', err);
+    }
+}
+</script>
+{% endblock %}

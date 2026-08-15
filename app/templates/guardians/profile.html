@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}Guardian Profile — {{ guardian.full_name }}{% endblock %}
+{% block header_title %}Parent & Guardian Profile{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Top Action Navigation -->
+    <div class="flex items-center justify-between">
+        <a href="{{ url_for('guardians.index') }}" class="inline-flex items-center space-x-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"></path></svg>
+            <span>Back to Guardians Directory</span>
+        </a>
+
+        <div class="flex items-center space-x-2">
+            <button onclick="document.getElementById('linkChildModal').classList.remove('hidden')" 
+                    class="px-3.5 py-2 text-xs font-bold rounded-xl bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 transition-colors flex items-center space-x-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                <span>Link Child / Student</span>
+            </button>
+
+            <form action="{{ url_for('guardians.toggle_status', guardian_id=guardian.id) }}" method="POST" class="inline">
+                <button type="submit" class="px-3.5 py-2 text-xs font-bold rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 transition-colors">
+                    {% if guardian.is_active %}Deactivate Profile{% else %}Activate Profile{% endif %}
+                </button>
+            </form>
+
+            <a href="{{ url_for('guardians.edit', guardian_id=guardian.id) }}" 
+               class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center space-x-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                <span>Edit Details</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Guardian Profile Header -->
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-8 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div class="flex items-center space-x-5">
+            <div class="w-20 h-20 rounded-2xl bg-pink-100 text-pink-700 font-extrabold text-2xl flex items-center justify-center border border-pink-200 shadow-md">
+                {{ guardian.first_name[0] }}{{ guardian.last_name[0] if guardian.last_name else '' }}
+            </div>
+
+            <div class="space-y-1">
+                <div class="flex items-center space-x-2">
+                    <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">{{ guardian.full_name }}</h2>
+                    <span class="px-2.5 py-0.5 rounded-md text-xs font-extrabold font-mono bg-slate-900 text-white shadow-xs">
+                        {{ guardian.registration_number }}
+                    </span>
+                </div>
+                
+                <p class="text-sm font-semibold text-slate-700">
+                    {{ guardian.occupation or 'Parent / Guardian' }}
+                </p>
+
+                <div class="flex items-center space-x-3 text-xs text-slate-500 pt-1">
+                    <span>Phone: <strong class="text-slate-800">{{ guardian.mobile_phone_number or 'N/A' }}</strong></span>
+                    <span>Email: <strong class="text-slate-800">{{ guardian.email_address or 'N/A' }}</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col items-start md:items-end space-y-2">
+            {% if guardian.is_active %}
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                ● Active Guardian
+            </span>
+            {% else %}
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-800 border border-rose-300">
+                ● Inactive
+            </span>
+            {% endif %}
+            <span class="text-xs text-slate-500">{{ guardian.student_links | length }} Associated Children</span>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- Column 1 & 2: Children / Sibling Roster -->
+        <div class="md:col-span-2 space-y-6">
+
+            <!-- Associated Children Roster -->
+            <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider flex items-center space-x-2">
+                        <svg class="w-4 h-4 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        <span>Associated Children & Sibling Roster</span>
+                    </h3>
+                    
+                    <button onclick="document.getElementById('linkChildModal').classList.remove('hidden')"
+                            class="px-3 py-1 bg-pink-50 hover:bg-pink-100 text-pink-700 text-xs font-bold rounded-lg border border-pink-200 transition-colors">
+                        + Link Child
+                    </button>
+                </div>
+
+                {% if guardian.student_links %}
+                <div class="grid grid-cols-1 gap-3">
+                    {% for link in guardian.student_links %}
+                    {% set child_en = link.student.get_current_enrollment() %}
+                    <div class="bg-slate-50 border border-slate-200/90 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div class="flex items-center space-x-3">
+                            {% if link.student.profile_photo %}
+                            <img src="{{ url_for('static', filename=link.student.profile_photo) }}" alt="{{ link.student.full_name }}" class="w-10 h-10 rounded-lg object-cover border border-slate-200">
+                            {% else %}
+                            <div class="w-10 h-10 rounded-lg bg-amber-500 text-white font-bold text-xs flex items-center justify-center">
+                                {{ link.student.first_name[0] }}{{ link.student.last_name[0] if link.student.last_name else '' }}
+                            </div>
+                            {% endif %}
+
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <a href="{{ url_for('students.profile', student_id=link.student.id) }}" class="font-extrabold text-slate-900 hover:text-brand-600 text-sm">
+                                        {{ link.student.full_name }}
+                                    </a>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-white border border-slate-200">
+                                        Adm # {{ link.student.registration_number }}
+                                    </span>
+                                </div>
+
+                                <div class="flex items-center space-x-2 text-xs text-slate-500 mt-0.5">
+                                    <span class="font-bold text-pink-700 bg-pink-100 px-1.5 py-0.5 rounded text-[10px]">{{ link.relationship }}</span>
+                                    {% if link.is_primary %}
+                                    <span class="font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded text-[10px]">Primary Guardian</span>
+                                    {% endif %}
+                                    {% if link.is_emergency_contact %}
+                                    <span class="font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded text-[10px]">Emergency Contact</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-200">
+                            {% if child_en %}
+                            <div class="text-right">
+                                <span class="font-bold text-slate-900 text-xs block">{{ child_en.school_class.display_name }}</span>
+                                <span class="text-[10px] text-slate-500">{{ child_en.section.display_name if child_en.section else '' }} (Roll #{{ child_en.roll_number or 'N/A' }})</span>
+                            </div>
+                            {% endif %}
+
+                            <form action="{{ url_for('guardians.unlink_student', guardian_id=guardian.id, student_id=link.student.id) }}" method="POST" 
+                                  onsubmit="return confirm('Are you sure you want to unlink {{ link.student.full_name }} from {{ guardian.full_name }}? Neither profile will be deleted.')">
+                                <button type="submit" title="Remove Relationship Link"
+                                        class="px-2.5 py-1 text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-200 transition-colors">
+                                    Unlink
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="p-6 text-center bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                    <p class="text-xs text-slate-500">No children currently linked to this guardian.</p>
+                    <button onclick="document.getElementById('linkChildModal').classList.remove('hidden')"
+                            class="px-3.5 py-1.5 bg-pink-600 hover:bg-pink-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all">
+                        Link Child Student
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Address Card -->
+            <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-4">
+                <h3 class="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-3 uppercase tracking-wider flex items-center space-x-2">
+                    <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <span>Residential Location Address</span>
+                </h3>
+
+                <div class="text-xs space-y-2 text-slate-800">
+                    <p class="font-medium">{{ guardian.home_address or 'No Street Address Provided' }}</p>
+                    <p class="text-slate-500">
+                        {{ guardian.city or '' }}{% if guardian.city and guardian.state %}, {% endif %}
+                        {{ guardian.state or '' }} {{ guardian.postal_code or '' }}
+                        {% if guardian.country %}({{ guardian.country }}){% endif %}
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Column 3: Guardian Details & Parent Portal Status -->
+        <div class="space-y-6">
+
+            <!-- Personal Contact Details Card -->
+            <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-4">
+                <h3 class="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-3 uppercase tracking-wider flex items-center space-x-2">
+                    <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    <span>Guardian Contact Info</span>
+                </h3>
+
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <span class="text-slate-400 block font-medium">Full Name</span>
+                        <span class="font-bold text-slate-900 text-sm">{{ guardian.full_name }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block font-medium">Occupation</span>
+                        <span class="font-bold text-slate-900">{{ guardian.occupation or 'Not Provided' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block font-medium">Primary Mobile Phone</span>
+                        <span class="font-bold text-slate-900">{{ guardian.mobile_phone_number or 'Not Provided' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block font-medium">Alternate Phone</span>
+                        <span class="font-bold text-slate-900">{{ guardian.alternate_phone or 'Not Provided' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block font-medium">Email Address</span>
+                        <span class="font-bold text-slate-900">{{ guardian.email_address or 'Not Provided' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parent Portal Account Status Card -->
+            <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-3">
+                <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+                    Parent Portal Credentials
+                </h3>
+                {% if linked_user %}
+                <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl space-y-1">
+                    <span class="text-xs font-bold text-emerald-900 block">✓ Linked Parent Portal Account</span>
+                    <p class="text-xs text-emerald-700 font-mono">Username: {{ linked_user.username }}</p>
+                </div>
+                {% else %}
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600 space-y-1">
+                    <span class="font-semibold block text-slate-800">No Login Account Linked</span>
+                    <p class="text-[11px] text-slate-500 leading-relaxed">
+                        Guardian identity exists independently of login credentials. User accounts can optionally be created in future parent portal modules.
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Modal: Link Child Student -->
+<div id="linkChildModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl p-6 max-w-lg w-full space-y-5 shadow-2xl border border-slate-200">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-base font-extrabold text-slate-900">Link Child / Student to {{ guardian.full_name }}</h3>
+            <button onclick="document.getElementById('linkChildModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-700 font-bold text-lg">×</button>
+        </div>
+
+        <form action="{{ url_for('guardians.link_student', guardian_id=guardian.id) }}" method="POST" class="space-y-4">
+            <div>
+                <label for="student_id_modal" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Select Student <span class="text-rose-500">*</span></label>
+                <select id="student_id_modal" name="student_id" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <option value="">Select Student</option>
+                    {% for stu in all_students %}
+                    <option value="{{ stu.id }}">{{ stu.full_name }} (Adm # {{ stu.registration_number }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="relationship_modal" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Relationship <span class="text-rose-500">*</span></label>
+                <select id="relationship_modal" name="relationship" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    {% for rel in relationships %}
+                    <option value="{{ rel }}">{{ rel }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="space-y-2 pt-1 text-xs font-medium text-slate-700">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" name="is_primary" checked class="w-4 h-4 text-brand-600 rounded">
+                    <span>Set as Primary Contact Guardian</span>
+                </label>
+
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" name="is_emergency_contact" checked class="w-4 h-4 text-brand-600 rounded">
+                    <span>Set as Emergency Contact</span>
+                </label>
+
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" name="can_receive_notifications" checked class="w-4 h-4 text-brand-600 rounded">
+                    <span>Permission to Receive School Notifications</span>
+                </label>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                <button type="button" onclick="document.getElementById('linkChildModal').classList.add('hidden')" class="px-4 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50">
+                    Cancel
+                </button>
+                <button type="submit" class="px-5 py-2 bg-pink-600 hover:bg-pink-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all">
+                    Establish Relationship Link
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

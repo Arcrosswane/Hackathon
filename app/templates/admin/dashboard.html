@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard — StratLearn{% endblock %}
+{% block header_title %}Administrator Overview{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Welcome Hero Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-purple-950 rounded-2xl p-6 sm:p-8 text-white shadow-lg border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div class="space-y-1">
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+                <span>System Administrator</span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Welcome, Administrator</h2>
+            <p class="text-xs sm:text-sm text-slate-300">StratLearn Base Architecture & School Operations Control</p>
+        </div>
+
+        <div class="bg-white/10 backdrop-blur-md border border-white/15 p-4 rounded-xl text-xs space-y-1">
+            <div class="flex items-center justify-between gap-4">
+                <span class="text-slate-300">Database Engine:</span>
+                <span class="font-bold text-white font-mono">XAMPP MySQL</span>
+            </div>
+            <div class="flex items-center justify-between gap-4">
+                <span class="text-slate-300">Architecture:</span>
+                <span class="font-bold text-emerald-400 font-mono">Application Factory</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- School Setup Status Identity Card / Warning Banner -->
+    {% if school and school.name %}
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 font-bold text-2xl flex items-center justify-center border border-brand-100 shadow-xs">
+                🏫
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-slate-900 tracking-tight">{{ school.name }}</h3>
+                <p class="text-xs text-slate-500 mt-0.5">
+                    Academic Session: <span class="font-semibold text-slate-800 font-mono">{{ school.academic_session or '2026-27' }}</span>
+                </p>
+            </div>
+        </div>
+
+        <a href="{{ url_for('school.setup') }}" 
+           class="px-4 py-2 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition-all shadow-xs flex items-center space-x-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+            <span>Edit School Setup</span>
+        </a>
+    </div>
+    {% else %}
+    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-lg">
+                ⚠️
+            </div>
+            <div>
+                <h4 class="font-bold text-amber-900 text-base">School setup incomplete</h4>
+                <p class="text-xs text-amber-700 mt-0.5">Complete your school profile to begin configuring StratLearn.</p>
+            </div>
+        </div>
+
+        <a href="{{ url_for('school.setup') }}" 
+           class="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all whitespace-nowrap">
+            [Complete Setup]
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Quick Overview Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Institute</p>
+                <p class="text-xl font-bold text-slate-900 mt-1 truncate">{{ school.name if school else 'Not Set' }}</p>
+                <span class="text-[11px] text-emerald-600 font-semibold">Active Profile</span>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+                🏛️
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">System Users</p>
+                <p class="text-xl font-bold text-slate-900 mt-1">3 Accounts</p>
+                <span class="text-[11px] text-slate-500 font-medium">Admin / Teacher / Student</span>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold">
+                👥
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Academics</p>
+                <p class="text-xl font-bold text-slate-900 mt-1">Grade 9 - Sec E</p>
+                <span class="text-[11px] text-slate-500 font-medium">Class Rosters Active</span>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                📚
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Role Access</p>
+                <p class="text-xl font-bold text-slate-900 mt-1">Full Access</p>
+                <span class="text-[11px] text-emerald-600 font-semibold">Role Isolated</span>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                🔒
+            </div>
+        </div>
+    </div>
+
+    <!-- Extensible Modules Grid -->
+    <div class="space-y-4 pt-2">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-extrabold text-slate-900 tracking-tight">Future Extensible Modules</h3>
+                <p class="text-xs text-slate-500">Ready to accept feature blueprints without architecture rewrite</p>
+            </div>
+            <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-bold border border-slate-200">
+                Base Layer Ready
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for mod in future_modules %}
+            <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs hover:shadow-md hover:border-slate-300 transition-all flex flex-col justify-between group">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="font-bold text-slate-900 text-base group-hover:text-brand-600 transition-colors">{{ mod.name }}</h4>
+                        <span class="text-[10px] font-extrabold uppercase tracking-wide px-2 py-0.5 bg-purple-50 text-purple-700 rounded-md border border-purple-200">
+                            Planned
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 leading-relaxed">{{ mod.desc }}</p>
+                </div>
+                <div class="mt-5 pt-3 border-t border-slate-100 text-[11px] text-slate-400 flex items-center justify-between">
+                    <span class="font-semibold text-slate-500">Target Blueprint</span>
+                    <span class="font-mono text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">/admin/{{ mod.name.lower().replace(' ', '-').replace('&-', '') }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

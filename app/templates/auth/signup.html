@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account (Sign Up) — StratLearn Portal{% endblock %}
+
+{% block content %}
+<div class="min-h-[82vh] flex flex-col items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-xl w-full bg-white rounded-2xl border border-slate-200/90 shadow-lg shadow-slate-200/50 overflow-hidden">
+        
+        <!-- Header Banner -->
+        <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-brand-950 p-8 text-center text-white relative">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-700 to-sky-400 text-white font-extrabold text-2xl mx-auto flex items-center justify-center shadow-lg shadow-brand-500/20 mb-3 border border-white/10">
+                S
+            </div>
+            <h2 class="text-2xl font-extrabold tracking-tight">StratLearn Account Registration</h2>
+            <p class="text-xs text-slate-400 mt-1 font-medium">Create your Student, Teacher, or Parent portal account</p>
+        </div>
+
+        <!-- Form Section -->
+        <div class="p-8 space-y-6">
+
+            <form class="space-y-5" action="{{ url_for('auth.signup') }}" method="POST">
+                
+                <!-- Account Role Selector Cards -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+                        I am registering as a: <span class="text-rose-500">*</span>
+                    </label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <label class="cursor-pointer border-2 rounded-xl p-3 text-center transition-all has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50/50 hover:bg-slate-50 border-slate-200">
+                            <input type="radio" name="account_role" value="student" checked onchange="toggleRoleFields(this.value)" class="sr-only">
+                            <span class="block text-lg mb-1">🎓</span>
+                            <span class="block text-xs font-bold text-slate-900">Student</span>
+                        </label>
+
+                        <label class="cursor-pointer border-2 rounded-xl p-3 text-center transition-all has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50/50 hover:bg-slate-50 border-slate-200">
+                            <input type="radio" name="account_role" value="teacher" onchange="toggleRoleFields(this.value)" class="sr-only">
+                            <span class="block text-lg mb-1">👨‍🏫</span>
+                            <span class="block text-xs font-bold text-slate-900">Teacher / Staff</span>
+                        </label>
+
+                        <label class="cursor-pointer border-2 rounded-xl p-3 text-center transition-all has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50/50 hover:bg-slate-50 border-slate-200">
+                            <input type="radio" name="account_role" value="parent" onchange="toggleRoleFields(this.value)" class="sr-only">
+                            <span class="block text-lg mb-1">👨‍👩‍👧</span>
+                            <span class="block text-xs font-bold text-slate-900">Parent / Guardian</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Username & Password -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="username" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                            Choose Username <span class="text-rose-500">*</span>
+                        </label>
+                        <input id="username" name="username" type="text" required 
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600 text-xs font-bold" 
+                               placeholder="e.g. aarav_student">
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                            Create Password <span class="text-rose-500">*</span>
+                        </label>
+                        <input id="password" name="password" type="password" required 
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600 text-xs font-bold" 
+                               placeholder="••••••••">
+                    </div>
+                </div>
+
+                <!-- Name & Contact -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="first_name" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                            First Name
+                        </label>
+                        <input id="first_name" name="first_name" type="text" 
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600 text-xs font-medium" 
+                               placeholder="e.g. Aarav">
+                    </div>
+
+                    <div>
+                        <label for="last_name" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                            Last Name
+                        </label>
+                        <input id="last_name" name="last_name" type="text" 
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600 text-xs font-medium" 
+                               placeholder="e.g. Sharma">
+                    </div>
+                </div>
+
+                <!-- Registration Code (Optional existing code link e.g. 4838, EMP001, PAR001) -->
+                <div>
+                    <label for="reg_code" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                        <span id="regCodeLabel">Admission No / Reg Code (Optional)</span>
+                    </label>
+                    <input id="reg_code" name="reg_code" type="text" 
+                           class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600 text-xs font-mono font-bold uppercase" 
+                           placeholder="e.g. 4838 or ADM001">
+                    <p class="text-[10px] text-slate-400 mt-1" id="regCodeHint">Enter your official registration code if you already have one, or leave blank to auto-create.</p>
+                </div>
+
+                <!-- Class Selection (For Students) -->
+                <div id="classSelectContainer">
+                    <label for="class_id" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                        Select Class
+                    </label>
+                    <select id="class_id" name="class_id" 
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-600 text-xs font-bold">
+                        <option value="">Select Class (Optional)</option>
+                        {% for c in classes %}
+                        <option value="{{ c.id }}">{{ c.display_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Email & Phone -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="email" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Email Address</label>
+                        <input id="email" name="email" type="email" placeholder="user@gmail.com"
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-600 text-xs font-medium">
+                    </div>
+                    <div>
+                        <label for="phone" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Mobile Phone</label>
+                        <input id="phone" name="phone" type="text" placeholder="+91 98000 00000"
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-600 text-xs font-medium">
+                    </div>
+                </div>
+
+                <div class="pt-3">
+                    <button type="submit" 
+                            class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-brand-700 to-brand-600 hover:from-brand-800 hover:to-brand-700 text-white font-bold text-sm shadow-md shadow-brand-700/20 transition-all active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600">
+                        Create My Portal Account
+                    </button>
+                </div>
+            </form>
+
+            <div class="pt-3 border-t border-slate-100 text-center text-xs text-slate-500">
+                Already have a portal account? 
+                <a href="{{ url_for('auth.login') }}" class="font-bold text-brand-600 hover:underline">Sign In to Portal</a>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+function toggleRoleFields(role) {
+    const regLabel = document.getElementById('regCodeLabel');
+    const regHint = document.getElementById('regCodeHint');
+    const classContainer = document.getElementById('classSelectContainer');
+
+    if (role === 'student') {
+        regLabel.innerText = 'Admission No / Student Reg Code (Optional)';
+        regHint.innerText = 'e.g. 4838 or ADM001 to link to an existing student profile.';
+        classContainer.classList.remove('hidden');
+    } else if (role === 'teacher') {
+        regLabel.innerText = 'Employee Reg No / Teacher Code (Optional)';
+        regHint.innerText = 'e.g. 257448 or EMP001 to link to an existing teacher profile.';
+        classContainer.classList.add('hidden');
+    } else if (role === 'parent') {
+        regLabel.innerText = 'Guardian Registration Code (Optional)';
+        regHint.innerText = 'e.g. PAR001 to link to your child\'s guardian profile.';
+        classContainer.classList.add('hidden');
+    }
+}
+</script>
+{% endblock %}

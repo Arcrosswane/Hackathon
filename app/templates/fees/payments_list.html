@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Payment History & Collection Summary — StratLearn{% endblock %}
+{% block header_title %}Payment History & Collection Summary{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Top Action Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+        <div>
+            <h2 class="text-xl font-bold text-slate-900 tracking-tight">Fee Collection & Payment Log</h2>
+            <p class="text-xs font-medium text-slate-500 mt-1">Financial metrics and recorded student payment transactions.</p>
+        </div>
+
+        <a href="{{ url_for('fees.record_payment_route') }}" 
+           class="inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            <span>Record Payment</span>
+        </a>
+    </div>
+
+    <!-- Collection Metrics Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+            <div class="text-[11px] font-extrabold uppercase text-slate-400">Total Billed</div>
+            <div class="text-xl font-black text-slate-900 mt-1">₹{{ "%.2f"|format(summary.total_billed) }}</div>
+            <div class="text-[10px] text-slate-500 mt-1">{{ summary.total_invoices_count }} Total Invoices</div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+            <div class="text-[11px] font-extrabold uppercase text-emerald-600">Total Collected</div>
+            <div class="text-xl font-black text-emerald-700 mt-1">₹{{ "%.2f"|format(summary.total_collected) }}</div>
+            <div class="text-[10px] text-emerald-600 mt-1">₹{{ "%.2f"|format(summary.today_collection) }} collected today</div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+            <div class="text-[11px] font-extrabold uppercase text-rose-600">Total Outstanding</div>
+            <div class="text-xl font-black text-rose-700 mt-1">₹{{ "%.2f"|format(summary.total_outstanding) }}</div>
+            <div class="text-[10px] text-rose-500 mt-1">{{ summary.unpaid_count }} Unpaid | {{ summary.partially_paid_count }} Partial</div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+            <div class="text-[11px] font-extrabold uppercase text-amber-600">Overdue Fees</div>
+            <div class="text-xl font-black text-amber-700 mt-1">₹{{ "%.2f"|format(summary.total_overdue) }}</div>
+            <div class="text-[10px] text-amber-600 mt-1">Past due date invoices</div>
+        </div>
+    </div>
+
+    <!-- Payments Log Table -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+            <h3 class="text-sm font-bold text-slate-900">Payment Transactions History</h3>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                        <th class="py-3.5 px-6">Payment ID</th>
+                        <th class="py-3.5 px-6">Student</th>
+                        <th class="py-3.5 px-6">Invoice #</th>
+                        <th class="py-3.5 px-6">Date</th>
+                        <th class="py-3.5 px-6">Method / Ref</th>
+                        <th class="py-3.5 px-6">Amount (₹)</th>
+                        <th class="py-3.5 px-6">Received By</th>
+                        <th class="py-3.5 px-6 text-right">Receipt</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+                    {% for p in payments %}
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                        <td class="py-4 px-6 font-bold text-slate-400">#{{ p.id }}</td>
+                        <td class="py-4 px-6 font-extrabold text-slate-900">
+                            {{ p.student.first_name }} {{ p.student.last_name or '' }}
+                        </td>
+                        <td class="py-4 px-6 font-bold text-brand-700">
+                            <a href="{{ url_for('fees.invoice_detail', invoice_id=p.invoice.id) }}" class="hover:underline">{{ p.invoice.invoice_number }}</a>
+                        </td>
+                        <td class="py-4 px-6 text-slate-800">{{ p.payment_date.strftime('%b %d, %Y') }}</td>
+                        <td class="py-4 px-6">
+                            <span class="font-bold text-slate-900">{{ p.payment_method }}</span>
+                            {% if p.transaction_reference %}
+                            <div class="text-[10px] text-slate-400">Ref: {{ p.transaction_reference }}</div>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 font-extrabold text-emerald-700">₹{{ "%.2f"|format(p.amount) }}</td>
+                        <td class="py-4 px-6 text-slate-600">{{ p.received_by.first_name if p.received_by else 'System Admin' }}</td>
+                        <td class="py-4 px-6 text-right">
+                            {% if p.receipt %}
+                            <a href="{{ url_for('fees.receipt_view', receipt_id=p.receipt.id) }}" class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 font-bold border border-indigo-200 hover:bg-indigo-100">
+                                #{{ p.receipt.receipt_number }}
+                            </a>
+                            {% else %}
+                            <span class="text-slate-400">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="py-8 text-center text-slate-400 font-medium">No payment transactions recorded yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

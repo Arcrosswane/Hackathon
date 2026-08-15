@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}Classes & Sections — StratLearn{% endblock %}
+{% block header_title %}Academic Structure: Classes & Sections{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Hero Header Banner & Academic Session Filter -->
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-bold bg-brand-50 text-brand-700 border border-brand-200 mb-2">
+                <span>Module 3: Academic Structure</span>
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Classes & Sections Management</h2>
+            <p class="text-xs text-slate-500 mt-1">Configure classes and section rosters scoped to academic sessions</p>
+        </div>
+
+        <!-- Academic Session Selector Dropdown -->
+        <form method="GET" action="{{ url_for('classes.index') }}" class="flex items-center space-x-2 bg-slate-50 border border-slate-200 p-2 rounded-xl">
+            <label for="session_id" class="text-xs font-bold text-slate-700 whitespace-nowrap px-1">Session:</label>
+            <select id="session_id" name="session_id" onchange="this.form.submit()" 
+                    class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-brand-600">
+                {% for sess in all_sessions %}
+                    <option value="{{ sess.id }}" {% if selected_session and selected_session.id == sess.id %}selected{% endif %}>
+                        {{ sess.name }} {% if sess.is_active %}(Active){% endif %}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Classes</p>
+                <p class="text-2xl font-bold text-slate-900 mt-1">{{ classes_list | length }}</p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-lg">
+                🏫
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Sections</p>
+                <p class="text-2xl font-bold text-slate-900 mt-1">
+                    {% set total_sections = namespace(count=0) %}
+                    {% for c in classes_list %}
+                        {% set total_sections.count = total_sections.count + (c.sections | length) %}
+                    {% endfor %}
+                    {{ total_sections.count }}
+                </p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold text-lg">
+                👥
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Selected Session</p>
+                <p class="text-base font-bold text-slate-900 mt-1 truncate">
+                    {{ selected_session.name if selected_session else 'None' }}
+                </p>
+                {% if selected_session and selected_session.is_active %}
+                    <span class="text-[10px] font-bold uppercase text-emerald-600">Active Academic Year</span>
+                {% else %}
+                    <span class="text-[10px] font-semibold text-slate-400">Historical / Inactive</span>
+                {% endif %}
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg">
+                📅
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Class Form Section -->
+    <div class="p-6 bg-white border border-slate-200/90 rounded-2xl shadow-xs space-y-4">
+        <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
+            <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            <span>Create New Class for {{ selected_session.name if selected_session else '' }}</span>
+        </h3>
+
+        <form action="{{ url_for('classes.index') }}" method="POST" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+            <input type="hidden" name="session_id" value="{{ selected_session.id if selected_session else '' }}">
+
+            <div>
+                <label for="name" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                    Class Code / Name <span class="text-rose-500">*</span>
+                </label>
+                <input type="text" id="name" name="name" placeholder="e.g. 9 or Nursery" required
+                       class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-brand-600 focus:outline-none">
+            </div>
+
+            <div>
+                <label for="display_name" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                    Display Name
+                </label>
+                <input type="text" id="display_name" name="display_name" placeholder="e.g. Grade 9"
+                       class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-brand-600 focus:outline-none">
+            </div>
+
+            <div>
+                <label for="numeric_order" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                    Order #
+                </label>
+                <input type="number" id="numeric_order" name="numeric_order" value="1" min="0" required
+                       class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-brand-600 focus:outline-none">
+            </div>
+
+            <div>
+                <label for="description" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                    Description
+                </label>
+                <input type="text" id="description" name="description" placeholder="Optional notes"
+                       class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-brand-600 focus:outline-none">
+            </div>
+
+            <div>
+                <button type="submit" 
+                        class="w-full py-2.5 px-4 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all">
+                    + Add Class
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Classes & Sections Cards List -->
+    <div class="space-y-4">
+        <h3 class="text-lg font-bold text-slate-900">Configured Classes & Sections</h3>
+
+        {% if classes_list %}
+            <div class="space-y-4">
+                {% for cls in classes_list %}
+                <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs transition-all hover:border-slate-300 space-y-4">
+                    
+                    <!-- Class Header Bar -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-slate-900 text-white font-bold text-sm flex items-center justify-center shadow-xs">
+                                {{ cls.name }}
+                            </div>
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <h4 class="font-bold text-slate-900 text-base">{{ cls.display_name }}</h4>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                                        Order: {{ cls.numeric_order }}
+                                    </span>
+                                </div>
+                                {% if cls.description %}
+                                <p class="text-xs text-slate-500 mt-0.5">{{ cls.description }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Class Status & Toggle Actions -->
+                        <div class="flex items-center space-x-2">
+                            {% if cls.is_active %}
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                    Active Class
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-300">
+                                    Inactive
+                                </span>
+                            {% endif %}
+
+                            <form action="{{ url_for('classes.toggle_class_status', class_id=cls.id) }}" method="POST" class="inline">
+                                <button type="submit" class="text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors">
+                                    {% if cls.is_active %}Deactivate{% else %}Activate{% endif %}
+                                </button>
+                            </form>
+
+                            <form action="{{ url_for('classes.delete_class', class_id=cls.id) }}" method="POST" class="inline"
+                                  onsubmit="return confirm('Are you sure you want to delete {{ cls.display_name }} and all its sections? This action cannot be undone.');">
+                                <button type="submit" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 transition-colors flex items-center space-x-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    <span>Delete Class</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Sections Roster Grid -->
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h5 class="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                Sections ({{ cls.sections | length }})
+                            </h5>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                            {% for sec in cls.sections %}
+                            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+                                <div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="font-bold text-slate-900 text-sm">{{ sec.display_name }}</span>
+                                        {% if not sec.is_active %}
+                                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700">Inactive</span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="text-[11px] text-slate-500 mt-0.5">Capacity: <span class="font-semibold text-slate-700">{{ sec.capacity or 'Unlimited' }}</span></p>
+                                </div>
+
+                                <div class="flex items-center space-x-1">
+                                    <form action="{{ url_for('classes.toggle_section_status', section_id=sec.id) }}" method="POST" class="inline">
+                                        <button type="submit" title="Toggle Section Status" class="p-1.5 rounded-md hover:bg-slate-200 text-slate-500 hover:text-slate-900 text-xs">
+                                            {% if sec.is_active %}
+                                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                            {% else %}
+                                            <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                                            {% endif %}
+                                        </button>
+                                    </form>
+
+                                    <form action="{{ url_for('classes.delete_section', section_id=sec.id) }}" method="POST" class="inline"
+                                          onsubmit="return confirm('Delete section {{ sec.display_name }}?');">
+                                        <button type="submit" title="Delete Section" class="p-1.5 rounded-md hover:bg-rose-100 text-slate-400 hover:text-rose-600 text-xs transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endfor %}
+
+                            <!-- Add Section Inline Form -->
+                            <form action="{{ url_for('classes.add_section', class_id=cls.id) }}" method="POST" 
+                                  class="p-3 bg-white border border-dashed border-slate-300 rounded-xl flex items-center space-x-2">
+                                <input type="text" name="name" placeholder="Sec Name (A)" required
+                                       class="w-1/2 px-2 py-1 text-xs rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-brand-600">
+                                <input type="number" name="capacity" placeholder="Cap (40)" value="40" min="1"
+                                       class="w-1/2 px-2 py-1 text-xs rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-brand-600">
+                                <button type="submit" class="px-2 py-1 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded shadow-xs">
+                                    +
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-white border border-slate-200/90 rounded-2xl p-12 text-center text-slate-500 space-y-3">
+                <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 font-bold text-2xl mx-auto flex items-center justify-center">
+                    🏫
+                </div>
+                <h4 class="font-bold text-slate-900 text-base">No Classes Found for Session</h4>
+                <p class="text-xs text-slate-500 max-w-sm mx-auto">Use the form above to add the first class and sections to this academic year.</p>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

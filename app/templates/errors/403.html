@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}403 Access Denied — StratLearn{% endblock %}
+
+{% block content %}
+<div class="min-h-[60vh] flex items-center justify-center p-6">
+    <div class="max-w-md w-full text-center bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
+            403
+        </div>
+        <h2 class="text-xl font-bold text-slate-900">Access Denied / Forbidden</h2>
+        <p class="text-sm text-slate-500">
+            You do not have the required permissions or role authorization to access this page.
+        </p>
+        <div class="pt-4">
+            <a href="/" class="inline-flex items-center px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-medium text-sm rounded-lg shadow-sm transition-colors">
+                Return to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
