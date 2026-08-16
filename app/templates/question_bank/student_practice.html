@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Interactive Practice Session — StratLearn{% endblock %}
+{% block header_title %}Interactive Practice Session{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-4xl mx-auto">
+
+    <!-- Header Navigation -->
+    <div class="flex items-center justify-between">
+        <a href="{{ url_for('question_bank.student_banks') }}" 
+           class="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-black text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs">
+            <span>◀</span>
+            <span>Back to All Question Banks</span>
+        </a>
+
+        <div class="flex items-center space-x-2">
+            <span class="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-black">
+                {{ cls_obj.display_name if cls_obj else 'Practice' }} — {{ sub_obj.name if sub_obj else 'Subject' }}
+            </span>
+            <span class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-black">
+                {{ questions|length }} Questions
+            </span>
+        </div>
+    </div>
+
+    <!-- Practice Header Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-brand-950 to-slate-900 rounded-2xl p-6 text-white shadow-lg">
+        <h1 class="text-xl font-black tracking-tight">Interactive Self-Study Practice</h1>
+        <p class="text-xs text-slate-300 mt-1">Select option choices or attempt questions below. Click "Check Answer & Explanation" to verify your answers instantly!</p>
+    </div>
+
+    <!-- Questions Roster -->
+    <div class="space-y-6">
+        {% for q in questions %}
+        {% set q_idx = loop.index %}
+        <div id="q_card_{{ q.id }}" class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-6 space-y-4">
+            
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center space-x-2">
+                    <span class="w-7 h-7 rounded-xl bg-slate-900 text-white font-black text-xs flex items-center justify-center">
+                        Q{{ q_idx }}
+                    </span>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-purple-50 text-purple-700 border border-purple-200">
+                        {{ q.question_type }}
+                    </span>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-50 text-amber-700 border border-amber-200">
+                        {{ q.difficulty }}
+                    </span>
+                </div>
+                
+                <span class="text-xs font-bold text-slate-400">
+                    {{ q.marks }} {{ 'mark' if q.marks == 1 else 'marks' }}
+                </span>
+            </div>
+
+            <!-- Question Statement -->
+            <p class="text-base font-extrabold text-slate-900 leading-relaxed">{{ q.question_text }}</p>
+
+            {% if q.question_type == 'MCQ' %}
+            <!-- MCQ Options Choices -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-bold pt-1">
+                {% for opt_key, opt_val in [('A', q.option_a), ('B', q.option_b), ('C', q.option_c), ('D', q.option_d)] %}
+                {% if opt_val %}
+                <button type="button" onclick="selectOption({{ q.id }}, '{{ opt_key }}')" id="opt_btn_{{ q.id }}_{{ opt_key }}" 
+                        class="opt-btn-{{ q.id }} p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-100 text-left transition-all flex items-center justify-between">
+                    <span class="text-slate-800"><span class="font-black text-slate-900 mr-1.5">{{ opt_key }})</span> {{ opt_val }}</span>
+                    <span id="opt_badge_{{ q.id }}_{{ opt_key }}" class="hidden text-[10px] font-black px-2 py-0.5 rounded-md"></span>
+                </button>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Reveal Answer & Explanation Controls -->
+            <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <button type="button" onclick="checkAnswer({{ q.id }}, '{{ q.correct_option or '' }}', '{{ q.question_type }}')" 
+                        class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs transition-colors">
+                    💡 Check Answer & Solution
+                </button>
+
+                <div id="status_msg_{{ q.id }}" class="hidden text-xs font-black"></div>
+            </div>
+
+            <!-- Solution & Explanation Panel (Hidden by default) -->
+            <div id="solution_panel_{{ q.id }}" class="hidden p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2">
+                {% if q.question_type == 'MCQ' and q.correct_option %}
+                <div class="font-extrabold text-emerald-800 flex items-center space-x-1.5">
+                    <span>✅ Correct Option: Choice {{ q.correct_option }}</span>
+                </div>
+                {% endif %}
+
+                {% if q.answer_text %}
+                <div>
+                    <span class="font-black text-slate-900 block mb-0.5">Model Answer / Key Points:</span>
+                    <p class="text-slate-700 leading-relaxed">{{ q.answer_text }}</p>
+                </div>
+                {% endif %}
+
+                {% if q.explanation %}
+                <div class="text-slate-600 italic border-t border-slate-200/60 pt-2 mt-1">
+                    💡 Explanation: {{ q.explanation }}
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+        {% else %}
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-12 text-center">
+            <span class="text-3xl block mb-2">📚</span>
+            <h3 class="text-base font-black text-slate-900">No Questions Found in this Question Bank</h3>
+            <p class="text-xs text-slate-500 mt-1">Return to Question Banks list to choose another subject.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<script>
+const selectedAnswers = {};
+
+function selectOption(qId, optKey) {
+    selectedAnswers[qId] = optKey;
+    
+    // Clear styles for option buttons of this question
+    const btns = document.querySelectorAll('.opt-btn-' + qId);
+    btns.forEach(b => {
+        b.classList.remove('border-indigo-500', 'bg-indigo-50/80', 'ring-2', 'ring-indigo-400');
+        b.classList.add('border-slate-200', 'bg-slate-50/70');
+    });
+
+    // Highlight selected button
+    const targetBtn = document.getElementById(`opt_btn_${qId}_${optKey}`);
+    if (targetBtn) {
+        targetBtn.classList.remove('border-slate-200', 'bg-slate-50/70');
+        targetBtn.classList.add('border-indigo-500', 'bg-indigo-50/80', 'ring-2', 'ring-indigo-400');
+    }
+}
+
+function checkAnswer(qId, correctChoice, qType) {
+    const solPanel = document.getElementById('solution_panel_' + qId);
+    const statusMsg = document.getElementById('status_msg_' + qId);
+    
+    if (solPanel) solPanel.classList.remove('hidden');
+
+    if (qType === 'MCQ' && correctChoice) {
+        const chosen = selectedAnswers[qId];
+        if (!chosen) {
+            statusMsg.className = "text-xs font-black text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200";
+            statusMsg.innerText = "⚠️ Please select an option first!";
+            statusMsg.classList.remove('hidden');
+            return;
+        }
+
+        if (chosen === correctChoice) {
+            statusMsg.className = "text-xs font-black text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200";
+            statusMsg.innerText = "🎉 Excellent! Choice " + chosen + " is Correct!";
+        } else {
+            statusMsg.className = "text-xs font-black text-rose-700 bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-200";
+            statusMsg.innerText = "❌ Incorrect. Choice " + chosen + " was selected. Correct choice is " + correctChoice + ".";
+        }
+        statusMsg.classList.remove('hidden');
+    } else {
+        if (statusMsg) statusMsg.classList.add('hidden');
+    }
+}
+</script>
+{% endblock %}

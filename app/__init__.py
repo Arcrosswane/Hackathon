@@ -32,6 +32,8 @@ def create_app(config_class=Config):
     db.init_app(app)
 
     # Register blueprints
+    from app.routes.question_bank import question_bank_bp
+
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(teacher_bp)
@@ -51,6 +53,7 @@ def create_app(config_class=Config):
     app.register_blueprint(accounts_bp)
     app.register_blueprint(payroll_bp)
     app.register_blueprint(attendance_bp)
+    app.register_blueprint(question_bank_bp)
 
     # Auto table & column check
     with app.app_context():

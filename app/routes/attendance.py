@@ -1,5 +1,6 @@
-from datetime import datetime, date
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, abort
+import calendar
+from datetime import datetime, date, timedelta
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, abort, Response
 from app.utils.decorators import login_required, role_required
 from app.services.academic_service import get_active_academic_session
 from app.services.class_service import get_classes_for_session
@@ -10,6 +11,7 @@ from app.services.attendance_service import (
     get_class_daily_attendance, get_student_attendance_summary,
     get_employee_attendance_summary, get_class_attendance_matrix,
     verify_teacher_class_access, get_today_attendance_overview,
+    get_month_calendar_attendance, generate_attendance_csv_export,
     VALID_ATTENDANCE_STATUSES
 )
 
@@ -305,22 +307,16 @@ def child_attendance(student_id):
     return render_template('attendance/child_attendance.html', data=data, month_year=month_year)
 
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, abort, Response
-from app.utils.decorators import login_required, role_required
-from app.services.academic_service import get_active_academic_session
-from app.services.class_service import get_classes_for_session
-from app.services.employee_service import get_all_employees
-from app.models import Student, Guardian, GuardianStudent, Employee, SchoolClass, Section, Attendance
-from app.services.attendance_service import (
-    save_bulk_class_student_attendance, save_bulk_employee_attendance,
-    get_class_daily_attendance, get_student_attendance_summary,
-    get_employee_attendance_summary, get_class_attendance_matrix,
-    verify_teacher_class_access, get_today_attendance_overview,
-    get_month_calendar_attendance, generate_attendance_csv_export,
-    VALID_ATTENDANCE_STATUSES
-)
-import calendar
-from datetime import datetime, date, timedelta
+@attendance_bp.route('/my-staff-attendance')
+@login_required
+def my_staff_attendance():
+    """Teacher / Employee self-service view for own attendance records."""
+    emp_id = resolve_current_employee_id()
+    month_year = request.args.get('month_year', datetime.now().strftime('%Y-%m'))
+
+    data = get_employee_attendance_summary(emp_id, month_year=month_year)
+
+    return render_template('attendance/my_staff_attendance.html', data=data, month_year=month_year)
 
 
 @attendance_bp.route('/calendar')

@@ -347,6 +347,38 @@ Builds a school Attendance Management system supporting daily student attendance
 
 ---
 
+### 📝 Module 15 — AI Question Paper & Question Bank
+
+#### Core Objective
+Builds a modular **Question Bank** and **AI-Powered Question Paper Generation System** for StratLearn, enabling teachers and admins to create, search, tag, and organize questions, assemble exam question papers with sections and reordering, snapshot finalized papers, print formatted student test papers and teacher-only answer keys, and leverage Gemini AI to generate structured, schema-validated questions and full question paper blueprints.
+
+#### Detailed Functionality
+- **Reusable Question Bank Catalog (`/question-bank/questions`)**:
+  - Store questions categorized by Class, Subject, Chapter/Topic, Question Type (`MCQ`, `SHORT_ANSWER`, `LONG_ANSWER`, `VERY_SHORT_ANSWER`, `TRUE_FALSE`, `FILL_IN_THE_BLANK`, `CASE_BASED`, `NUMERICAL`), Difficulty (`EASY`, `MEDIUM`, `HARD`), Marks, MCQ Options (A, B, C, D), Correct Option, Model Answer, Detailed Explanation, Tags (`NCERT`, `Important`, `Conceptual`, `HOTS`), and Status (`ACTIVE`, `ARCHIVED`).
+  - Search and filter questions by Class, Subject, Chapter, Difficulty, Type, Marks, Tags, and Keyword.
+- **Gemini AI Question Generator Wizard (`/question-bank/ai-generate`)**:
+  - Configure curriculum parameters: Class, Subject, Chapters/Topics, Difficulty, Number of Questions (1-25), Question Types, and Custom Teacher Instructions.
+  - Calls Gemini REST API (`gemini-1.5-flash` / `gemini-2.5-flash`) with structured JSON schema enforcement (`responseMimeType="application/json"`).
+  - Server validates JSON output before presenting candidate preview cards for teacher review (*Accept*, *Edit*, or *Reject*).
+  - Accepted questions automatically enter the Question Bank as reusable items.
+- **Question Paper Directory & Builder (`/question-bank/papers`, `/question-bank/papers/<id>/builder`)**:
+  - Create question paper drafts with custom title, instructions, and duration (mins).
+  - Organize papers into flexible Sections (e.g. *Section A - MCQs*, *Section B - Short Answers*).
+  - Attach questions from the Question Bank into sections, adjust question orders, and set mark allocations.
+  - Total marks per section and overall paper total marks are calculated server-side.
+- **Immutable Question Paper Snapshots (`/question-bank/papers/<id>/finalize`)**:
+  - Finalizing a paper locks it and serializes immutable JSON snapshots (`question_snapshot_json`) for all included questions.
+  - **Historical Snapshot Guarantee**: Future edits or archival of questions in the Question Bank will **NEVER** rewrite, corrupt, or modify previously finalized exam papers.
+- **Paper Duplication (`/question-bank/papers/<id>/duplicate`)**:
+  - Duplicate an existing finalized or draft paper into an independent new draft paper for fast exam paper variation creating.
+- **Printable Student Question Paper (`/question-bank/papers/<id>/view`)**:
+  - Clean, print-formatted student exam document featuring school header branding, general instructions, sections, question statements, and zero correct answers or solution explanations exposed.
+- **Teacher-Only Printable Answer Key & Solution Guide (`/question-bank/papers/<id>/answer-key`)**:
+  - Printable solution document displaying correct MCQ options, model answers, solution keys, and grading notes.
+  - **Server-Side Security**: Protected with role authorization (`Admin`, `Teacher`) to prevent students or parents from accessing answer keys.
+
+---
+
 ## 🎨 Navigation & Menu UI Architecture
 
 - **Expandable Dark-Themed Left Sidebar**:

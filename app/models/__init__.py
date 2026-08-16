@@ -33,6 +33,10 @@ from app.models.payroll import (
     SalaryComponent, SalaryStructure, SalaryStructureItem,
     EmployeeSalaryAssignment, PayrollRecord, PayrollItem
 )
+from app.models.question_bank import (
+    Question, QuestionPaper, QuestionPaperSection,
+    QuestionPaperQuestion, AIQuestionGenerationLog
+)
 
 __all__ = [
     'db',
@@ -77,5 +81,10 @@ __all__ = [
     'SalaryStructureItem',
     'EmployeeSalaryAssignment',
     'PayrollRecord',
-    'PayrollItem'
+    'PayrollItem',
+    'Question',
+    'QuestionPaper',
+    'QuestionPaperSection',
+    'QuestionPaperQuestion',
+    'AIQuestionGenerationLog'
 ]

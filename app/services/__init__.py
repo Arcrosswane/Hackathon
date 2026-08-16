@@ -33,6 +33,15 @@ from app.services.fee_service import (
     get_student_fee_summary, get_collection_summary,
     verify_parent_invoice_access, verify_parent_receipt_access, VALID_PAYMENT_METHODS
 )
+from app.services.question_bank_service import (
+    create_question, update_question, archive_question, delete_question, delete_question_bank, delete_question_paper, get_questions,
+    create_question_paper, add_question_to_paper_section, remove_question_from_paper,
+    recalculate_paper_totals, finalize_question_paper, duplicate_question_paper,
+    VALID_QUESTION_TYPES, VALID_DIFFICULTIES
+)
+from app.services.ai_question_service import (
+    generate_ai_questions, improve_question_with_ai, convert_document_to_questions
+)
 from app.services.finance_service import (
     get_all_categories, create_category, update_category, toggle_category_status,
     create_manual_transaction, sync_single_payment_to_finance, sync_all_fee_payments_to_finance,
@@ -171,5 +180,19 @@ __all__ = [
     'get_today_attendance_overview',
     'get_month_calendar_attendance',
     'generate_attendance_csv_export',
-    'VALID_ATTENDANCE_STATUSES'
+    'VALID_ATTENDANCE_STATUSES',
+    'create_question',
+    'update_question',
+    'archive_question',
+    'get_questions',
+    'create_question_paper',
+    'add_question_to_paper_section',
+    'remove_question_from_paper',
+    'recalculate_paper_totals',
+    'finalize_question_paper',
+    'duplicate_question_paper',
+    'generate_ai_questions',
+    'improve_question_with_ai',
+    'VALID_QUESTION_TYPES',
+    'VALID_DIFFICULTIES'
 ]

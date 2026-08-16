@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Practice Question Banks — StratLearn{% endblock %}
+{% block header_title %}Practice Question Banks{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span class="px-2.5 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30 text-[10px] font-extrabold uppercase tracking-wider">
+                    STUDENT SELF-SERVICE PRACTICE
+                </span>
+                <span class="text-xs text-slate-300 font-bold">Academic Practice & Knowledge Building</span>
+            </div>
+            <h1 class="text-2xl font-black mt-1 tracking-tight">Available Practice Question Banks</h1>
+            <p class="text-xs text-slate-300 mt-1 max-w-xl">
+                Solve questions, test your concepts, check model answers, and prepare for upcoming exams across all your class subjects.
+            </p>
+        </div>
+    </div>
+
+    <!-- Student Question Banks Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {% for bank in student_banks %}
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-6 hover:border-brand-300 hover:shadow-md transition-all flex flex-col justify-between">
+            
+            <div>
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <span class="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] font-extrabold uppercase tracking-wider">
+                        {{ bank.class_name }}
+                    </span>
+                    <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-extrabold">
+                        {{ bank.count }} Questions
+                    </span>
+                </div>
+
+                <h3 class="text-lg font-black text-slate-900 tracking-tight mt-1">{{ bank.subject_name }} Question Bank</h3>
+                
+                {% if bank.chapters %}
+                <div class="mt-3 space-y-1">
+                    <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Chapters Covered:</span>
+                    <div class="flex flex-wrap gap-1">
+                        {% for ch in bank.chapters %}
+                        <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-bold text-[10px]">📖 {{ ch }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="pt-5 mt-4 border-t border-slate-100 flex items-center space-x-2">
+                <a href="{{ url_for('question_bank.student_practice', class_id=bank.class_id, subject_id=bank.subject_id) }}" 
+                   class="flex-1 py-3 px-4 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs text-center shadow-md transition-all">
+                    ✏️ Solve Question Bank ({{ bank.count }})
+                </a>
+            </div>
+
+        </div>
+        {% else %}
+        <div class="col-span-full bg-white rounded-2xl border border-slate-200/80 p-12 text-center">
+            <span class="text-3xl block mb-2">📚</span>
+            <h3 class="text-base font-black text-slate-900">No Question Banks Available for Practice</h3>
+            <p class="text-xs text-slate-500 mt-1">Check back later when teachers add practice questions for your class.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

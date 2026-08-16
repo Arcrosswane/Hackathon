@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ paper.title }} — Teacher Answer Key</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; font-size: 11pt; }
+            .page-break { page-break-after: always; }
+        }
+    </style>
+</head>
+<body class="bg-purple-50/40 min-h-screen font-sans p-6 text-slate-900">
+
+    <!-- Top Action Bar -->
+    <div class="max-w-4xl mx-auto mb-6 flex items-center justify-between no-print bg-white p-4 rounded-2xl shadow-sm border border-purple-200">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span class="px-2.5 py-0.5 rounded-full bg-purple-600 text-white text-[10px] font-extrabold uppercase">
+                    CONFIDENTIAL
+                </span>
+                <h2 class="text-sm font-bold text-slate-900">Official Teacher Answer Key & Solution Guide</h2>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">Strictly for evaluation & scoring</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button onclick="window.print()" class="px-5 py-2 rounded-xl bg-purple-600 text-white font-extrabold text-xs shadow-md hover:bg-purple-700 transition-all flex items-center space-x-2">
+                <span>🖨️ Save / Print Answer Key</span>
+            </button>
+            <button onclick="window.close()" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <!-- Printable Sheet Document -->
+    <div class="max-w-4xl mx-auto bg-white p-10 rounded-2xl shadow-lg border border-purple-200 space-y-6">
+
+        <!-- Header -->
+        <div class="text-center border-b-2 border-purple-900 pb-6 space-y-1">
+            <h1 class="text-2xl font-black uppercase tracking-wider text-purple-900">TEACHER ANSWER KEY & SCORING SCHEME</h1>
+            <h2 class="text-xl font-extrabold text-slate-800">{{ paper.title }}</h2>
+            
+            <div class="flex items-center justify-between text-xs font-bold text-slate-700 pt-4 px-2 border-t border-slate-200 mt-4">
+                <div>Class: {{ paper.school_class.display_name if paper.school_class else 'N/A' }}</div>
+                <div>Subject: {{ paper.subject.name if paper.subject else 'N/A' }}</div>
+                <div>Maximum Marks: {{ paper.total_marks }}</div>
+                <div>Status: {{ paper.status }}</div>
+            </div>
+        </div>
+
+        <!-- Answer Keys by Section -->
+        <div class="space-y-8 pt-2">
+            {% for sec in paper.sections %}
+            <div class="space-y-4">
+                
+                <div class="bg-purple-50 border-y border-purple-200 py-2 px-4 flex items-center justify-between">
+                    <h3 class="text-sm font-black uppercase text-purple-900">
+                        {{ sec.section_name }}
+                    </h3>
+                    <span class="text-xs font-bold text-purple-700">Section Total: {{ sec.total_section_marks }}m</span>
+                </div>
+
+                <div class="space-y-4 divide-y divide-slate-100">
+                    {% for pq in sec.paper_questions %}
+                    {% set snap = pq.snapshot_data %}
+                    <div class="pt-3 text-xs leading-relaxed space-y-2">
+                        
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="font-bold text-slate-900 flex space-x-2">
+                                <span class="font-black text-purple-700 min-w-[24px]">Q{{ loop.index }}.</span>
+                                <div>{{ snap.question_text }}</div>
+                            </div>
+                            <span class="font-black text-purple-900 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+                                {{ pq.marks }}m
+                            </span>
+                        </div>
+
+                        <!-- Correct Answer Box -->
+                        <div class="ml-7 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 font-bold space-y-1">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700">Correct Answer:</span>
+                                {% if snap.question_type == 'MCQ' %}
+                                <span class="px-2 py-0.5 rounded bg-emerald-600 text-white font-black">Option {{ snap.correct_option }}</span>
+                                {% endif %}
+                            </div>
+                            
+                            <p class="text-slate-800 text-xs font-medium">{{ snap.answer_text or snap.explanation or 'Full marks awarded for correct calculation/explanation.' }}</p>
+                        </div>
+
+                        {% if snap.explanation %}
+                        <div class="ml-7 text-[11px] text-slate-500 italic">
+                            💡 Teacher Note / Explanation: {{ snap.explanation }}
+                        </div>
+                        {% endif %}
+
+                    </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Footer -->
+        <div class="pt-8 border-t border-slate-200 text-center text-xs font-bold text-slate-400 tracking-widest uppercase">
+            *** CONFIDENTIAL — STRATLEARN TEACHER ANSWER KEY ***
+        </div>
+
+    </div>
+
+</body>
+</html>

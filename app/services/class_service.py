@@ -22,6 +22,13 @@ def get_active_classes_for_session(session_id):
     """Helper for future modules to read active classes."""
     return get_classes_for_session(session_id, active_only=True)
 
+def get_all_classes(active_only=False):
+    """Returns all school classes ordered by numeric_order and name."""
+    query = SchoolClass.query
+    if active_only:
+        query = query.filter_by(is_active=True)
+    return query.order_by(SchoolClass.numeric_order.asc(), SchoolClass.name.asc()).all()
+
 def get_class_by_id(class_id):
     """Retrieve a class record by primary key."""
     return SchoolClass.query.get(class_id)

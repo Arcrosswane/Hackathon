@@ -127,6 +127,15 @@ TEACHER_NAV = [
         'subitems': []
     },
     {
+        'label': 'Question Bank & Papers',
+        'icon': 'document-text',
+        'subitems': [
+            {'label': 'Question Bank Catalog', 'endpoint': 'question_bank.questions_list'},
+            {'label': 'AI Question Generator', 'endpoint': 'question_bank.ai_generate'},
+            {'label': 'Question Papers Directory', 'endpoint': 'question_bank.papers_list'}
+        ]
+    },
+    {
         'label': 'Attendance',
         'icon': 'clipboard-check',
         'subitems': [
@@ -196,6 +205,13 @@ STUDENT_NAV = [
         'icon': 'currency-dollar',
         'subitems': [
             {'label': 'My Fee Account', 'endpoint': 'fees.student_fee_account'}
+        ]
+    },
+    {
+        'label': 'Question Banks',
+        'icon': 'book-open',
+        'subitems': [
+            {'label': 'Practice Question Banks', 'endpoint': 'question_bank.student_banks'}
         ]
     }
 ]

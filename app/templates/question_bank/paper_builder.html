@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Paper Builder — {{ paper.title }}{% endblock %}
+{% block header_title %}Question Paper Builder{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span class="px-2.5 py-0.5 rounded-full {% if paper.status == 'FINAL' %}bg-emerald-500/20 text-emerald-300 border border-emerald-500/30{% else %}bg-amber-500/20 text-amber-300 border border-amber-500/30{% endif %} text-[10px] font-extrabold uppercase tracking-wider">
+                    STATUS: {{ paper.status }}
+                </span>
+                <span class="text-xs text-slate-300 font-bold">
+                    {{ paper.school_class.display_name if paper.school_class else '' }} • {{ paper.subject.name if paper.subject else '' }}
+                </span>
+            </div>
+            <h1 class="text-2xl font-black mt-1 tracking-tight">{{ paper.title }}</h1>
+            <p class="text-xs text-slate-300 mt-1 max-w-xl">
+                Duration: {{ paper.duration_minutes }} min | Total Marks: {{ paper.total_marks }}m
+            </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            
+            {% if paper.status == 'DRAFT' %}
+            <!-- Finalize Paper Form -->
+            <form method="POST" action="{{ url_for('question_bank.finalize_paper_route', paper_id=paper.id) }}" onsubmit="return confirm('Finalize paper? This will create immutable question snapshots.')">
+                <button type="submit" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-1.5">
+                    <span>🔒 Finalize & Snapshot Paper</span>
+                </button>
+            </form>
+            {% else %}
+            <span class="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold text-xs">
+                ✅ Paper Finalized & Locked
+            </span>
+            {% endif %}
+
+            <!-- Print Paper Button -->
+            <a href="{{ url_for('question_bank.view_paper_print', paper_id=paper.id) }}" target="_blank"
+               class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs border border-white/20 transition-all flex items-center space-x-1.5">
+                <span>🖨️ Printable View</span>
+            </a>
+
+            <!-- Answer Key Button -->
+            <a href="{{ url_for('question_bank.view_answer_key_print', paper_id=paper.id) }}" target="_blank"
+               class="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-1.5">
+                <span>🔑 Teacher Answer Key</span>
+            </a>
+
+        </div>
+    </div>
+
+    <!-- Paper Summary Stats -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs text-center">
+            <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Total Marks</span>
+            <span class="text-xl font-black text-slate-900">{{ paper.total_marks }}m</span>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs text-center">
+            <span class="text-[10px] font-extrabold text-indigo-600 uppercase tracking-wider block">Total Sections</span>
+            <span class="text-xl font-black text-indigo-700">{{ paper.sections|length }}</span>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs text-center">
+            <span class="text-[10px] font-extrabold text-purple-600 uppercase tracking-wider block">Total Questions</span>
+            <span class="text-xl font-black text-purple-700">
+                {% set count = namespace(value=0) %}
+                {% for sec in paper.sections %}{% set count.value = count.value + sec.paper_questions|length %}{% endfor %}
+                {{ count.value }}
+            </span>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs text-center">
+            <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Duration</span>
+            <span class="text-xl font-black text-slate-900">{{ paper.duration_minutes }} mins</span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Left: Paper Structure & Sections (2 cols) -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            {% for sec in paper.sections %}
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 space-y-4">
+                
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
+                            Section {{ loop.index }}
+                        </span>
+                        <h3 class="text-base font-black text-slate-900 mt-1">{{ sec.section_name }}</h3>
+                        {% if sec.section_instructions %}
+                        <p class="text-xs text-slate-500 italic mt-0.5">{{ sec.section_instructions }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="text-right">
+                        <span class="text-xs font-black text-slate-900 bg-slate-100 px-3 py-1 rounded-xl border border-slate-200">
+                            Section Total: {{ sec.total_section_marks }}m
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Questions List in Section -->
+                <div class="space-y-3">
+                    {% for pq in sec.paper_questions %}
+                    {% set snap = pq.snapshot_data %}
+                    <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 flex items-start justify-between gap-3">
+                        
+                        <div class="space-y-1">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs font-black text-slate-900">Q{{ loop.index }}.</span>
+                                <span class="px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase bg-slate-200 text-slate-700">
+                                    {{ snap.question_type or 'QUESTION' }}
+                                </span>
+                                <span class="px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                    {{ pq.marks }}m
+                                </span>
+                            </div>
+                            <p class="text-xs font-bold text-slate-800 leading-relaxed">{{ snap.question_text }}</p>
+
+                            {% if snap.question_type == 'MCQ' %}
+                            <div class="grid grid-cols-2 gap-1 text-[11px] font-semibold text-slate-600 pt-1">
+                                <div>A) {{ snap.option_a }}</div>
+                                <div>B) {{ snap.option_b }}</div>
+                                <div>C) {{ snap.option_c }}</div>
+                                <div>D) {{ snap.option_d }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        {% if paper.status == 'DRAFT' %}
+                        <form method="POST" action="{{ url_for('question_bank.paper_builder', paper_id=paper.id) }}">
+                            <input type="hidden" name="action" value="remove_question">
+                            <input type="hidden" name="paper_question_id" value="{{ pq.id }}">
+                            <button type="submit" class="text-slate-400 hover:text-rose-600 font-bold text-xs p-1">
+                                🗑️ Remove
+                            </button>
+                        </form>
+                        {% endif %}
+
+                    </div>
+                    {% else %}
+                    <div class="p-4 rounded-xl border border-dashed border-slate-200 text-center text-xs text-slate-400 font-medium">
+                        No questions in this section yet. Add from Question Bank on the right.
+                    </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+            {% endfor %}
+
+            {% if paper.status == 'DRAFT' %}
+            <!-- Add New Section Form -->
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
+                <form method="POST" action="{{ url_for('question_bank.paper_builder', paper_id=paper.id) }}" class="flex items-center space-x-3">
+                    <input type="hidden" name="action" value="add_section">
+                    <input type="text" name="section_name" required placeholder="Section Name (e.g. Section C - Long Answers)" class="flex-1 px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold">
+                    <input type="text" name="section_instructions" placeholder="Section instructions..." class="flex-1 px-3.5 py-2 rounded-xl border border-slate-300 text-xs">
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-slate-900 text-white font-extrabold text-xs hover:bg-slate-800">
+                        ➕ Add Section
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- Right: Question Bank Drawer (1 col) -->
+        <div class="space-y-4">
+            <div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs space-y-3 sticky top-6">
+                <h3 class="text-sm font-black text-slate-900 border-b border-slate-100 pb-2">
+                    Available Question Bank ({{ available_questions|length }})
+                </h3>
+
+                {% if paper.status == 'DRAFT' %}
+                <div class="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+                    {% for q in available_questions %}
+                    <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2 text-xs">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase bg-slate-200 text-slate-700">
+                                {{ q.question_type }}
+                            </span>
+                            <span class="font-bold text-slate-500">{{ q.marks }}m</span>
+                        </div>
+                        
+                        <p class="font-bold text-slate-800 text-xs line-clamp-2">{{ q.question_text }}</p>
+
+                        <form method="POST" action="{{ url_for('question_bank.paper_builder', paper_id=paper.id) }}" class="flex items-center space-x-2 pt-1">
+                            <input type="hidden" name="action" value="add_question">
+                            <input type="hidden" name="question_id" value="{{ q.id }}">
+                            
+                            <select name="section_id" required class="flex-1 px-2 py-1 rounded-lg border border-slate-300 text-[11px] font-bold">
+                                {% for sec in paper.sections %}
+                                <option value="{{ sec.id }}">{{ sec.section_name }}</option>
+                                {% endfor %}
+                            </select>
+
+                            <button type="submit" class="px-3 py-1 rounded-lg bg-brand-600 text-white font-extrabold text-[11px] hover:bg-brand-700">
+                                Add ➕
+                            </button>
+                        </form>
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center text-xs text-slate-400">
+                        No available active questions found for this class and subject.
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="p-4 text-center text-xs text-slate-500 italic">
+                    Paper is finalized. Question modifications locked.
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

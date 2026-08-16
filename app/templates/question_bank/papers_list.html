@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Question Papers Directory — StratLearn{% endblock %}
+{% block header_title %}Question Papers Directory{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span class="px-2.5 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30 text-[10px] font-extrabold uppercase tracking-wider">
+                    MODULE 15 — QUESTION PAPERS
+                </span>
+                <span class="text-xs text-slate-300 font-bold">Exam & Assessment Assembly</span>
+            </div>
+            <h1 class="text-2xl font-black mt-1 tracking-tight">Question Papers Directory</h1>
+            <p class="text-xs text-slate-300 mt-1 max-w-xl">
+                Create, assemble sections, snapshot, print student test papers and teacher answer keys, or duplicate existing papers into new drafts.
+            </p>
+        </div>
+
+        <button onclick="document.getElementById('createPaperModal').classList.remove('hidden')" 
+                class="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-1.5">
+            <span>➕ Create Question Paper</span>
+        </button>
+    </div>
+
+    <!-- Papers Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for p in papers %}
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 flex flex-col justify-between hover:border-slate-300 transition-all">
+            
+            <div>
+                <!-- Top Status Badge & Subject -->
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider
+                        {% if p.status == 'FINAL' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                        {% elif p.status == 'DRAFT' %}bg-amber-50 text-amber-700 border border-amber-200
+                        {% else %}bg-slate-100 text-slate-700 border border-slate-200{% endif %}">
+                        {{ p.status }}
+                    </span>
+
+                    <span class="text-xs font-bold text-slate-400">
+                        {{ p.school_class.display_name if p.school_class else 'Class' }} • {{ p.subject.name if p.subject else 'Subject' }}
+                    </span>
+                </div>
+
+                <!-- Paper Title -->
+                <h3 class="text-base font-black text-slate-900 leading-tight mb-2">{{ p.title }}</h3>
+
+                <!-- Key Metrics -->
+                <div class="grid grid-cols-3 gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100 text-center my-3">
+                    <div>
+                        <span class="text-[9px] font-extrabold text-slate-400 uppercase block">Total Marks</span>
+                        <span class="text-sm font-black text-slate-900">{{ p.total_marks }}m</span>
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-extrabold text-slate-400 uppercase block">Duration</span>
+                        <span class="text-sm font-black text-slate-900">{{ p.duration_minutes }}m</span>
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-extrabold text-slate-400 uppercase block">Sections</span>
+                        <span class="text-sm font-black text-indigo-600">{{ p.sections|length }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="pt-3 border-t border-slate-100 space-y-2">
+                <div class="flex items-center space-x-2">
+                    <!-- Builder Link -->
+                    <a href="{{ url_for('question_bank.paper_builder', paper_id=p.id) }}" 
+                       class="flex-1 text-center py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs transition-colors">
+                        {% if p.status == 'DRAFT' %}🛠️ Edit Builder{% else %}👁️ View Builder{% endif %}
+                    </a>
+
+                    <!-- Duplicate Form -->
+                    <form method="POST" action="{{ url_for('question_bank.duplicate_paper_route', paper_id=p.id) }}">
+                        <button type="submit" class="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors" title="Duplicate to Draft">
+                            📋 Duplicate
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Printable Links -->
+                <div class="flex items-center space-x-2 text-xs">
+                    <a href="{{ url_for('question_bank.view_paper_print', paper_id=p.id) }}" target="_blank" 
+                       class="flex-1 text-center py-1.5 px-2 rounded-xl bg-brand-50 text-brand-700 border border-brand-200 font-extrabold hover:bg-brand-100 transition-colors">
+                        🖨️ Print Paper
+                    </a>
+                    <a href="{{ url_for('question_bank.view_answer_key_print', paper_id=p.id) }}" target="_blank" 
+                       class="flex-1 text-center py-1.5 px-2 rounded-xl bg-purple-50 text-purple-700 border border-purple-200 font-extrabold hover:bg-purple-100 transition-colors">
+                        🔑 Answer Key
+                    </a>
+                </div>
+            </div>
+
+        </div>
+        {% else %}
+        <div class="col-span-full bg-white rounded-2xl border border-slate-200/80 p-12 text-center">
+            <span class="text-3xl block mb-2">📄</span>
+            <h3 class="text-base font-black text-slate-900">No Question Papers Found</h3>
+            <p class="text-xs text-slate-500 mt-1">Create your first question paper draft to assemble sections and questions.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<!-- CREATE PAPER MODAL -->
+<div id="createPaperModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-base font-black text-slate-900">Create New Question Paper Draft</h3>
+            <button onclick="document.getElementById('createPaperModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 font-bold text-lg">×</button>
+        </div>
+
+        <form method="POST" action="{{ url_for('question_bank.papers_list') }}" class="space-y-4 text-xs font-bold text-slate-700">
+            <div>
+                <label class="block mb-1">Paper Title *</label>
+                <input type="text" name="title" required placeholder="e.g. Mid-Term Physics Assessment 2026" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block mb-1">Class *</label>
+                    <select name="class_id" required class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-slate-900">
+                        {% for c in all_classes %}
+                        <option value="{{ c.id }}">{{ c.display_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block mb-1">Subject *</label>
+                    <select name="subject_id" required class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-slate-900">
+                        {% for s in all_subjects %}
+                        <option value="{{ s.id }}">{{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block mb-1">Duration (Minutes)</label>
+                <input type="number" name="duration_minutes" value="90" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold">
+            </div>
+
+            <div>
+                <label class="block mb-1">General Exam Instructions</label>
+                <textarea name="instructions" rows="3" class="w-full px-3 py-2 rounded-xl border border-slate-300">1. All questions are compulsory.
+2. Section A contains MCQs. Section B contains Short & Long Answer questions.</textarea>
+            </div>
+
+            <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+                <button type="button" onclick="document.getElementById('createPaperModal').classList.add('hidden')" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold">Cancel</button>
+                <button type="submit" class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold shadow-md">Create Draft Paper</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

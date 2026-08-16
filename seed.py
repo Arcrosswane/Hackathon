@@ -924,6 +924,110 @@ def seed_database():
 
             print("✓ Seeded Module 14 Student and Employee daily attendance records for recent working days.")
 
+            # ==========================================
+            # MODULE 15: QUESTION BANK & QUESTION PAPER SEEDING
+            # ==========================================
+            from app.models.question_bank import Question, QuestionPaper, QuestionPaperSection, QuestionPaperQuestion
+            from app.services.question_bank_service import create_question, create_question_paper, add_question_to_paper_section, finalize_question_paper
+
+            if Question.query.count() == 0:
+                # Retrieve first class and subject
+                first_cls = SchoolClass.query.first()
+                first_subj = Subject.query.first()
+
+                c_id = first_cls.id if first_cls else 1
+                s_id = first_subj.id if first_subj else 1
+
+                # 1. Seed Questions
+                q1 = create_question(
+                    class_id=c_id,
+                    subject_id=s_id,
+                    question_text="Which of the following is the SI unit of force?",
+                    question_type="MCQ",
+                    difficulty="EASY",
+                    marks=1.0,
+                    chapter="Laws of Motion",
+                    option_a="Joule",
+                    option_b="Newton",
+                    option_c="Watt",
+                    option_d="Pascal",
+                    correct_option="B",
+                    explanation="Force is measured in Newtons (N) in the SI system.",
+                    tags="NCERT,Important",
+                    created_by_id=admin_user.id
+                )
+
+                q2 = create_question(
+                    class_id=c_id,
+                    subject_id=s_id,
+                    question_text="What is the acceleration due to gravity on the surface of the Earth?",
+                    question_type="MCQ",
+                    difficulty="EASY",
+                    marks=1.0,
+                    chapter="Gravitation",
+                    option_a="9.8 m/s²",
+                    option_b="8.9 m/s²",
+                    option_c="10.8 m/s²",
+                    option_d="9.8 km/s²",
+                    correct_option="A",
+                    explanation="Standard g value is approximately 9.8 m/s².",
+                    tags="NCERT,Conceptual",
+                    created_by_id=admin_user.id
+                )
+
+                q3 = create_question(
+                    class_id=c_id,
+                    subject_id=s_id,
+                    question_text="State Newton's Second Law of Motion and derive the formula F = ma.",
+                    question_type="SHORT_ANSWER",
+                    difficulty="MEDIUM",
+                    marks=3.0,
+                    chapter="Laws of Motion",
+                    answer_text="Newton's 2nd Law states that the rate of change of momentum is proportional to applied force. F = dp/dt = m(dv/dt) = ma.",
+                    explanation="Include statement, momentum definition p=mv, and derivative step.",
+                    tags="NCERT,Important,HOTS",
+                    created_by_id=admin_user.id
+                )
+
+                q4 = create_question(
+                    class_id=c_id,
+                    subject_id=s_id,
+                    question_text="Explain the principle of conservation of momentum with a practical example.",
+                    question_type="LONG_ANSWER",
+                    difficulty="HARD",
+                    marks=5.0,
+                    chapter="Laws of Motion",
+                    answer_text="Total momentum of an isolated system remains constant in absence of external force. Example: Recoil of gun, rocket propulsion.",
+                    explanation="Define isolated system, state formula m1u1 + m2u2 = m1v1 + m2v2, and elaborate recoil example.",
+                    tags="NCERT,Board-style",
+                    created_by_id=admin_user.id
+                )
+
+                # 2. Create and finalize a Question Paper
+                paper = create_question_paper(
+                    title="Mid-Term Physics Assessment 2026",
+                    class_id=c_id,
+                    subject_id=s_id,
+                    instructions="1. All questions are compulsory. 2. Write neat and clean steps.",
+                    duration_minutes=90,
+                    created_by_id=admin_user.id,
+                    session_id=active_sess.id
+                )
+
+                # Add questions to Section A and B
+                sec_a = paper.sections[0]
+                sec_b = paper.sections[1]
+
+                add_question_to_paper_section(sec_a.id, q1.id, 1.0)
+                add_question_to_paper_section(sec_a.id, q2.id, 1.0)
+                add_question_to_paper_section(sec_b.id, q3.id, 3.0)
+                add_question_to_paper_section(sec_b.id, q4.id, 5.0)
+
+                # Finalize paper to create immutable snapshots
+                finalize_question_paper(paper.id)
+
+                print("✓ Seeded Module 15 Question Bank items and finalized Question Paper with snapshots.")
+
         db.session.commit()
         print("\n🎉 Database initialization and seeding completed successfully!")
 
