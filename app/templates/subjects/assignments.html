@@ -107,32 +107,52 @@
                 </div>
 
                 {% if all_subjects %}
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {% for sub in all_subjects %}
                     {% set is_assigned = sub.id in assigned_subject_ids %}
-                    <label class="p-4 rounded-xl border transition-all cursor-pointer flex items-start space-x-3
-                                  {% if is_assigned %}bg-brand-50/40 border-brand-300 shadow-2xs{% else %}bg-slate-50 border-slate-200 hover:border-slate-300{% endif %}">
-                        <input type="checkbox" name="subject_ids" value="{{ sub.id }}" {% if is_assigned %}checked{% endif %}
-                               class="mt-1 w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500">
-                        <div class="flex-1 space-y-1">
-                            <div class="flex items-center justify-between">
-                                <span class="font-extrabold text-slate-900 text-sm">{{ sub.name }}</span>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold font-mono bg-slate-900 text-white">
-                                    {{ sub.code or 'N/A' }}
+                    {% set sc_record = subject_class_map.get(sub.id) %}
+                    <div class="p-4 rounded-xl border transition-all flex flex-col justify-between space-y-3
+                                {% if is_assigned %}bg-brand-50/40 border-brand-300 shadow-2xs{% else %}bg-slate-50 border-slate-200 hover:border-slate-300{% endif %}">
+                        
+                        <label class="flex items-start space-x-3 cursor-pointer">
+                            <input type="checkbox" name="subject_ids" value="{{ sub.id }}" {% if is_assigned %}checked{% endif %}
+                                   class="mt-1 w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500">
+                            <div class="flex-1 space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-extrabold text-slate-900 text-sm">{{ sub.name }}</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold font-mono bg-slate-900 text-white">
+                                        {{ sub.code or 'N/A' }}
+                                    </span>
+                                </div>
+                                <div class="flex items-center space-x-2 text-xs text-slate-500">
+                                    <span>Short: <strong>{{ sub.short_name or sub.name }}</strong></span>
+                                    <span>•</span>
+                                    <span class="capitalize font-semibold text-slate-700">{{ sub.subject_type.replace('_', ' ') }}</span>
+                                </div>
+                                {% if not sub.is_active %}
+                                <span class="inline-block text-[9px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
+                                    Inactive Subject
                                 </span>
+                                {% endif %}
                             </div>
-                            <div class="flex items-center space-x-2 text-xs text-slate-500">
-                                <span>Short: <strong>{{ sub.short_name or sub.name }}</strong></span>
-                                <span>•</span>
-                                <span class="capitalize font-semibold text-slate-700">{{ sub.subject_type.replace('_', ' ') }}</span>
-                            </div>
-                            {% if not sub.is_active %}
-                            <span class="inline-block text-[9px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
-                                Inactive Subject
-                            </span>
-                            {% endif %}
+                        </label>
+
+                        <!-- Teacher Dropdown Selector -->
+                        <div class="pt-2 border-t border-slate-200/60 space-y-1">
+                            <label class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">
+                                Assigned Subject Teacher
+                            </label>
+                            <select name="teacher_id_{{ sub.id }}" 
+                                    class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-800 focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                                <option value="">-- Select Teacher --</option>
+                                {% for tch in teachers_list %}
+                                <option value="{{ tch.id }}" {% if sc_record and sc_record.teacher_id == tch.id %}selected{% endif %}>
+                                    {{ tch.full_name }} ({{ tch.registration_number }})
+                                </option>
+                                {% endfor %}
+                            </select>
                         </div>
-                    </label>
+                    </div>
                     {% endfor %}
                 </div>
                 {% else %}

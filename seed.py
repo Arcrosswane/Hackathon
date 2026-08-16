@@ -591,29 +591,32 @@ def seed_database():
             if teacher_emp:
                 teacher_user.linked_entity_id = teacher_emp.id
 
-        student_entity = seeded_students.get("4838")
-        student_user = User.query.filter_by(username="student").first()
+        student_entity = seeded_students.get("ADM002") or seeded_students.get("4838") or Student.query.first()
+        student_user = User.query.filter_by(username="stu_std002").first() or User.query.filter_by(username="student").first()
         if not student_user:
-            student_user = User(username="student", user_type="Student", school_id=school.id, linked_entity_id=student_entity.id if student_entity else None)
-            student_user.set_password("Student@123")
+            student_user = User(username="stu_std002", user_type="Student", school_id=school.id, linked_entity_id=student_entity.id if student_entity else None)
             db.session.add(student_user)
-        else:
-            student_user.school_id = school.id
-            if student_entity:
-                student_user.linked_entity_id = student_entity.id
+        student_user.username = "stu_std002"
+        student_user.user_type = "Student"
+        student_user.school_id = school.id
+        student_user.set_password("student")
+        if student_entity:
+            student_user.linked_entity_id = student_entity.id
+        print(f"✓ Seeded/Reset Student User Account: 'stu_std002' / 'student' [Linked Student: '{student_entity.full_name if student_entity else ''}']")
 
-        parent_gdn = seeded_guardians.get("PAR001") or Guardian.query.filter_by(registration_number="PAR001").first()
-        parent_user = User.query.filter_by(username="parent").first()
+        parent_gdn = seeded_guardians.get("PAR002") or seeded_guardians.get("PAR001") or Guardian.query.first()
+        parent_user = User.query.filter_by(username="par_par002").first() or User.query.filter_by(username="parent").first()
         if not parent_user:
-            parent_user = User(username="parent", user_type="Parent", school_id=school.id, linked_entity_id=parent_gdn.id if parent_gdn else None)
+            parent_user = User(username="par_par002", user_type="Parent", school_id=school.id, linked_entity_id=parent_gdn.id if parent_gdn else None)
             db.session.add(parent_user)
         
+        parent_user.username = "par_par002"
         parent_user.school_id = school.id
         parent_user.user_type = "Parent"
         parent_user.set_password("Parent@123")
         if parent_gdn:
             parent_user.linked_entity_id = parent_gdn.id
-        print(f"✓ Seeded/Reset Parent User Account: 'parent' / 'Parent@123' [Linked Guardian PAR001: '{parent_gdn.full_name if parent_gdn else ''}']")
+        print(f"✓ Seeded/Reset Parent User Account: 'par_par002' / 'Parent@123' [Linked Guardian: '{parent_gdn.full_name if parent_gdn else ''}']")
 
         # Seed sample Behaviour Observations & Skill Assessments for Student 4838
         if student_entity and teacher_emp:
@@ -1027,6 +1030,78 @@ def seed_database():
                 finalize_question_paper(paper.id)
 
                 print("✓ Seeded Module 15 Question Bank items and finalized Question Paper with snapshots.")
+
+            # ==========================================
+            # MODULE 16: EXAMINATION MANAGEMENT SEEDING
+            # ==========================================
+            from app.models.examination import ExamType, Examination, ExaminationClass, ExaminationSubject, ExaminationResult, ExamOverallResult, GradeRule
+            from app.services.examination_service import create_exam_type, get_grade_rules, create_examination, assign_classes_to_exam, add_exam_subject, save_bulk_exam_marks, calculate_and_publish_exam_results
+
+            if Examination.query.count() == 0:
+                # 1. Seed Exam Types
+                et_mid = create_exam_type("Mid-Term Examination", "MID", "Official Mid-Year Academic Assessment")
+                et_annual = create_exam_type("Annual Examination", "ANN", "Year-End Final Assessment")
+                create_exam_type("Unit Test", "UT", "Periodic Chapter Assessment")
+
+                # Ensure default grade rules exist
+                get_grade_rules(active_only=True)
+
+                first_cls = SchoolClass.query.first()
+                first_subj = Subject.query.first()
+                c_id = first_cls.id if first_cls else 1
+                s_id = first_subj.id if first_subj else 1
+
+                # 2. Create Master Examination
+                mid_exam = create_examination(
+                    name="Mid-Term Assessment 2026",
+                    academic_session_id=active_sess.id,
+                    exam_type_id=et_mid.id,
+                    description="Mid-term assessment covering Chapters 1 to 4.",
+                    start_date=date(2026, 9, 15),
+                    end_date=date(2026, 9, 25),
+                    created_by_id=admin_user.id
+                )
+
+                # Assign Class
+                assign_classes_to_exam(mid_exam.id, [c_id])
+
+                # Get finalized question paper from Module 15 if present
+                from app.models.question_bank import QuestionPaper
+                p_obj = QuestionPaper.query.filter_by(status='FINAL').first()
+                p_id = p_obj.id if p_obj else None
+
+                # Schedule Exam Subject
+                es_sub = add_exam_subject(
+                    exam_id=mid_exam.id,
+                    class_id=c_id,
+                    subject_id=s_id,
+                    exam_date=date(2026, 9, 16),
+                    start_time=time(9, 30),
+                    end_time=time(12, 30),
+                    max_marks=100.0,
+                    pass_marks=33.0,
+                    question_paper_id=p_id
+                )
+
+                # Enter marks for enrolled students
+                students_cls = Student.query.filter_by(class_id=c_id).all()
+                if students_cls:
+                    marks_payload = []
+                    for idx, st in enumerate(students_cls):
+                        if idx == len(students_cls) - 1 and len(students_cls) > 1:
+                            # Mark last student absent
+                            marks_payload.append({'student_id': st.id, 'attendance_status': 'ABSENT', 'marks_obtained': None})
+                        else:
+                            # Assigned realistic marks
+                            assigned_m = 75.0 + (idx * 5.0)
+                            if assigned_m > 95.0:
+                                assigned_m = 92.0
+                            marks_payload.append({'student_id': st.id, 'attendance_status': 'PRESENT', 'marks_obtained': assigned_m})
+
+                    save_bulk_exam_marks(es_sub.id, marks_payload, entered_by_id=admin_user.id)
+                    calculate_and_publish_exam_results(mid_exam.id, approved_by_id=admin_user.id)
+
+                print("✓ Seeded Module 16 Examination master, subjects, bulk marks, and published results.")
 
         db.session.commit()
         print("\n🎉 Database initialization and seeding completed successfully!")

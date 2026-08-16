@@ -45,7 +45,7 @@ def index():
 
 @settings_bp.route('/school', methods=['GET', 'POST'])
 @login_required
-@role_required('admin')
+@role_required('admin', 'teacher', 'employee', 'student', 'parent')
 def school_profile():
     school = get_or_create_school()
 

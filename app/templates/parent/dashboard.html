@@ -1,233 +1,307 @@
 {% extends "base.html" %}
 
-{% block title %}Parent Portal Dashboard — StratLearn{% endblock %}
-{% block header_title %}Parent Overview Dashboard{% endblock %}
+{% block title %}Parent Child Monitoring Workspace — StratLearn{% endblock %}
+{% block header_title %}Parent Overview & Child Monitoring Workspace{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto space-y-6">
+<div class="space-y-6 max-w-7xl mx-auto animate-fade-in">
 
-    <!-- Top Identity & Session Banner -->
-    <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div class="flex items-center space-x-4">
-            <div class="w-14 h-14 rounded-2xl bg-pink-500 text-white font-extrabold text-xl flex items-center justify-center border border-pink-400 shadow-md">
-                {{ guardian.first_name[0] if guardian else 'P' }}{{ guardian.last_name[0] if guardian and guardian.last_name else '' }}
+    <!-- 1. HEADER BANNER & MULTI-CHILD SELECTOR -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-pink-950 rounded-2xl p-6 sm:p-8 text-white shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-all duration-500 hover:shadow-2xl group">
+        <div class="space-y-2 relative z-10">
+            <div class="flex items-center space-x-2">
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-pink-500/20 text-pink-300 border border-pink-500/30">
+                    👪 PARENT MONITORING HUB
+                </span>
+                <span class="text-xs text-slate-400 font-bold">Academic Session: {{ summary.active_session.name if summary.active_session else '2026-2027' }}</span>
             </div>
-            <div>
-                <div class="inline-flex items-center space-x-2 px-3 py-0.5 rounded-full text-[11px] font-extrabold bg-pink-50 text-pink-700 border border-pink-200 mb-1">
-                    <span>Parent Portal Active</span>
-                </div>
-                <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">
-                    Welcome, {{ guardian.full_name if guardian else current_username }}!
-                </h2>
-                <p class="text-xs text-slate-500 mt-0.5">
-                    🏫 {{ current_school.name if current_school else 'TPS School' }} | Active Session: <strong class="text-slate-800">{{ active_session.name if active_session else '2026-2027' }}</strong>
-                </p>
-            </div>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
+                <span>Welcome, {{ summary.guardian.full_name if summary.guardian else 'Parent' }}</span>
+                <span class="inline-block animate-float text-xl">👋</span>
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium">
+                Monitor your child's academic progress, class schedule today, homework completion, attendance, and school fee receipts.
+            </p>
         </div>
 
-        {% if guardian %}
-        <div class="flex flex-col items-start md:items-end">
-            <span class="text-xs font-mono font-extrabold px-3 py-1 bg-slate-900 text-white rounded-lg shadow-2xs">
-                Guardian Code: {{ guardian.registration_number }}
-            </span>
-            <span class="text-[11px] text-slate-500 mt-1 font-medium">{{ children_data | length }} Children Linked</span>
+        <!-- Multi-Child Selector Dropdown -->
+        <div class="relative z-10 bg-white/10 backdrop-blur-md border border-white/15 p-4 rounded-xl text-xs space-y-2 min-w-[260px] transition-all duration-300 hover:bg-white/20">
+            <label class="block text-[10px] font-black uppercase tracking-wider text-pink-300">
+                Select Child to Monitor ({{ summary.linked_children|length }} Enrolled)
+            </label>
+            {% if summary.linked_children %}
+            <select onchange="window.location.href='/parent/dashboard?child_id=' + this.value"
+                    class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-pink-400/50 text-white font-extrabold text-xs focus:ring-2 focus:ring-pink-500 focus:border-pink-500">
+                {% for item in summary.linked_children %}
+                <option value="{{ item.student.id }}" {% if summary.selected_child and summary.selected_child.id == item.student.id %}selected{% endif %}>
+                    {{ item.student.full_name }} ({{ item.enrollment.school_class.display_name if item.enrollment else 'Grade 9' }})
+                </option>
+                {% endfor %}
+            </select>
+            {% else %}
+            <p class="text-xs text-rose-300 italic">No linked children found for this account.</p>
+            {% endif %}
+            <div class="flex items-center justify-between text-[11px] text-slate-300 font-mono pt-1">
+                <span>Guardian Code:</span>
+                <span class="font-bold text-white">{{ summary.guardian.registration_number if summary.guardian else 'PAR-001' }}</span>
+            </div>
         </div>
-        {% endif %}
     </div>
 
-    <!-- Main Content Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    {% if summary.selected_child %}
+    <!-- 2. SELECTED CHILD SPOTLIGHT CARD -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-scale-up" style="animation-delay: 0.05s;">
+        <div class="flex items-center space-x-4">
+            <div class="w-16 h-16 rounded-2xl bg-pink-100 text-pink-800 font-black text-2xl flex items-center justify-center border border-pink-200 shadow-2xs">
+                {{ summary.selected_child.first_name[0] if summary.selected_child and summary.selected_child.first_name else 'C' }}
+            </div>
+            <div>
+                <div class="flex items-center space-x-2">
+                    <h2 class="text-xl font-extrabold text-slate-900">{{ summary.selected_child.full_name }}</h2>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        Active Student
+                    </span>
+                </div>
+                <div class="flex items-center space-x-3 text-xs text-slate-500 mt-1 font-mono">
+                    <span>Admission No: <strong class="text-slate-900">{{ summary.selected_child.registration_number }}</strong></span>
+                    <span>•</span>
+                    <span>Class: <strong class="text-pink-700">{{ summary.selected_enrollment.school_class.display_name if summary.selected_enrollment else 'Grade 9' }}</strong></span>
+                    {% if summary.selected_enrollment and summary.selected_enrollment.section %}
+                    <span>•</span>
+                    <span>Section: <strong class="text-slate-800">{{ summary.selected_enrollment.section.display_name }}</strong></span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
 
-        <!-- Left 2 Columns: Children / Sibling Roster Cards -->
-        <div class="lg:col-span-2 space-y-6">
+        <div class="flex items-center space-x-2 text-xs font-bold">
+            <a href="{{ url_for('homework.parent_index') }}" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 transition-all">
+                📖 Child Homework
+            </a>
+            <a href="{{ url_for('examination.student_results') }}" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 transition-all">
+                📝 Report Cards
+            </a>
+        </div>
+    </div>
 
-            <div class="flex items-center justify-between border-b border-slate-200/90 pb-3">
-                <h3 class="text-base font-extrabold text-slate-900 tracking-tight flex items-center space-x-2">
-                    <svg class="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                    <span>My Children & Academic Placements</span>
-                </h3>
-                <span class="text-xs font-semibold text-slate-500">{{ children_data | length }} Total Children</span>
+    <!-- 3. CHILD MONITORING ALERTS -->
+    {% if summary.alerts %}
+    <div class="space-y-2 animate-scale-up" style="animation-delay: 0.1s;">
+        {% for alert in summary.alerts %}
+        <div class="p-3.5 rounded-xl border flex items-center justify-between text-xs font-bold
+            {% if alert.severity == 'HIGH' %}bg-rose-50 border-rose-200 text-rose-900
+            {% else %}bg-amber-50 border-amber-200 text-amber-900{% endif %}">
+            <div class="flex items-center space-x-2">
+                <span>⚠️</span>
+                <span>{{ alert.message }}</span>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider
+                {% if alert.severity == 'HIGH' %}bg-rose-500 text-white{% else %}bg-amber-500 text-white{% endif %}">
+                Attention Required
+            </span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- 4. CHILD CLASS SCHEDULE & HOMEWORK MONITORING GRID -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-scale-up" style="animation-delay: 0.15s;">
+
+        <!-- Today's Timetable for Selected Child -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-4 lg:col-span-2 hover-lift">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="text-base font-black text-slate-900">{{ summary.selected_child.first_name }}'s Class Schedule Today ({{ summary.day_name }})</h3>
+                    <p class="text-xs text-slate-500">Timetable periods scheduled for today.</p>
+                </div>
+                <a href="{{ url_for('timetables.index') }}" class="text-xs font-black text-pink-600 hover:text-pink-800 transition-colors">
+                    Full Timetable →
+                </a>
             </div>
 
-            {% if children_data %}
-            <div class="space-y-6">
-                {% for item in children_data %}
-                {% set child = item.student %}
-                {% set en = item.current_enrollment %}
-                {% set link = item.link %}
-
-                <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-5 hover:border-slate-300 transition-all">
+            <div class="space-y-3">
+                {% for tt in summary.today_timetable %}
+                {% set is_current = (summary.current_class and summary.current_class.id == tt.id) %}
+                <div class="p-4 rounded-xl border flex items-center justify-between gap-4 transition-all duration-200 hover:shadow-md
+                    {% if is_current %}bg-pink-50/80 border-pink-300 ring-2 ring-pink-500/20
+                    {% else %}bg-slate-50/60 border-slate-200/80{% endif %}">
                     
-                    <!-- Child Header Card -->
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                        <div class="flex items-center space-x-4">
-                            {% if child.profile_photo %}
-                            <img src="{{ url_for('static', filename=child.profile_photo) }}" alt="{{ child.full_name }}" class="w-14 h-14 rounded-2xl object-cover border border-slate-200 shadow-xs">
-                            {% else %}
-                            <div class="w-14 h-14 rounded-2xl bg-amber-500 text-white font-extrabold text-lg flex items-center justify-center shadow-xs">
-                                {{ child.first_name[0] }}{{ child.last_name[0] if child.last_name else '' }}
-                            </div>
-                            {% endif %}
-
-                            <div>
-                                <div class="flex items-center space-x-2">
-                                    <h4 class="text-lg font-extrabold text-slate-900 tracking-tight">{{ child.full_name }}</h4>
-                                    <span class="px-2 py-0.5 rounded text-[11px] font-extrabold font-mono bg-slate-100 text-slate-800 border border-slate-200">
-                                        Adm # {{ child.registration_number }}
-                                    </span>
-                                </div>
-                                <div class="flex items-center space-x-2 mt-1">
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-pink-100 text-pink-800">
-                                        {{ link.relationship }}
-                                    </span>
-                                    {% if link.is_primary %}
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                                        Primary Contact
-                                    </span>
-                                    {% endif %}
-                                </div>
-                            </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="text-center px-3 py-1 rounded-lg bg-white border border-slate-200 shadow-2xs font-mono text-xs">
+                            <span class="font-black text-slate-900 block">{{ tt.period.start_time.strftime('%I:%M') if tt.period and tt.period.start_time else '00:00' }}</span>
+                            <span class="text-[10px] text-slate-400 block">{{ tt.period.end_time.strftime('%I:%M %p') if tt.period and tt.period.end_time else '00:00' }}</span>
                         </div>
-
-                        <!-- Placement Badge -->
-                        {% if en %}
-                        <div class="p-3 bg-purple-50 border border-purple-200 rounded-xl text-right w-full sm:w-auto">
-                            <span class="text-xs font-extrabold text-purple-900 block">{{ en.school_class.display_name }}</span>
-                            <span class="text-[11px] font-bold text-purple-700">
-                                {{ en.section.display_name if en.section else 'All Sections' }} 
-                                {% if en.roll_number %}(Roll #{{ en.roll_number }}){% endif %}
-                            </span>
-                            <span class="text-[10px] text-purple-600 block mt-0.5">Session {{ en.academic_session.name }}</span>
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <h4 class="text-sm font-extrabold text-slate-900">{{ tt.subject.name if tt.subject else 'Subject' }}</h4>
+                                {% if is_current %}
+                                <span class="px-2 py-0.5 rounded text-[9px] font-black bg-pink-600 text-white uppercase tracking-wider">NOW ACTIVE</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-xs text-slate-500 font-medium mt-0.5">
+                                👨‍🏫 Teacher: {{ tt.employee.full_name if tt.employee else 'Faculty Member' }}
+                                {% if tt.room_number %} • Room {{ tt.room_number }}{% endif %}
+                            </p>
                         </div>
-                        {% else %}
-                        <span class="text-xs text-slate-400 italic">No Active Placement Assigned</span>
-                        {% endif %}
                     </div>
 
-                    <!-- Curriculum Subjects Grid -->
-                    <div class="space-y-2">
-                        <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500 block">
-                            Enrolled Class Curriculum Subjects ({{ item.subjects | length }})
-                        </span>
-                        {% if item.subjects %}
-                        <div class="flex flex-wrap gap-2">
-                            {% for sub in item.subjects %}
-                            <span class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-50 border border-slate-200 text-slate-800 flex items-center space-x-2">
-                                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-900 text-white">{{ sub.code or 'SUB' }}</span>
-                                <span>{{ sub.name }}</span>
-                            </span>
-                            {% endfor %}
-                        </div>
-                        {% else %}
-                        <p class="text-xs text-slate-400 italic">No curriculum subjects assigned to class yet.</p>
-                        {% endif %}
-                    </div>
-
-                    <!-- Academic Modules Quick Status Bar -->
-                    <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-                        <div class="grid grid-cols-3 gap-2 text-center text-xs w-full sm:w-auto">
-                            <div class="p-2 bg-slate-50 border border-slate-200 rounded-xl">
-                                <span class="text-[10px] font-bold text-slate-400 block uppercase">Homework</span>
-                                <span class="font-extrabold text-slate-700">Tasks</span>
-                            </div>
-                            <div class="p-2 bg-slate-50 border border-slate-200 rounded-xl">
-                                <span class="text-[10px] font-bold text-slate-400 block uppercase">Growth</span>
-                                <span class="font-extrabold text-slate-700">Records</span>
-                            </div>
-                            <div class="p-2 bg-slate-50 border border-slate-200 rounded-xl">
-                                <span class="text-[10px] font-bold text-slate-400 block uppercase">Fees</span>
-                                <span class="font-extrabold text-emerald-700">Active</span>
-                            </div>
-                        </div>
-                        <a href="{{ url_for('fees.child_fee_account', student_id=child.id) }}" 
-                           class="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center space-x-1.5 whitespace-nowrap">
-                            <span>💳 Fee Account & Pay Dues</span>
-                        </a>
-                    </div>
-
+                    <span class="px-3 py-1 rounded-xl text-xs font-extrabold bg-slate-100 text-slate-700">
+                        {{ tt.period.name or 'Period' }}
+                    </span>
+                </div>
+                {% else %}
+                <div class="py-10 text-center text-slate-400 font-bold text-xs bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                    🎉 No classes scheduled for {{ summary.selected_child.first_name }} today ({{ summary.day_name }}).
                 </div>
                 {% endfor %}
             </div>
-            {% else %}
-            <div class="bg-white border border-slate-200/90 rounded-2xl p-12 text-center max-w-md mx-auto space-y-3 shadow-xs">
-                <div class="w-12 h-12 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center mx-auto text-xl font-bold">
-                    🎓
-                </div>
-                <h3 class="text-base font-bold text-slate-900">No Children Currently Linked</h3>
-                <p class="text-xs text-slate-500">Contact the school administration to link your registered children to your Parent Portal account.</p>
-            </div>
-            {% endif %}
-
         </div>
 
-        <!-- Right Column: Parent Profile & Contact Details -->
-        <div class="space-y-6">
+        <!-- Homework & Coursework Status -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-4 hover-lift">
+            <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-black text-slate-900">Homework Status</h3>
+                    <p class="text-xs text-slate-500">Coursework assignments for {{ summary.selected_child.first_name }}.</p>
+                </div>
+                <a href="{{ url_for('homework.parent_index') }}" class="text-xs font-black text-pink-600 hover:underline">View All →</a>
+            </div>
 
-            <!-- Parent Profile Identity Card -->
-            <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-4">
-                <h3 class="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-3 uppercase tracking-wider flex items-center space-x-2">
-                    <svg class="w-4 h-4 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                    <span>Parent Profile Identity</span>
-                </h3>
+            <div class="grid grid-cols-2 gap-2 text-center">
+                <div class="p-3 rounded-xl bg-amber-50 border border-amber-100">
+                    <span class="text-lg font-black text-amber-900 block font-mono">{{ summary.homework_overview.get('pending_count', 0) }}</span>
+                    <span class="text-[9px] font-bold text-amber-700 uppercase">Pending Tasks</span>
+                </div>
+                <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-100">
+                    <span class="text-lg font-black text-emerald-900 block font-mono">{{ summary.homework_overview.get('submitted_count', 0) }}</span>
+                    <span class="text-[9px] font-bold text-emerald-700 uppercase">Submitted</span>
+                </div>
+            </div>
 
-                {% if guardian %}
-                <div class="space-y-3 text-xs">
-                    <div>
-                        <span class="text-slate-400 block font-medium">Guardian Name</span>
-                        <span class="font-bold text-slate-900 text-sm">{{ guardian.full_name }}</span>
+            <div class="space-y-2.5">
+                {% for item in summary.homework_overview.get('pending_items', []) %}
+                {% set hw = item.homework %}
+                <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex flex-col space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-extrabold text-slate-900">{{ hw.title }}</span>
+                        {% if item.is_overdue %}
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-rose-500 text-white">OVERDUE</span>
+                        {% elif item.is_due_today %}
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500 text-white">DUE TODAY</span>
+                        {% endif %}
                     </div>
-                    <div>
-                        <span class="text-slate-400 block font-medium">Guardian Code</span>
-                        <span class="font-bold font-mono text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 inline-block">
-                            {{ guardian.registration_number }}
-                        </span>
-                    </div>
-                    <div>
-                        <span class="text-slate-400 block font-medium">Occupation</span>
-                        <span class="font-bold text-slate-900">{{ guardian.occupation or 'Parent / Guardian' }}</span>
-                    </div>
-                    <div>
-                        <span class="text-slate-400 block font-medium">Mobile Phone</span>
-                        <span class="font-bold text-slate-900">{{ guardian.mobile_phone_number or 'Not Provided' }}</span>
-                    </div>
-                    <div>
-                        <span class="text-slate-400 block font-medium">Email Address</span>
-                        <span class="font-bold text-slate-900">{{ guardian.email_address or 'Not Provided' }}</span>
-                    </div>
-                    <div>
-                        <span class="text-slate-400 block font-medium">Address</span>
-                        <span class="font-medium text-slate-800">
-                            {{ guardian.home_address or '' }}
-                            {% if guardian.city %}, {{ guardian.city }}{% endif %}
-                            {% if guardian.state %}, {{ guardian.state }}{% endif %}
-                        </span>
-                    </div>
+                    <p class="text-[10px] text-slate-500 font-medium">
+                        Subject: {{ hw.subject.name if hw.subject else 'Class Subject' }} • Due: {{ hw.due_date.strftime('%b %d, %Y') if hw.due_date else 'TBD' }}
+                    </p>
                 </div>
                 {% else %}
-                <p class="text-xs text-slate-400 italic">No parent profile linked to portal login account.</p>
-                {% endif %}
-            </div>
-
-            <!-- School Support & Notices Card -->
-            <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-3">
-                <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500">
-                    School Helpdesk & Information
-                </h3>
-                <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 text-xs text-slate-700">
-                    <span class="font-bold text-slate-900 block">Need assistance?</span>
-                    <p class="text-slate-600 text-[11px] leading-relaxed">
-                        For any queries regarding student admissions, class section transfers, or fee updates, reach out to the school administrative desk.
-                    </p>
-                    <div class="pt-1 text-[11px] text-slate-500 font-mono">
-                        <div>Email: contact@tps.edu</div>
-                        <div>Phone: +91 98765 43210</div>
-                    </div>
+                <div class="py-6 text-center text-slate-400 font-bold text-xs bg-slate-50 rounded-xl">
+                    ✅ All assigned homework is up to date!
                 </div>
+                {% endfor %}
             </div>
-
         </div>
 
     </div>
+
+    <!-- 5. ATTENDANCE & FEES MONITORING (WITH FUTURE BADGES) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-scale-up" style="animation-delay: 0.2s;">
+
+        <!-- Personal Attendance Monitoring -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-4 hover-lift">
+            <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-black text-slate-900">Attendance Records</h3>
+                    <p class="text-xs text-slate-500">Child session attendance tracking.</p>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-purple-100 text-purple-800 border border-purple-200">
+                    FUTURE FEATURE
+                </span>
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center space-y-1">
+                <span class="text-3xl font-black text-slate-900 block font-mono">
+                    {{ summary.attendance_overview.get('attendance_pct', 100.0) }}%
+                </span>
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Session Attendance Percentage</span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                <div class="p-2 rounded-lg bg-emerald-50 text-emerald-800 font-bold">
+                    <span>{{ summary.attendance_overview.get('present_count', 0) }}</span>
+                    <span class="block text-[9px] uppercase font-bold text-emerald-600">Present</span>
+                </div>
+                <div class="p-2 rounded-lg bg-rose-50 text-rose-800 font-bold">
+                    <span>{{ summary.attendance_overview.get('absent_count', 0) }}</span>
+                    <span class="block text-[9px] uppercase font-bold text-rose-600">Absent</span>
+                </div>
+                <div class="p-2 rounded-lg bg-amber-50 text-amber-800 font-bold">
+                    <span>{{ summary.attendance_overview.get('late_count', 0) }}</span>
+                    <span class="block text-[9px] uppercase font-bold text-amber-600">Late</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fee Payment & Receipts -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-4 hover-lift">
+            <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-black text-slate-900">Fee Payment & History</h3>
+                    <p class="text-xs text-slate-500">School fee account receipts and dues.</p>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-purple-100 text-purple-800 border border-purple-200">
+                    FUTURE FEATURE
+                </span>
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center space-y-1">
+                <span class="text-2xl font-black text-slate-900 block font-mono">
+                    ₹{{ int(summary.fees_overview.get('total_paid', 0)) }}
+                </span>
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Total Fees Paid to Date</span>
+            </div>
+
+            <div class="pt-2 flex items-center justify-between text-xs">
+                <span class="text-slate-600 font-bold">Outstanding Dues:</span>
+                <span class="font-black text-rose-600 font-mono">₹{{ int(summary.fees_overview.get('total_due', 0)) }}</span>
+            </div>
+            
+            <a href="{{ url_for('fees.student_fee_account') }}" class="block text-center py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-all">
+                View Paid Fee Receipts →
+            </a>
+        </div>
+
+        <!-- School Notices & Circulars -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-4 hover-lift">
+            <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-black text-slate-900">School Notices & Circulars</h3>
+                    <p class="text-xs text-slate-500">Official parent announcements.</p>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-purple-100 text-purple-800 border border-purple-200">
+                    FUTURE FEATURE
+                </span>
+            </div>
+
+            <div class="p-4 rounded-xl bg-purple-50/50 border border-purple-100 text-center space-y-2">
+                <span class="text-2xl block">📢</span>
+                <h4 class="text-xs font-extrabold text-purple-900">Parent Circulars & Notices Gateway</h4>
+                <p class="text-[10px] text-purple-700 font-medium">Official school circulars and announcements will appear here when published by school administration.</p>
+            </div>
+        </div>
+
+    </div>
+
+    {% else %}
+    <!-- EMPTY STATE WHEN NO LINKED CHILD FOUND -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-4 shadow-xs">
+        <span class="text-4xl block">👪</span>
+        <h3 class="text-xl font-extrabold text-slate-900">No Student Linked to Parent Account</h3>
+        <p class="text-xs text-slate-500 max-w-md mx-auto">
+            Your parent/guardian profile currently has no active student records linked. Please contact the school administration to link your child's admission number.
+        </p>
+    </div>
+    {% endif %}
 
 </div>
 {% endblock %}

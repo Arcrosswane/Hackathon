@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Teacher Exam Marks Dashboard — StratLearn{% endblock %}
+{% block header_title %}Teacher Exam Marks Portal{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span class="px-2.5 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30 text-[10px] font-extrabold uppercase tracking-wider">
+                    TEACHER EXAM EVALUATION
+                </span>
+                <span class="text-xs text-slate-300 font-bold">Student Marks Entry & Roster Management</span>
+            </div>
+            <h1 class="text-2xl font-black mt-1 tracking-tight">Teacher Exam Marks Roster</h1>
+            <p class="text-xs text-slate-300 mt-1 max-w-xl">
+                Select any scheduled examination subject below to evaluate student performance, mark absent students, and record marks.
+            </p>
+        </div>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-4">
+        <form method="GET" action="{{ url_for('examination.teacher_marks_dashboard') }}" class="flex flex-wrap items-center gap-3 text-xs font-bold">
+            <div>
+                <label class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">Filter Examination</label>
+                <select name="exam_id" onchange="this.form.submit()" class="px-3 py-1.5 rounded-xl border border-slate-300 font-bold text-slate-900">
+                    <option value="">All Active Examinations</option>
+                    {% for ex in all_exams %}
+                    <option value="{{ ex.id }}" {% if selected_exam_id == ex.id %}selected{% endif %}>{{ ex.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">Filter Class</label>
+                <select name="class_id" onchange="this.form.submit()" class="px-3 py-1.5 rounded-xl border border-slate-300 font-bold text-slate-900">
+                    <option value="">All Classes</option>
+                    {% for c in all_classes %}
+                    <option value="{{ c.id }}" {% if selected_class_id == c.id %}selected{% endif %}>Grade {{ c.display_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {% if selected_exam_id or selected_class_id %}
+            <div class="pt-5">
+                <a href="{{ url_for('examination.teacher_marks_dashboard') }}" class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200">
+                    Reset
+                </a>
+            </div>
+            {% endif %}
+        </form>
+
+        <span class="text-xs font-bold text-slate-500">
+            Total Scheduled Subjects: <span class="font-black text-slate-900">{{ exam_subjects|length }}</span>
+        </span>
+    </div>
+
+    <!-- Exam Subjects Evaluation Roster Table -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-4">
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-500 uppercase tracking-wider font-extrabold border-b border-slate-200/80">
+                        <th class="py-3 px-4">Examination</th>
+                        <th class="py-3 px-4">Class</th>
+                        <th class="py-3 px-4">Subject</th>
+                        <th class="py-3 px-4">Exam Date & Time</th>
+                        <th class="py-3 px-4">Max / Pass Marks</th>
+                        <th class="py-3 px-4">Evaluation Status</th>
+                        <th class="py-3 px-4 text-right">Teacher Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-bold text-slate-800">
+                    {% for es in exam_subjects %}
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                        <td class="py-3.5 px-4 font-black text-slate-900">
+                            <div>{{ es.examination.name if es.examination else '—' }}</div>
+                            <div class="text-[10px] text-slate-400 font-normal">{{ es.examination.exam_type.name if es.examination and es.examination.exam_type else '' }}</div>
+                        </td>
+                        <td class="py-3.5 px-4 font-black text-slate-900">Grade {{ es.school_class.display_name if es.school_class else '—' }}</td>
+                        <td class="py-3.5 px-4 font-extrabold text-brand-700 text-sm">{{ es.subject.name if es.subject else '—' }}</td>
+                        <td class="py-3.5 px-4">
+                            {% if es.exam_date %}
+                            <div>📅 {{ es.exam_date.strftime('%b %d, %Y') }}</div>
+                            <div class="text-[10px] text-slate-400 font-normal">
+                                {{ es.start_time.strftime('%I:%M %p') if es.start_time else '' }} - {{ es.end_time.strftime('%I:%M %p') if es.end_time else '' }}
+                            </div>
+                            {% else %}
+                            <span class="text-slate-400 italic font-normal">TBD</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span class="px-2 py-0.5 rounded bg-slate-100 font-black text-slate-900">
+                                {{ es.max_marks|int if es.max_marks == es.max_marks|int else es.max_marks }}m
+                            </span>
+                            <span class="text-[10px] text-slate-400 font-bold ml-1">(Pass: {{ es.pass_marks|int if es.pass_marks == es.pass_marks|int else es.pass_marks }}m)</span>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase
+                                {% if es.status == 'EVALUATED' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                                {% else %}bg-indigo-50 text-indigo-700 border border-indigo-200{% endif %}">
+                                {{ es.status }}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4 text-right">
+                            <div class="flex items-center justify-end space-x-2">
+                                <a href="{{ url_for('examination.marks_entry', exam_subject_id=es.id, mode='view') }}" 
+                                   class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs transition-colors">
+                                    👁️ View Roster
+                                </a>
+                                <a href="{{ url_for('examination.marks_entry', exam_subject_id=es.id, mode='edit') }}" 
+                                   class="px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs transition-colors shadow-2xs">
+                                    ✏️ Edit Marks
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colSpan="7" class="py-10 text-center text-slate-400 font-medium">
+                            No scheduled exam subjects found for evaluation.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

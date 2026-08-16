@@ -21,6 +21,8 @@ from app.routes.fees import fees_bp
 from app.routes.accounts import accounts_bp
 from app.routes.payroll import payroll_bp
 from app.routes.attendance import attendance_bp
+from app.routes.question_bank import question_bank_bp
+from app.routes.examination import examination_bp
 from app.utils.navigation import get_navigation_for_role
 from app.services.academic_service import get_active_academic_session
 
@@ -54,6 +56,10 @@ def create_app(config_class=Config):
     app.register_blueprint(payroll_bp)
     app.register_blueprint(attendance_bp)
     app.register_blueprint(question_bank_bp)
+    app.register_blueprint(examination_bp)
+
+    # Register Python built-in helpers into Jinja template environment
+    app.jinja_env.globals['int'] = int
 
     # Auto table & column check
     with app.app_context():
@@ -183,19 +189,36 @@ def create_app(config_class=Config):
                     except Exception:
                         pass
 
-            # Auto-ensure demo Parent user account is seeded and password set
-            from app.models import User, Guardian
-            p_gdn = Guardian.query.filter_by(registration_number="PAR001").first()
+            # Auto-ensure demo Student and Parent user accounts are seeded and password set
+            from app.models import User, Guardian, Student, School
+            sch = School.query.first()
+            sch_id = sch.id if sch else None
+
+            # Student account: stu_std002 / student
+            s_entity = Student.query.filter_by(registration_number="ADM002").first() or Student.query.first()
+            stu_u = User.query.filter_by(username="stu_std002").first() or User.query.filter_by(username="student").first()
+            if not stu_u:
+                stu_u = User(username="stu_std002", user_type="Student", school_id=sch_id, linked_entity_id=s_entity.id if s_entity else None, is_active=True)
+                db.session.add(stu_u)
+            stu_u.username = "stu_std002"
+            stu_u.user_type = "Student"
+            stu_u.set_password("student")
+            if s_entity:
+                stu_u.linked_entity_id = s_entity.id
+
+            # Parent account: par_par002 / Parent@123
+            p_gdn = Guardian.query.filter_by(registration_number="PAR002").first() or Guardian.query.filter_by(registration_number="PAR001").first() or Guardian.query.first()
+            par_u = User.query.filter_by(username="par_par002").first() or User.query.filter_by(username="parent").first()
+            if not par_u:
+                par_u = User(username="par_par002", user_type="Parent", school_id=sch_id, linked_entity_id=p_gdn.id if p_gdn else None, is_active=True)
+                db.session.add(par_u)
+            par_u.username = "par_par002"
+            par_u.user_type = "Parent"
+            par_u.set_password("Parent@123")
             if p_gdn:
-                p_user = User.query.filter_by(username="parent").first()
-                if not p_user:
-                    sch = School.query.first()
-                    p_user = User(username="parent", user_type="Parent", school_id=sch.id if sch else None, linked_entity_id=p_gdn.id, is_active=True)
-                    db.session.add(p_user)
-                p_user.user_type = "Parent"
-                p_user.set_password("Parent@123")
-                p_user.linked_entity_id = p_gdn.id
-                db.session.commit()
+                par_u.linked_entity_id = p_gdn.id
+
+            db.session.commit()
 
             # Auto-ensure demo student 'student' (4838) is aligned to Grade 9 Section A
             from app.models import Student, StudentEnrollment, Section

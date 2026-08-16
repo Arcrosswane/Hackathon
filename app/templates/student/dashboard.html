@@ -1,34 +1,43 @@
 {% extends "base.html" %}
 
-{% block title %}Student Dashboard — StratLearn{% endblock %}
-{% block header_title %}Student Learning Portal{% endblock %}
+{% block title %}Student's Personal Workspace — StratLearn{% endblock %}
+{% block header_title %}Student Learning Portal & Home Workspace{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto space-y-6">
+<div class="space-y-6 max-w-7xl mx-auto animate-fade-in">
 
-    <!-- Welcome Hero Banner -->
-    <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 rounded-2xl p-6 sm:p-8 text-white shadow-lg border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div class="space-y-1">
-            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span>Student Learning Portal</span>
+    <!-- 1. HEADER & STUDENT CONTEXT BANNER -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-emerald-950 rounded-2xl p-6 sm:p-8 text-white shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-all duration-500 hover:shadow-2xl group">
+        <div class="space-y-2 relative z-10">
+            <div class="flex items-center space-x-2">
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    🎒 STUDENT WORKSPACE
+                </span>
+                <span class="text-xs text-slate-400 font-bold">Academic Session: {{ summary.active_session.name if summary.active_session else '2026-2027' }}</span>
             </div>
-            <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                Welcome, {{ student.full_name if student else 'Student' }}
-            </h2>
-            <p class="text-xs sm:text-sm text-slate-300">StratLearn Learning Portal & Class Homework</p>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
+                <span>Welcome, {{ summary.student.full_name if summary.student else 'Student' }}</span>
+                <span class="inline-block animate-float text-xl">👋</span>
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium">
+                Here is your personal school home. Track your schedule, pending homework, test results, and attendance for today.
+            </p>
         </div>
 
-        <div class="bg-white/10 backdrop-blur-md border border-white/15 p-4 rounded-xl text-xs space-y-1.5 min-w-[220px]">
+        <div class="relative z-10 bg-white/10 backdrop-blur-md border border-white/15 p-4 rounded-xl text-xs space-y-2 min-w-[240px] transition-all duration-300 hover:bg-white/20 hover:scale-105">
             <div class="flex items-center justify-between gap-4">
-                <span class="text-slate-300">Admission No:</span>
-                <span class="font-bold text-white font-mono">{{ student.registration_number if student else 'N/A' }}</span>
+                <span class="text-slate-300 font-bold">Today:</span>
+                <span class="font-black text-white font-mono">{{ summary.today.strftime('%b %d, %Y (%a)') }}</span>
             </div>
             <div class="flex items-center justify-between gap-4">
-                <span class="text-slate-300">Class & Section:</span>
-                <span class="font-bold text-emerald-300 font-mono">
-                    {% if enrollment %}
-                        {{ enrollment.school_class.display_name }} {% if enrollment.section %}({{ enrollment.section.display_name }}){% endif %}
+                <span class="text-slate-300 font-bold">Admission No:</span>
+                <span class="font-black text-emerald-300 font-mono">{{ summary.student.registration_number if summary.student else 'STU-001' }}</span>
+            </div>
+            <div class="flex items-center justify-between gap-4 pt-1 border-t border-white/10">
+                <span class="text-slate-300 font-bold">Enrolled Class:</span>
+                <span class="font-black text-sky-400 font-mono">
+                    {% if summary.enrollment %}
+                        {{ summary.enrollment.school_class.display_name }} {% if summary.enrollment.section %}({{ summary.enrollment.section.display_name }}){% endif %}
                     {% else %}
                         Grade 9 (Section A)
                     {% endif %}
@@ -37,135 +46,327 @@
         </div>
     </div>
 
-    <!-- Quick Overview Stats -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
-            <div>
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Enrolled Class & Section</p>
-                <p class="text-xl font-bold text-slate-900 mt-1">
-                    {% if enrollment %}
-                        {{ enrollment.school_class.display_name }}
-                    {% else %}
-                        Grade 9
-                    {% endif %}
-                </p>
-                <span class="text-[11px] text-emerald-600 font-extrabold">
-                    {% if enrollment and enrollment.section %}
-                        {{ enrollment.section.display_name }}
-                    {% else %}
-                        Section A
-                    {% endif %}
+    <!-- 2. CURRENT & NEXT CLASS SPOTLIGHT HERO WIDGET -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 animate-scale-up" style="animation-delay: 0.05s;">
+        
+        <!-- Current Class Spotlight -->
+        <div class="p-6 rounded-2xl border bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-950 text-white border-emerald-700/50 shadow-lg hover-lift space-y-4 relative overflow-hidden">
+            <div class="flex items-center justify-between">
+                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                    ● CURRENT CLASS PERIOD
                 </span>
+                <span class="text-xs font-bold text-slate-300 font-mono">Now Active</span>
             </div>
-            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg">
-                🏫
-            </div>
-        </div>
 
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
-            <div>
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Pending Assignments</p>
-                <p class="text-2xl font-extrabold text-amber-600 mt-1">{{ pending_cnt }}</p>
-                <span class="text-[11px] text-amber-600 font-semibold">Action Required</span>
-            </div>
-            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
-                ⏳
-            </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
-            <div>
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Submitted Work</p>
-                <p class="text-2xl font-extrabold text-emerald-600 mt-1">{{ submitted_cnt }}</p>
-                <span class="text-[11px] text-emerald-600 font-semibold">Completed Coursework</span>
-            </div>
-            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-                ✔️
-            </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
-            <div>
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Academic Session</p>
-                <p class="text-xl font-bold text-slate-900 mt-1">{{ active_session.name if active_session else '2026-27' }}</p>
-                <span class="text-[11px] text-slate-500 font-medium">Session Active</span>
-            </div>
-            <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold">
-                📅
-            </div>
-        </div>
-
-        <!-- Fee Ledger & Direct Pay Banner -->
-        <div class="bg-gradient-to-r from-emerald-800 to-teal-900 p-5 rounded-2xl text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 col-span-1 sm:col-span-2 lg:col-span-4 border border-emerald-700">
+            {% if summary.current_class %}
             <div class="space-y-1">
-                <div class="flex items-center space-x-2 text-[10px] font-extrabold uppercase tracking-wider text-emerald-300">
-                    <span>💳 Student Fee Account</span>
-                    <span>•</span>
-                    <span>Online Self-Service Payment</span>
-                </div>
-                <h4 class="text-lg font-black text-white">View Outstanding Dues & Pay School Invoices</h4>
-                <p class="text-xs text-emerald-100">Pay term fees via UPI, Credit/Debit Card, or Net Banking with instant official receipt generation.</p>
+                <h3 class="text-2xl font-black text-white tracking-tight">
+                    {{ summary.current_class.subject.name if summary.current_class.subject else 'Subject' }}
+                </h3>
+                <p class="text-xs font-bold text-emerald-300">
+                    👨‍🏫 Faculty: {{ summary.current_class.employee.full_name if summary.current_class.employee else 'Class Teacher' }}
+                    {% if summary.current_class.room_number %} • Room {{ summary.current_class.room_number }}{% endif %}
+                </p>
+                <p class="text-xs text-slate-400 font-mono pt-1">
+                    ⏰ {{ summary.current_class.period.start_time.strftime('%I:%M %p') if summary.current_class.period and summary.current_class.period.start_time else '' }} - 
+                       {{ summary.current_class.period.end_time.strftime('%I:%M %p') if summary.current_class.period and summary.current_class.period.end_time else '' }}
+                </p>
             </div>
-            <a href="{{ url_for('fees.student_fee_account') }}" class="px-5 py-2.5 bg-white text-emerald-900 hover:bg-emerald-50 font-black text-xs rounded-xl shadow-xs transition-all flex items-center space-x-1.5 whitespace-nowrap">
-                <span>💳 Fee Ledger & Pay Now</span>
+            {% else %}
+            <div class="py-4 space-y-1">
+                <h3 class="text-lg font-bold text-slate-300">No active class period right now</h3>
+                <p class="text-xs text-slate-400">You are currently between periods or outside school hours.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Next Class Spotlight -->
+        <div class="p-6 rounded-2xl border bg-white border-slate-200/80 shadow-xs hover-lift space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-sky-50 text-sky-700 border border-sky-200">
+                    ⏭️ UPCOMING NEXT CLASS
+                </span>
+                <span class="text-xs font-bold text-slate-400">Next Period</span>
+            </div>
+
+            {% if summary.next_class %}
+            <div class="space-y-1">
+                <h3 class="text-xl font-black text-slate-900 tracking-tight">
+                    {{ summary.next_class.subject.name if summary.next_class.subject else 'Subject' }}
+                </h3>
+                <p class="text-xs font-bold text-brand-600">
+                    👨‍🏫 Faculty: {{ summary.next_class.employee.full_name if summary.next_class.employee else 'Class Teacher' }}
+                    {% if summary.next_class.room_number %} • Room {{ summary.next_class.room_number }}{% endif %}
+                </p>
+                <p class="text-xs text-slate-500 font-mono pt-1">
+                    ⏰ {{ summary.next_class.period.start_time.strftime('%I:%M %p') if summary.next_class.period and summary.next_class.period.start_time else '' }} - 
+                       {{ summary.next_class.period.end_time.strftime('%I:%M %p') if summary.next_class.period and summary.next_class.period.end_time else '' }}
+                </p>
+            </div>
+            {% else %}
+            <div class="py-4 space-y-1">
+                <h3 class="text-lg font-bold text-slate-800">No remaining classes today</h3>
+                <p class="text-xs text-slate-500">All scheduled class periods for today are complete!</p>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- 3. QUICK ACTIONS SHORTCUTS BAR -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs animate-scale-up hover-lift" style="animation-delay: 0.1s;">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-xs font-black text-slate-400 uppercase tracking-wider">⚡ Student Quick Shortcuts</h3>
+            <span class="text-[10px] font-bold text-slate-400">1-Click Navigation</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+            <a href="{{ url_for('homework.student_index') }}" 
+               class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-400 hover:-translate-y-1 hover:shadow-md active:scale-95 text-slate-800 hover:text-emerald-900 transition-all duration-200 text-center group font-bold text-xs flex flex-col items-center justify-center space-y-1">
+                <span class="text-xl group-hover:scale-125 transition-transform duration-200 animate-float" style="animation-duration: 4s;">📖</span>
+                <span class="truncate">Home Assignments</span>
+            </a>
+
+            <a href="{{ url_for('timetables.index') }}" 
+               class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-400 hover:-translate-y-1 hover:shadow-md active:scale-95 text-slate-800 hover:text-emerald-900 transition-all duration-200 text-center group font-bold text-xs flex flex-col items-center justify-center space-y-1">
+                <span class="text-xl group-hover:scale-125 transition-transform duration-200 animate-float" style="animation-duration: 4.2s;">📅</span>
+                <span class="truncate">My Timetable</span>
+            </a>
+
+            <a href="{{ url_for('examination.student_results') }}" 
+               class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-400 hover:-translate-y-1 hover:shadow-md active:scale-95 text-slate-800 hover:text-emerald-900 transition-all duration-200 text-center group font-bold text-xs flex flex-col items-center justify-center space-y-1">
+                <span class="text-xl group-hover:scale-125 transition-transform duration-200 animate-float" style="animation-duration: 3.5s;">📝</span>
+                <span class="truncate">Exam Results</span>
+            </a>
+
+            <a href="{{ url_for('fees.student_fee_account') }}" 
+               class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-400 hover:-translate-y-1 hover:shadow-md active:scale-95 text-slate-800 hover:text-emerald-900 transition-all duration-200 text-center group font-bold text-xs flex flex-col items-center justify-center space-y-1">
+                <span class="text-xl group-hover:scale-125 transition-transform duration-200 animate-float" style="animation-duration: 4.5s;">💳</span>
+                <span class="truncate">Paid Fee Receipts</span>
+            </a>
+
+            <a href="{{ url_for('fees.student_fee_account') }}" 
+               class="p-3 rounded-xl border border-purple-200 bg-purple-50/50 hover:bg-purple-100 hover:border-purple-400 hover:-translate-y-1 hover:shadow-md active:scale-95 text-purple-900 transition-all duration-200 text-center group font-bold text-xs flex flex-col items-center justify-center space-y-1">
+                <span class="text-xl group-hover:scale-125 transition-transform duration-200 animate-float" style="animation-duration: 4.8s;">🛍️</span>
+                <span class="truncate">Online Store</span>
             </a>
         </div>
     </div>
 
-    <!-- Active Class Homework Roster -->
-    <div class="space-y-4 pt-2">
-        <div class="flex items-center justify-between">
-            <div>
-                <h3 class="text-lg font-extrabold text-slate-900 tracking-tight">Active Class Assignments</h3>
-                <p class="text-xs text-slate-500">
-                    Assigned homework for 
-                    <strong class="text-slate-800">
-                        {% if enrollment %}{{ enrollment.school_class.display_name }} {% if enrollment.section %}({{ enrollment.section.display_name }}){% endif %}{% else %}Grade 9 (Section A){% endif %}
-                    </strong>
-                </p>
-            </div>
-            <a href="{{ url_for('homework.student_index') }}" class="text-xs font-bold text-brand-600 hover:underline">View All →</a>
-        </div>
+    <!-- 4. LEVEL 1 — TODAY'S TIMETABLE TIMELINE & STUDENT TASK CENTER -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-scale-up" style="animation-delay: 0.15s;">
 
-        {% if homework_items %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {% for item in homework_items %}
-            {% set hw = item.homework %}
-            {% set sub = item.submission %}
-            {% set st = item.submission_status %}
-            <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs flex flex-col justify-between space-y-3">
+        <!-- Today's Timetable Schedule -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-4 lg:col-span-2 hover-lift">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
-                    <div class="flex items-center justify-between text-xs mb-2">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-brand-50 text-brand-700 border border-brand-200">
-                            {{ hw.subject.code if hw.subject and hw.subject.code else hw.subject.name }}
-                        </span>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold 
-                                     {% if st == 'REVIEWED' %}bg-sky-100 text-sky-800
-                                     {% elif st == 'SUBMITTED' %}bg-emerald-100 text-emerald-800
-                                     {% elif st == 'LATE' %}bg-amber-100 text-amber-800
-                                     {% elif st == 'MISSING' %}bg-rose-100 text-rose-800
-                                     {% else %}bg-slate-100 text-slate-700{% endif %}">
-                            ● {{ st }}
-                        </span>
+                    <h3 class="text-base font-black text-slate-900">Today's Class Schedule ({{ summary.day_name }})</h3>
+                    <p class="text-xs text-slate-500">Your timetable periods for today.</p>
+                </div>
+                <a href="{{ url_for('timetables.index') }}" class="text-xs font-black text-emerald-600 hover:text-emerald-800 transition-colors">
+                    Full Timetable →
+                </a>
+            </div>
+
+            <div class="space-y-3">
+                {% for tt in summary.today_timetable %}
+                {% set is_current = (summary.current_class and summary.current_class.id == tt.id) %}
+                <div class="p-4 rounded-xl border flex items-center justify-between gap-4 transition-all duration-200 hover:shadow-md
+                    {% if is_current %}bg-emerald-50/80 border-emerald-300 ring-2 ring-emerald-500/20
+                    {% else %}bg-slate-50/60 border-slate-200/80{% endif %}">
+                    
+                    <div class="flex items-center space-x-4">
+                        <div class="text-center px-3 py-1 rounded-lg bg-white border border-slate-200 shadow-2xs font-mono text-xs">
+                            <span class="font-black text-slate-900 block">{{ tt.period.start_time.strftime('%I:%M') if tt.period and tt.period.start_time else '00:00' }}</span>
+                            <span class="text-[10px] text-slate-400 block">{{ tt.period.end_time.strftime('%I:%M %p') if tt.period and tt.period.end_time else '00:00' }}</span>
+                        </div>
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <h4 class="text-sm font-extrabold text-slate-900">{{ tt.subject.name if tt.subject else 'Subject' }}</h4>
+                                {% if is_current %}
+                                <span class="px-2 py-0.5 rounded text-[9px] font-black bg-emerald-500 text-white uppercase tracking-wider">NOW</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-xs text-slate-500 font-medium mt-0.5">
+                                👨‍🏫 {{ tt.employee.full_name if tt.employee else 'Faculty Member' }}
+                                {% if tt.room_number %} • Room {{ tt.room_number }}{% endif %}
+                            </p>
+                        </div>
                     </div>
-                    <h4 class="font-bold text-slate-900 text-sm line-clamp-1">{{ hw.title }}</h4>
-                    <p class="text-xs text-slate-500 mt-1">Due: <strong class="text-slate-900">{{ hw.due_date.strftime('%b %d, %Y') }}</strong></p>
+
+                    <span class="px-3 py-1 rounded-xl text-xs font-extrabold bg-slate-100 text-slate-700">
+                        {{ tt.period.name or 'Period' }}
+                    </span>
+                </div>
+                {% else %}
+                <div class="py-10 text-center text-slate-400 font-bold text-xs bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                    🎉 No classes scheduled for today ({{ summary.day_name }}).
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Student Task Center (What Should I Do Next?) -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-4 hover-lift">
+            <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-black text-slate-900">Student Task Center</h3>
+                    <p class="text-xs text-slate-500">Upcoming tasks and deadlines.</p>
+                </div>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">
+                    {{ summary.pending_tasks|length }} Tasks
+                </span>
+            </div>
+
+            <div class="space-y-3">
+                {% for task in summary.pending_tasks %}
+                <div class="p-3.5 rounded-xl border flex flex-col space-y-2 transition-all duration-200 hover:shadow-md
+                    {% if task.priority == 'HIGH' %}bg-rose-50/70 border-rose-200
+                    {% elif task.priority == 'MEDIUM' %}bg-amber-50/70 border-amber-200
+                    {% else %}bg-slate-50 border-slate-200{% endif %}">
+                    
+                    <div class="flex items-center justify-between">
+                        <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider
+                            {% if task.priority == 'HIGH' %}bg-rose-500 text-white
+                            {% elif task.priority == 'MEDIUM' %}bg-amber-500 text-white
+                            {% else %}bg-slate-600 text-white{% endif %}">
+                            {{ task.priority }}
+                        </span>
+                        <span class="text-[10px] font-black uppercase text-slate-400">{{ task.category }}</span>
+                    </div>
+
+                    <div>
+                        <h4 class="text-xs font-extrabold text-slate-900">{{ task.title }}</h4>
+                        <p class="text-[11px] text-slate-600 font-medium mt-0.5">{{ task.description }}</p>
+                    </div>
+
+                    <div class="pt-1 text-right">
+                        <a href="{{ task.action_url }}" class="text-xs font-black text-emerald-600 hover:text-emerald-800 transition-colors">
+                            {{ task.action_label }} →
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="py-8 text-center text-slate-400 font-bold text-xs bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                    ✅ All tasks complete! No pending homework or test alerts.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 5. LEVEL 3 — ATTENDANCE & ACADEMIC PERFORMANCE SUMMARY -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-scale-up" style="animation-delay: 0.2s;">
+
+        <!-- Personal Attendance Summary % -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-4 hover-lift">
+            <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-black text-slate-900">Personal Attendance</h3>
+                    <p class="text-xs text-slate-500">Academic session attendance tracking.</p>
+                </div>
+                <span class="text-xs font-black text-emerald-600 font-mono">
+                    {{ summary.attendance_overview.get('attendance_pct', 100.0) }}%
+                </span>
+            </div>
+
+            <div class="space-y-3">
+                <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center space-y-1">
+                    <span class="text-3xl font-black text-slate-900 block font-mono">
+                        {{ summary.attendance_overview.get('attendance_pct', 100.0) }}%
+                    </span>
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Overall Session Attendance</span>
                 </div>
 
-                <div class="pt-3 border-t border-slate-100">
-                    <a href="{{ url_for('homework.student_detail', homework_id=hw.id) }}"
-                       class="w-full py-1.5 bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs rounded-xl transition-all block text-center">
-                        View & Submit
-                    </a>
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="p-2.5 rounded-lg bg-emerald-50 border border-emerald-100">
+                        <span class="text-xs font-black text-emerald-800 block">{{ summary.attendance_overview.get('present_count', 0) }}</span>
+                        <span class="text-[9px] font-bold text-emerald-600 uppercase">Present</span>
+                    </div>
+                    <div class="p-2.5 rounded-lg bg-rose-50 border border-rose-100">
+                        <span class="text-xs font-black text-rose-800 block">{{ summary.attendance_overview.get('absent_count', 0) }}</span>
+                        <span class="text-[9px] font-bold text-rose-600 uppercase">Absent</span>
+                    </div>
+                    <div class="p-2.5 rounded-lg bg-amber-50 border border-amber-100">
+                        <span class="text-xs font-black text-amber-800 block">{{ summary.attendance_overview.get('late_count', 0) }}</span>
+                        <span class="text-[9px] font-bold text-amber-600 uppercase">Late</span>
+                    </div>
                 </div>
             </div>
-            {% endfor %}
         </div>
-        {% else %}
-        <div class="bg-white border border-slate-200/90 rounded-2xl p-8 text-center space-y-3">
-            <p class="text-xs text-slate-500 font-medium">No homework assignments posted for your class.</p>
+
+        <!-- Recent Published Exam & Test Scores -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-4 lg:col-span-2 hover-lift">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="text-base font-black text-slate-900">Recent Academic Results & Exam Scores</h3>
+                    <p class="text-xs text-slate-500">Official published scores and report entries.</p>
+                </div>
+                <a href="{{ url_for('examination.student_results') }}" class="text-xs font-black text-emerald-600 hover:text-emerald-800 transition-colors">
+                    View Report Card →
+                </a>
+            </div>
+
+            <div class="space-y-2.5">
+                {% for res in summary.exams_overview.get('recent_results', []) %}
+                <div class="p-3.5 rounded-xl border border-slate-200/80 bg-slate-50/60 flex items-center justify-between gap-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs group">
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-black border border-emerald-200">
+                                {{ res.subject.name if res.subject else 'Subject' }}
+                            </span>
+                            <span class="text-xs font-black text-slate-900 group-hover:text-emerald-900 transition-colors">{{ res.examination.name if res.examination else 'Examination' }}</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-sm font-black text-slate-900 font-mono">{{ res.marks_obtained }} / {{ res.max_marks }}</span>
+                    </div>
+                </div>
+                {% else %}
+                <div class="py-6 text-center text-slate-400 font-bold text-xs bg-slate-50 rounded-xl">
+                    No published exam results available yet.
+                </div>
+                {% endfor %}
+            </div>
         </div>
-        {% endif %}
+
+    </div>
+
+    <!-- 6. FEES & DOCUMENTS WIDGET -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-4 animate-scale-up hover-lift" style="animation-delay: 0.25s;">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h2 class="text-base font-black text-slate-900">My Student Documents & Fee Receipts</h2>
+            <span class="text-xs font-bold text-slate-400">Official Student Records</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <a href="{{ url_for('students.index') }}" 
+               class="p-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-300 transition-all duration-200 flex items-center space-x-3 group">
+                <span class="text-2xl group-hover:scale-125 transition-transform duration-200 animate-float" style="animation-duration: 4s;">📄</span>
+                <div>
+                    <h4 class="text-xs font-extrabold text-slate-900 group-hover:text-emerald-900">Admission Letter</h4>
+                    <p class="text-[10px] text-slate-500 font-medium">Official Enrollment Doc</p>
+                </div>
+            </a>
+
+            <a href="{{ url_for('fees.student_fee_account') }}" 
+               class="p-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-300 transition-all duration-200 flex items-center space-x-3 group">
+                <span class="text-2xl group-hover:scale-125 transition-transform duration-200 animate-float" style="animation-duration: 4.2s;">💳</span>
+                <div>
+                    <h4 class="text-xs font-extrabold text-slate-900 group-hover:text-emerald-900">Paid Fee Receipts</h4>
+                    <p class="text-[10px] text-slate-500 font-medium">{{ summary.documents_overview.get('paid_invoices_count', 0) }} Payment Receipt(s)</p>
+                </div>
+            </a>
+
+            <a href="{{ url_for('student.account') }}" 
+               class="p-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-300 transition-all duration-200 flex items-center space-x-3 group">
+                <span class="text-2xl group-hover:scale-125 transition-transform duration-200 animate-float" style="animation-duration: 4.5s;">⚙️</span>
+                <div>
+                    <h4 class="text-xs font-extrabold text-slate-900 group-hover:text-emerald-900">Account Settings</h4>
+                    <p class="text-[10px] text-slate-500 font-medium">Profile & Credentials</p>
+                </div>
+            </a>
+        </div>
     </div>
 
 </div>

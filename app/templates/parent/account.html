@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}My Parent Account Settings — StratLearn{% endblock %}
+{% block header_title %}Parent Account Profile & Portal Settings{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6 animate-fade-in" x-data="{ editing: false }">
+
+    <!-- Header Hero Banner -->
+    <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-pink-950 rounded-2xl p-6 text-white shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="space-y-1">
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-bold bg-pink-500/20 text-pink-300 border border-pink-500/30">
+                <span>👪 PARENT PORTAL PROFILE</span>
+            </div>
+            <h1 class="text-2xl font-black tracking-tight">Parent Account & Guardian Profile</h1>
+            <p class="text-xs text-slate-300">View your parent registration code, linked children roster, and manage your contact settings.</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button @click="editing = !editing" type="button"
+                    class="px-4 py-2 rounded-xl bg-pink-600 hover:bg-pink-700 text-white text-xs font-extrabold transition-all shadow-md active:scale-95 flex items-center space-x-1.5">
+                <span x-text="editing ? '👁️ View Mode' : '✏️ Edit Account'">✏️ Edit Account</span>
+            </button>
+            <a href="{{ url_for('parent.dashboard') }}" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all backdrop-blur-sm border border-white/15">
+                ← Workspace
+            </a>
+        </div>
+    </div>
+
+    <!-- Guardian Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" x-show="!editing" x-transition>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs space-y-2">
+            <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider">Guardian Registration Code</span>
+            <p class="text-lg font-black text-slate-900 font-mono">{{ guardian.registration_number if guardian else 'PAR-001' }}</p>
+            <p class="text-xs text-slate-500 font-medium">Status: <span class="text-emerald-700 font-bold">Authorized Parent</span></p>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs space-y-2">
+            <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider">Linked Children Roster</span>
+            <p class="text-lg font-black text-slate-900">{{ linked_children | length }} Children Enrolled</p>
+            <p class="text-xs text-slate-500 font-medium">Relationship: <span class="text-pink-700 font-bold">Parent / Guardian</span></p>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs space-y-2">
+            <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider">Primary Contact</span>
+            <p class="text-sm font-black text-slate-900 truncate">{{ guardian.email if guardian and guardian.email else (user.email if user else 'Not provided') }}</p>
+            <p class="text-xs text-slate-500 font-mono">{{ guardian.phone if guardian and guardian.phone else 'No phone registered' }}</p>
+        </div>
+    </div>
+
+    <!-- Linked Children Overview -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-3" x-show="!editing">
+        <h3 class="text-xs font-black text-slate-400 uppercase tracking-wider">Authorized Enrolled Children</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {% for link in linked_children %}
+            <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-pink-100 text-pink-800 font-black flex items-center justify-center text-sm border border-pink-200">
+                    {{ link.student.first_name[0] if link.student and link.student.first_name else 'C' }}
+                </div>
+                <div>
+                    <h4 class="text-xs font-extrabold text-slate-900">{{ link.student.full_name }}</h4>
+                    <p class="text-[11px] text-slate-500 font-mono">Admission: {{ link.student.registration_number }} • Relationship: {{ link.relationship_type or 'Parent' }}</p>
+                </div>
+            </div>
+            {% else %}
+            <p class="text-xs text-slate-500 italic">No linked children currently assigned to this account.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Edit Form -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
+        
+        <div class="flex items-center justify-between border-b border-slate-100 pb-6">
+            <div class="flex items-center space-x-4">
+                <div class="w-16 h-16 rounded-2xl bg-pink-100 text-pink-800 font-black text-2xl flex items-center justify-center border border-pink-200 shadow-2xs">
+                    {{ guardian.first_name[0] if guardian and guardian.first_name else 'P' }}
+                </div>
+                <div>
+                    <h2 class="text-xl font-extrabold text-slate-900">{{ guardian.full_name if guardian else 'Guardian' }}</h2>
+                    <div class="flex items-center space-x-3 text-xs text-slate-500 mt-1 font-mono">
+                        <span>Guardian Code: <strong class="text-slate-900">{{ guardian.registration_number if guardian else 'N/A' }}</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <button @click="editing = !editing" type="button"
+                    class="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs font-bold transition-all shadow-2xs">
+                <span x-text="editing ? 'Cancel Editing' : '✏️ Edit Profile'">✏️ Edit Profile</span>
+            </button>
+        </div>
+
+        <form method="POST" action="{{ url_for('parent.account') }}" class="space-y-6">
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">First Name</label>
+                    <input type="text" value="{{ guardian.first_name if guardian else '' }}" disabled
+                           class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-xs font-bold text-slate-600 cursor-not-allowed">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">Last Name</label>
+                    <input type="text" value="{{ guardian.last_name if guardian else '' }}" disabled
+                           class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-xs font-bold text-slate-600 cursor-not-allowed">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">Email Address</label>
+                    <input type="email" name="email" value="{{ guardian.email if guardian and guardian.email else (user.email if user else '') }}"
+                           :disabled="!editing"
+                           :class="editing ? 'bg-white border-slate-300 focus:ring-2 focus:ring-pink-500 focus:border-pink-500' : 'bg-slate-50 border-slate-200 cursor-not-allowed'"
+                           class="w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-900 transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">Phone Number</label>
+                    <input type="text" name="phone" value="{{ guardian.phone if guardian and guardian.phone else '' }}"
+                           :disabled="!editing"
+                           :class="editing ? 'bg-white border-slate-300 focus:ring-2 focus:ring-pink-500 focus:border-pink-500' : 'bg-slate-50 border-slate-200 cursor-not-allowed'"
+                           class="w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-900 transition-all">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">Emergency Contact Number</label>
+                    <input type="text" name="emergency_contact" value="{{ guardian.emergency_contact if guardian and guardian.emergency_contact else '' }}"
+                           :disabled="!editing"
+                           :class="editing ? 'bg-white border-slate-300 focus:ring-2 focus:ring-pink-500 focus:border-pink-500' : 'bg-slate-50 border-slate-200 cursor-not-allowed'"
+                           class="w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-900 transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">Residential Address</label>
+                    <textarea name="address" rows="2"
+                              :disabled="!editing"
+                              :class="editing ? 'bg-white border-slate-300 focus:ring-2 focus:ring-pink-500 focus:border-pink-500' : 'bg-slate-50 border-slate-200 cursor-not-allowed'"
+                              class="w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-900 transition-all">{{ guardian.address if guardian and guardian.address else '' }}</textarea>
+                </div>
+            </div>
+
+            <!-- Portal Security / Password Change -->
+            <div class="pt-6 border-t border-slate-200 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-extrabold text-slate-900">Portal Security & Password Credentials</h3>
+                        <p class="text-xs text-slate-500">Manage your parent login password.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">Username / Guardian Code</label>
+                        <input type="text" value="{{ user.username if user else (guardian.registration_number if guardian else '') }}" disabled
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-xs font-bold text-slate-600 cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">New Portal Password</label>
+                        <input type="password" name="new_password" placeholder="••••••••"
+                               :disabled="!editing"
+                               :class="editing ? 'bg-white border-slate-300 focus:ring-2 focus:ring-pink-500 focus:border-pink-500' : 'bg-slate-50 border-slate-200 cursor-not-allowed'"
+                               class="w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-900 transition-all">
+                        <p class="text-[10px] text-slate-400 mt-1" x-show="editing">Leave blank if you do not want to change your password.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3" x-show="editing">
+                <button type="button" @click="editing = false" class="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold transition-all">
+                    Cancel
+                </button>
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-700 text-white text-xs font-extrabold transition-all shadow-xs hover:shadow-md active:scale-95">
+                    Save Account Changes
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+{% endblock %}

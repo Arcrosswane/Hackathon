@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+
+{% block title %}Marks Roster — {{ es.subject.name if es.subject else 'Subject' }} (Grade {{ es.school_class.display_name if es.school_class else '' }}){% endblock %}
+{% block header_title %}Student Marks Roster{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-5xl mx-auto">
+
+    <!-- Header Navigation -->
+    <div class="flex items-center justify-between">
+        <a href="{{ url_for('examination.exam_detail', exam_id=exam.id) }}" 
+           class="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-black text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs">
+            <span>◀</span>
+            <span>Back to {{ exam.name }} Setup</span>
+        </a>
+
+        <div class="flex items-center space-x-2">
+            <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200 text-xs font-black">
+                Max Marks: {{ es.max_marks|int if es.max_marks == es.max_marks|int else es.max_marks }}m
+            </span>
+            <span class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-black">
+                Passing Marks: {{ es.pass_marks|int if es.pass_marks == es.pass_marks|int else es.pass_marks }}m
+            </span>
+        </div>
+    </div>
+
+    <!-- Mode Switcher & Header Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-lg space-y-4">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+                <div class="flex items-center space-x-2">
+                    <span class="px-2.5 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30 text-[10px] font-extrabold uppercase tracking-wider">
+                        GRADE {{ es.school_class.display_name if es.school_class else '—' }}
+                    </span>
+                    <span class="text-xs text-slate-300 font-bold">{{ exam.name }}</span>
+                </div>
+                <h1 class="text-2xl font-black mt-1 tracking-tight">{{ es.subject.name if es.subject else 'Subject' }} Marks Roster</h1>
+                <p class="text-xs text-slate-300 mt-1">
+                    Manage student examination marks, view saved evaluation rosters, or adjust exam schedule parameters.
+                </p>
+            </div>
+
+            {% if es.question_paper %}
+            <div class="px-4 py-2 rounded-xl bg-white/10 border border-white/20 text-xs text-white">
+                <span class="text-[10px] text-slate-300 block font-bold uppercase">Attached Question Paper</span>
+                <span class="font-black">{{ es.question_paper.title }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- 3 Action Controls: View Roster, Edit Marks, Edit Schedule -->
+        <div class="pt-3 border-t border-white/10 flex flex-wrap items-center gap-2 text-xs font-bold">
+            <!-- Option 1: View Roster -->
+            <a href="{{ url_for('examination.marks_entry', exam_subject_id=es.id, mode='view') }}" 
+               class="px-4 py-2 rounded-xl border transition-all flex items-center space-x-1.5
+                   {% if mode == 'view' %}bg-white text-slate-900 border-white shadow-md font-black{% else %}bg-white/10 text-white border-white/20 hover:bg-white/20{% endif %}">
+                <span>👁️ View Saved Roster</span>
+            </a>
+
+            <!-- Option 2: Edit Marks -->
+            <a href="{{ url_for('examination.marks_entry', exam_subject_id=es.id, mode='edit') }}" 
+               class="px-4 py-2 rounded-xl border transition-all flex items-center space-x-1.5
+                   {% if mode == 'edit' %}bg-brand-600 text-white border-brand-500 shadow-md font-black{% else %}bg-white/10 text-white border-white/20 hover:bg-white/20{% endif %}">
+                <span>✏️ Edit Student Marks</span>
+            </a>
+
+            <!-- Option 3: Edit Schedule Parameters -->
+            <button onclick="document.getElementById('editScheduleModal').classList.remove('hidden')" 
+                    class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all flex items-center space-x-1.5">
+                <span>⚙️ Edit Subject Schedule & Max Marks</span>
+            </button>
+        </div>
+    </div>
+
+    {% if mode == 'view' %}
+    <!-- ========================================== -->
+    <!-- READ-ONLY VIEW MODE                        -->
+    <!-- ========================================== -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+                <h2 class="text-base font-black text-slate-900">Saved Roster — Read-Only View</h2>
+                <p class="text-xs text-slate-500">Currently displaying saved marks for Grade {{ es.school_class.display_name if es.school_class else '—' }} {{ es.subject.name if es.subject else '' }}.</p>
+            </div>
+
+            <a href="{{ url_for('examination.marks_entry', exam_subject_id=es.id, mode='edit') }}" 
+               class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-1">
+                <span>✏️ Switch to Edit Marks</span>
+            </a>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-500 uppercase tracking-wider font-extrabold border-b border-slate-200/80">
+                        <th class="py-3 px-4">Roll No</th>
+                        <th class="py-3 px-4">Student Name</th>
+                        <th class="py-3 px-4">Section</th>
+                        <th class="py-3 px-4">Attendance</th>
+                        <th class="py-3 px-4">Obtained Marks</th>
+                        <th class="py-3 px-4">Percentage</th>
+                        <th class="py-3 px-4 text-right">Grade & Pass/Fail</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-bold text-slate-800">
+                    {% for st in students %}
+                    {% set prev_res = existing_results.get(st.id) %}
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                        <td class="py-3.5 px-4 font-black text-slate-900">{{ st.roll_number or '—' }}</td>
+                        <td class="py-3.5 px-4 font-extrabold text-slate-900">{{ st.full_name }}</td>
+                        <td class="py-3.5 px-4 text-slate-500">{{ st.section.name if st.section else '—' }}</td>
+                        
+                        <td class="py-3.5 px-4">
+                            {% if prev_res %}
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase
+                                {% if prev_res.attendance_status == 'PRESENT' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                                {% else %}bg-rose-50 text-rose-700 border border-rose-200{% endif %}">
+                                {{ prev_res.attendance_status }}
+                            </span>
+                            {% else %}
+                            <span class="text-slate-400 font-normal italic">Not Entered</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="py-3.5 px-4 font-black text-slate-900">
+                            {% if prev_res and prev_res.attendance_status == 'PRESENT' and prev_res.marks_obtained is not none %}
+                            {{ prev_res.marks_obtained }} / {{ es.max_marks|int }}m
+                            {% else %}
+                            <span class="text-slate-400 font-normal">—</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="py-3.5 px-4 font-black text-slate-900">
+                            {% if prev_res and prev_res.percentage is not none and prev_res.attendance_status == 'PRESENT' %}
+                            {{ prev_res.percentage }}%
+                            {% else %}
+                            <span class="text-slate-400 font-normal">—</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="py-3.5 px-4 text-right">
+                            {% if prev_res %}
+                            {% if prev_res.attendance_status == 'ABSENT' %}
+                            <span class="px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-black uppercase">ABSENT</span>
+                            {% else %}
+                            <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-800 text-[10px] font-black mr-1">{{ prev_res.grade or 'E' }}</span>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase
+                                {% if prev_res.is_pass %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                                {% else %}bg-rose-50 text-rose-700 border border-rose-200{% endif %}">
+                                {{ 'PASS' if prev_res.is_pass else 'FAIL' }}
+                            </span>
+                            {% endif %}
+                            {% else %}
+                            <span class="text-slate-400 font-normal italic text-[11px]">Draft</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- ========================================== -->
+    <!-- EDITABLE MARKS ENTRY FORM                  -->
+    <!-- ========================================== -->
+    <form method="POST" action="{{ url_for('examination.marks_entry', exam_subject_id=es.id) }}" class="space-y-4">
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-4">
+            
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h2 class="text-base font-black text-slate-900">Student Marks Entry Sheet ({{ students|length }})</h2>
+                
+                <div class="flex items-center space-x-2">
+                    <button type="button" onclick="markAllPresent()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs">
+                        ✅ Mark All Present
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs shadow-md transition-all">
+                        💾 Save Student Marks
+                    </button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-500 uppercase tracking-wider font-extrabold border-b border-slate-200/80">
+                            <th class="py-3 px-4">Roll No</th>
+                            <th class="py-3 px-4">Student Name</th>
+                            <th class="py-3 px-4">Section</th>
+                            <th class="py-3 px-4">Attendance Status</th>
+                            <th class="py-3 px-4">Obtained Marks (out of {{ es.max_marks|int }})</th>
+                            <th class="py-3 px-4">Percentage</th>
+                            <th class="py-3 px-4 text-right">Grade & Pass/Fail</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 font-bold text-slate-800">
+                        {% for st in students %}
+                        {% set prev_res = existing_results.get(st.id) %}
+                        <tr class="hover:bg-slate-50/60 transition-colors">
+                            <input type="hidden" name="student_ids" value="{{ st.id }}">
+                            
+                            <td class="py-3 px-4 font-black text-slate-900">{{ st.roll_number or '—' }}</td>
+                            <td class="py-3 px-4 font-extrabold text-slate-900">{{ st.full_name }}</td>
+                            <td class="py-3 px-4 text-slate-500">{{ st.section.name if st.section else '—' }}</td>
+                            
+                            <td class="py-3 px-4">
+                                <select name="attendance_{{ st.id }}" id="att_{{ st.id }}" onchange="toggleAbsenceInput({{ st.id }}, this.value)" 
+                                        class="px-2.5 py-1.5 rounded-xl border border-slate-300 font-black text-xs text-slate-900 focus:ring-2 focus:ring-brand-500">
+                                    <option value="PRESENT" {% if not prev_res or prev_res.attendance_status == 'PRESENT' %}selected{% endif %}>PRESENT</option>
+                                    <option value="ABSENT" {% if prev_res and prev_res.attendance_status == 'ABSENT' %}selected{% endif %}>ABSENT</option>
+                                </select>
+                            </td>
+
+                            <td class="py-3 px-4">
+                                <input type="number" step="0.5" min="0" max="{{ es.max_marks }}" name="marks_{{ st.id }}" id="marks_{{ st.id }}" 
+                                       value="{% if prev_res and prev_res.marks_obtained is not none %}{{ prev_res.marks_obtained }}{% endif %}" 
+                                       placeholder="0.0 - {{ es.max_marks|int }}" 
+                                       {% if prev_res and prev_res.attendance_status == 'ABSENT' %}disabled{% endif %}
+                                       class="w-32 px-3 py-1.5 rounded-xl border border-slate-300 font-black text-slate-900 focus:ring-2 focus:ring-brand-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400">
+                            </td>
+
+                            <td class="py-3 px-4">
+                                {% if prev_res and prev_res.percentage is not none and prev_res.attendance_status == 'PRESENT' %}
+                                <span class="font-extrabold text-slate-900">{{ prev_res.percentage }}%</span>
+                                {% else %}
+                                <span class="text-slate-400 font-normal">—</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="py-3 px-4 text-right">
+                                {% if prev_res %}
+                                {% if prev_res.attendance_status == 'ABSENT' %}
+                                <span class="px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-black uppercase">ABSENT</span>
+                                {% else %}
+                                <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-800 text-[10px] font-black mr-1">{{ prev_res.grade or 'E' }}</span>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase
+                                    {% if prev_res.is_pass %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                                    {% else %}bg-rose-50 text-rose-700 border border-rose-200{% endif %}">
+                                    {{ 'PASS' if prev_res.is_pass else 'FAIL' }}
+                                </span>
+                                {% endif %}
+                                {% else %}
+                                <span class="text-slate-400 font-normal italic text-[11px]">Draft</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end">
+                <button type="submit" class="px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs shadow-lg shadow-brand-600/20 transition-all">
+                    💾 Save Student Marks Roster
+                </button>
+            </div>
+
+        </div>
+    </form>
+    {% endif %}
+
+</div>
+
+<!-- EDIT SUBJECT SCHEDULE & PARAMETERS MODAL -->
+<div id="editScheduleModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-base font-black text-slate-900">Edit Subject Parameters</h3>
+            <button onclick="document.getElementById('editScheduleModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 font-bold text-lg">×</button>
+        </div>
+
+        <form method="POST" action="{{ url_for('examination.edit_exam_subject_route', exam_subject_id=es.id) }}" class="space-y-4 text-xs font-bold text-slate-700">
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="block mb-1">Exam Date</label>
+                    <input type="date" name="exam_date" value="{{ es.exam_date.strftime('%Y-%m-%d') if es.exam_date else '' }}" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold">
+                </div>
+                <div>
+                    <label class="block mb-1">Start Time</label>
+                    <input type="time" name="start_time" value="{{ es.start_time.strftime('%H:%M') if es.start_time else '' }}" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold">
+                </div>
+                <div>
+                    <label class="block mb-1">End Time</label>
+                    <input type="time" name="end_time" value="{{ es.end_time.strftime('%H:%M') if es.end_time else '' }}" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block mb-1">Maximum Marks *</label>
+                    <input type="number" step="1" name="max_marks" value="{{ es.max_marks|int }}" required class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold">
+                </div>
+                <div>
+                    <label class="block mb-1">Passing Marks *</label>
+                    <input type="number" step="1" name="pass_marks" value="{{ es.pass_marks|int }}" required class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold">
+                </div>
+            </div>
+
+            <div>
+                <label class="block mb-1">Module 15 Question Paper</label>
+                <select name="question_paper_id" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-slate-900">
+                    <option value="0">None / Detach Paper</option>
+                    {% for p in available_papers %}
+                    <option value="{{ p.id }}" {% if es.question_paper_id == p.id %}selected{% endif %}>{{ p.title }} ({{ p.total_marks }}m)</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+                <button type="button" onclick="document.getElementById('editScheduleModal').classList.add('hidden')" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold">Cancel</button>
+                <button type="submit" class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold shadow-md">Save Parameters</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleAbsenceInput(stId, val) {
+    const input = document.getElementById('marks_' + stId);
+    if (input) {
+        if (val === 'ABSENT') {
+            input.value = '';
+            input.disabled = true;
+        } else {
+            input.disabled = false;
+        }
+    }
+}
+
+function markAllPresent() {
+    const selects = document.querySelectorAll('select[id^="att_"]');
+    selects.forEach(s => {
+        s.value = 'PRESENT';
+        const stId = s.id.replace('att_', '');
+        toggleAbsenceInput(stId, 'PRESENT');
+    });
+}
+</script>
+{% endblock %}

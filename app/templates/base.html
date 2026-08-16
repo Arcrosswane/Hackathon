@@ -57,6 +57,67 @@
             scrollbar-width: thin;
             scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
         }
+
+        /* Micro-Animations & Entrance Transitions */
+        @keyframes animateFadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes animateScaleUp {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes animateSlideLeft {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes animateSlideRight {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes animateFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        @keyframes animateShimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        @keyframes animateGlowBorder {
+            0%, 100% { border-color: rgba(14, 165, 233, 0.4); box-shadow: 0 0 10px rgba(14, 165, 233, 0.1); }
+            50% { border-color: rgba(14, 165, 233, 0.9); box-shadow: 0 0 20px rgba(14, 165, 233, 0.3); }
+        }
+
+        .animate-fade-in {
+            animation: animateFadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-scale-up {
+            animation: animateScaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-slide-left {
+            animation: animateSlideLeft 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-slide-right {
+            animation: animateSlideRight 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-float {
+            animation: animateFloat 3.5s ease-in-out infinite;
+        }
+        .animate-shimmer {
+            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0) 100%);
+            background-size: 200% 100%;
+            animation: animateShimmer 4s infinite;
+        }
+        .animate-glow-border {
+            animation: animateGlowBorder 3s ease-in-out infinite;
+        }
+        .hover-lift {
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .hover-lift:hover {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 12px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+        }
     </style>
 
     <!-- Custom App Script -->
@@ -73,15 +134,16 @@
            class="fixed md:static inset-y-0 left-0 z-50 w-64 bg-slate-950 text-slate-300 flex-shrink-0 flex flex-col justify-between transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out border-r border-slate-800/80 shadow-xl md:shadow-none">
         
         <div>
-            <!-- Sidebar Header / Logo -->
-            <div class="h-16 flex items-center px-5 border-b border-slate-800/80 justify-between bg-slate-950/80 backdrop-blur">
-                <a href="/" class="flex items-center space-x-3 group">
+            <!-- Sidebar Header / Logo (Pinned Above All Dashboard Menus) -->
+            <div class="h-16 flex items-center px-5 border-b border-slate-800/80 justify-between bg-slate-950/90 backdrop-blur sticky top-0 z-20">
+                <a href="{% if current_user_role in ('Admin', 'admin') %}{{ url_for('admin.dashboard') }}{% elif current_user_role in ('Teacher', 'teacher', 'Employee') %}{{ url_for('teacher.dashboard') }}{% elif current_user_role == 'Student' %}{{ url_for('student.dashboard') }}{% else %}{{ url_for('parent.dashboard') }}{% endif %}" 
+                   class="flex items-center space-x-3 group">
                     <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-700 via-brand-600 to-sky-400 flex items-center justify-center text-white font-extrabold text-lg shadow-md shadow-brand-900/40 group-hover:scale-105 transition-transform">
                         S
                     </div>
                     <div class="flex flex-col">
                         <span class="font-bold text-white tracking-tight text-lg leading-tight">StratLearn</span>
-                        <span class="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">Base Architecture</span>
+                        <span class="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">BASE ARCHITECTURE</span>
                     </div>
                 </a>
             </div>
@@ -115,18 +177,25 @@
                 {% set item_id = 'menu-item-' ~ loop.index %}
                 
                 <!-- Check if group or subitem is active -->
+                {% set dashboard_endpoints = ['admin.dashboard', 'teacher.dashboard', 'student.dashboard', 'parent.dashboard'] %}
                 {% set ns = namespace(is_active=false, has_sub=false) %}
                 {% if item.subitems %}
                     {% set ns.has_sub = true %}
                     {% for sub in item.subitems %}
-                        {% if sub.endpoint and request.endpoint == sub.endpoint %}
+                        {% if sub.endpoint and request.endpoint == sub.endpoint and (sub.endpoint not in dashboard_endpoints or item.label == 'Dashboard') and not sub.is_future %}
                             {% set ns.is_active = true %}
                         {% endif %}
                     {% endfor %}
                 {% else %}
-                    {% if item.endpoint and request.endpoint == item.endpoint %}
+                    {% if item.endpoint and request.endpoint == item.endpoint and (item.endpoint not in dashboard_endpoints or item.label == 'Dashboard') and not item.is_future %}
                         {% set ns.is_active = true %}
                     {% endif %}
+                {% endif %}
+
+                {% if item.category %}
+                <div class="pt-4 pb-1.5 px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 border-t border-slate-800/80 mt-3 first:mt-0 first:border-0 first:pt-0">
+                    {{ item.category }}
+                </div>
                 {% endif %}
 
                 <div class="menu-group-wrapper">
@@ -137,6 +206,8 @@
                             class="menu-group-btn w-full px-3 py-2.5 flex items-center justify-between rounded-xl text-xs font-bold transition-all group
                             {% if ns.is_active %}
                                 border-l-4 border-brand-500 bg-brand-500/10 text-brand-400
+                            {% elif item.is_future %}
+                                text-slate-500 opacity-60 hover:opacity-80 hover:bg-slate-900/40
                             {% else %}
                                 text-slate-300 hover:bg-slate-900 hover:text-white
                             {% endif %}">
@@ -164,6 +235,9 @@
                             <svg class="w-4 h-4 {% if ns.is_active %}text-brand-400{% else %}text-slate-400 group-hover:text-slate-200{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                             {% endif %}
                             <span>{{ item.label }}</span>
+                            {% if item.is_future %}
+                            <span class="ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-slate-800 text-amber-400 border border-amber-500/30">FUTURE</span>
+                            {% endif %}
                         </div>
                         
                         <!-- Toggle Plus / Minus Symbol -->
@@ -175,32 +249,53 @@
                     <!-- Expandable Sub-items with Vertical Connecting Line -->
                     <div id="{{ item_id }}" class="subitems-container border-l-2 border-brand-500/40 ml-6 pl-4 my-1 space-y-1.5 {% if not ns.is_active %}hidden{% endif %}">
                         {% for sub in item.subitems %}
-                        {% set is_sub_active = (sub.endpoint and request.endpoint == sub.endpoint) %}
+                        {% set is_sub_active = (sub.endpoint and request.endpoint == sub.endpoint and (sub.endpoint not in dashboard_endpoints or item.label == 'Dashboard')) %}
                         <a href="{{ url_for(sub.endpoint) }}" 
-                           class="menu-item-link block py-1 text-xs font-semibold transition-colors
+                           class="menu-item-link block py-1 text-xs font-semibold transition-colors flex items-center justify-between
                            {% if is_sub_active %}
                                text-brand-400 font-bold
+                           {% elif sub.is_future %}
+                               text-slate-500 opacity-60 hover:opacity-80
                            {% else %}
                                text-slate-400 hover:text-white
                            {% endif %}">
-                            {{ sub.label }}
+                            <span>{{ sub.label }}</span>
+                            {% if sub.is_future %}
+                            <span class="ml-1 px-1 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-slate-800 text-amber-400 border border-amber-500/30">FUTURE</span>
+                            {% endif %}
                         </a>
                         {% endfor %}
                     </div>
 
                     {% else %}
                     <!-- Single Menu Item (No Subitems) -->
-                    <a href="{{ url_for(item.endpoint) }}" 
+                    <a href="{{ url_for(item.endpoint) if not item.is_locked else '#' }}" 
                        class="menu-item-link flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all group
-                       {% if ns.is_active %}
+                       {% if ns.is_active and not item.is_locked %}
                            border-l-4 border-brand-500 bg-brand-500/10 text-brand-400
+                       {% elif item.is_locked %}
+                           text-slate-500 hover:text-slate-400 cursor-not-allowed
+                       {% elif item.is_future %}
+                           text-slate-500 opacity-60 hover:opacity-80 hover:bg-slate-900/40
                        {% else %}
                            text-slate-300 hover:bg-slate-900 hover:text-white
                        {% endif %}">
                         <div class="flex items-center space-x-3">
+                            {% if item.icon == 'chat' %}
+                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                            {% elif item.icon == 'document' %}
+                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V7.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 1H7a2 2 0 00-2 2v16a2 2 0 002 2z"></path></svg>
+                            {% else %}
                             <svg class="w-4 h-4 {% if ns.is_active %}text-brand-400{% else %}text-slate-400 group-hover:text-slate-200{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                            {% endif %}
                             <span>{{ item.label }}</span>
                         </div>
+
+                        {% if item.is_future %}
+                        <span class="ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-slate-800 text-amber-400 border border-amber-500/30">FUTURE</span>
+                        {% elif item.is_locked %}
+                        <span class="text-rose-400 font-normal text-xs">🔒</span>
+                        {% endif %}
                     </a>
                     {% endif %}
                 </div>

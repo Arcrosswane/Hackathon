@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}My Student Account Settings — StratLearn{% endblock %}
+{% block header_title %}Student Account Profile & Portal Settings{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6 animate-fade-in" x-data="{ editing: false }">
+
+    <!-- Header Hero Banner -->
+    <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-emerald-950 rounded-2xl p-6 text-white shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="space-y-1">
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span>👤 STUDENT PROFILE</span>
+            </div>
+            <h1 class="text-2xl font-black tracking-tight">Account Profile & Settings</h1>
+            <p class="text-xs text-slate-300">View your student record and manage your personal contact information and portal password.</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button @click="editing = !editing" type="button"
+                    class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-extrabold transition-all shadow-md active:scale-95 flex items-center space-x-1.5">
+                <span x-text="editing ? '👁️ View Mode' : '✏️ Edit Account'">✏️ Edit Account</span>
+            </button>
+            <a href="{{ url_for('student.dashboard') }}" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all backdrop-blur-sm border border-white/15">
+                ← Workspace
+            </a>
+        </div>
+    </div>
+
+    <!-- Read-only Summary Cards (When not editing) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" x-show="!editing" x-transition>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs space-y-2">
+            <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider">Admission & Registration</span>
+            <p class="text-lg font-black text-slate-900 font-mono">{{ student.registration_number if student else 'STU-001' }}</p>
+            <p class="text-xs text-slate-500 font-medium">Status: <span class="text-emerald-700 font-bold">Active Student</span></p>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs space-y-2">
+            <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider">Enrolled Class & Section</span>
+            <p class="text-lg font-black text-slate-900">
+                {{ enrollment.school_class.display_name if enrollment else 'Grade 9' }}
+            </p>
+            <p class="text-xs text-slate-500 font-medium">Section: <span class="text-sky-700 font-bold">{{ enrollment.section.display_name if enrollment and enrollment.section else 'Section A' }}</span></p>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs space-y-2">
+            <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider">Primary Contact</span>
+            <p class="text-sm font-black text-slate-900 truncate">{{ student.email if student and student.email else (user.email if user else 'Not provided') }}</p>
+            <p class="text-xs text-slate-500 font-mono">{{ student.phone if student and student.phone else 'No phone registered' }}</p>
+        </div>
+    </div>
+
+    <!-- Account Details & Edit Form -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
+        
+        <!-- Student Information Header -->
+        <div class="flex items-center justify-between border-b border-slate-100 pb-6">
+            <div class="flex items-center space-x-4">
+                <div class="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-800 font-black text-2xl flex items-center justify-center border border-emerald-200 shadow-2xs">
+                    {{ student.first_name[0] if student and student.first_name else 'S' }}
+                </div>
+                <div>
+                    <h2 class="text-xl font-extrabold text-slate-900">{{ student.full_name if student else 'Student' }}</h2>
+                    <div class="flex items-center space-x-3 text-xs text-slate-500 mt-1 font-mono">
+                        <span>Admission No: <strong class="text-slate-900">{{ student.registration_number if student else 'N/A' }}</strong></span>
+                        <span>•</span>
+                        <span>Class: <strong class="text-emerald-700">{{ enrollment.school_class.display_name if enrollment else 'Grade 9' }}</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <button @click="editing = !editing" type="button"
+                    class="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs font-bold transition-all shadow-2xs">
+                <span x-text="editing ? 'Cancel Editing' : '✏️ Edit Profile'">✏️ Edit Profile</span>
+            </button>
+        </div>
+
+        <form method="POST" action="{{ url_for('student.account') }}" class="space-y-6">
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">First Name</label>
+                    <input type="text" value="{{ student.first_name if student else '' }}" disabled
+                           class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-xs font-bold text-slate-600 cursor-not-allowed">
+                    <p class="text-[10px] text-slate-400 mt-1">First name is managed by school administration.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">Last Name</label>
+                    <input type="text" value="{{ student.last_name if student else '' }}" disabled
+                           class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-xs font-bold text-slate-600 cursor-not-allowed">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">Email Address</label>
+                    <input type="email" name="email" value="{{ student.email if student and student.email else (user.email if user else '') }}"
+                           :disabled="!editing"
+                           :class="editing ? 'bg-white border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500' : 'bg-slate-50 border-slate-200 cursor-not-allowed'"
+                           class="w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-900 transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">Phone Number</label>
+                    <input type="text" name="phone" value="{{ student.phone if student and student.phone else '' }}"
+                           :disabled="!editing"
+                           :class="editing ? 'bg-white border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500' : 'bg-slate-50 border-slate-200 cursor-not-allowed'"
+                           class="w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-900 transition-all">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">Residential Address</label>
+                <textarea name="address" rows="2"
+                          :disabled="!editing"
+                          :class="editing ? 'bg-white border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500' : 'bg-slate-50 border-slate-200 cursor-not-allowed'"
+                          class="w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-900 transition-all">{{ student.address if student and student.address else '' }}</textarea>
+            </div>
+
+            <!-- Portal Security / Password Change -->
+            <div class="pt-6 border-t border-slate-200 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-extrabold text-slate-900">Portal Security & Login Credentials</h3>
+                        <p class="text-xs text-slate-500">Manage your portal password and security settings.</p>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-700">
+                        Authentication Security
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">Username / Reg No</label>
+                        <input type="text" value="{{ user.username if user else (student.registration_number if student else '') }}" disabled
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-xs font-bold text-slate-600 cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">New Portal Password</label>
+                        <input type="password" name="new_password" placeholder="••••••••"
+                               :disabled="!editing"
+                               :class="editing ? 'bg-white border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500' : 'bg-slate-50 border-slate-200 cursor-not-allowed'"
+                               class="w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-900 transition-all">
+                        <p class="text-[10px] text-slate-400 mt-1" x-show="editing">Leave blank if you do not want to change your password.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3" x-show="editing">
+                <button type="button" @click="editing = false" class="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold transition-all">
+                    Cancel
+                </button>
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold transition-all shadow-xs hover:shadow-md active:scale-95">
+                    Save Account Changes
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+{% endblock %}

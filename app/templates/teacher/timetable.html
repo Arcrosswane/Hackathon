@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}My Personal Teaching Timetable — StratLearn{% endblock %}
+{% block header_title %}Teacher Personal Teaching Schedule{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto animate-fade-in">
+
+    <!-- Header Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-sky-950 rounded-2xl p-6 sm:p-8 text-white shadow-lg border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div class="space-y-1">
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+                <span>Faculty Personal Schedule</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight">
+                My Teaching Schedule — {{ teacher.full_name if teacher else 'Teacher' }}
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-300">
+                Personalized weekly timetable showing all your assigned teaching periods across classes and subjects.
+            </p>
+        </div>
+
+        <div class="bg-white/10 backdrop-blur border border-white/15 p-4 rounded-xl text-xs space-y-1.5 min-w-[220px]">
+            <div class="flex items-center justify-between gap-4">
+                <span class="text-slate-300">Academic Session:</span>
+                <span class="font-bold text-white font-mono">{{ active_session.name if active_session else '2026-2027' }}</span>
+            </div>
+            <div class="flex items-center justify-between gap-4">
+                <span class="text-slate-300">Assigned Periods:</span>
+                <span class="font-bold text-emerald-400 font-mono">{{ tt_entries|length }} Periods / Week</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timetable Grid Table -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="text-sm font-black text-slate-900 flex items-center gap-2">
+                <span>📅 Weekly Teaching Matrix</span>
+            </h2>
+            <a href="{{ url_for('teacher.dashboard') }}" class="text-xs font-black text-brand-600 hover:underline">← Back to Workspace</a>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200">
+                        <th class="py-3 px-4 font-black text-slate-500 uppercase tracking-wider w-32 border-r border-slate-200">Period / Time</th>
+                        {% for day in days %}
+                        <th class="py-3 px-4 font-black text-slate-700 uppercase tracking-wider text-center border-r border-slate-200 last:border-r-0 min-w-[150px]">
+                            {{ day }}
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    {% for p in periods %}
+                    <tr>
+                        <td class="py-3 px-4 font-mono text-slate-700 bg-slate-50/50 border-r border-slate-200 align-top">
+                            <span class="font-black text-slate-900 block">{{ p.name or ('Period ' ~ p.period_order) }}</span>
+                            <span class="text-[10px] text-slate-400 block">
+                                {{ p.start_time.strftime('%I:%M') if p.start_time else '' }} - {{ p.end_time.strftime('%I:%M %p') if p.end_time else '' }}
+                            </span>
+                        </td>
+
+                        {% for day in days %}
+                        {% set tt = grid[p.id][day] %}
+                        <td class="p-2 border-r border-slate-200 last:border-r-0 align-top h-24">
+                            {% if tt %}
+                            <div class="h-full p-2.5 rounded-xl border border-brand-200 bg-brand-50/60 hover:bg-brand-100/80 transition-colors flex flex-col justify-between space-y-1 group">
+                                <div>
+                                    <span class="text-xs font-black text-brand-950 group-hover:text-brand-900 block">
+                                        {{ tt.subject.name if tt.subject else 'Subject' }}
+                                    </span>
+                                    <span class="text-[11px] font-bold text-slate-700 block mt-0.5">
+                                        {{ tt.school_class.display_name if tt.school_class else '—' }}
+                                        {% if tt.section %} ({{ tt.section.display_name }}){% endif %}
+                                    </span>
+                                    {% if tt.room_number %}
+                                    <span class="text-[10px] text-slate-400 font-mono block">Room: {{ tt.room_number }}</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="pt-1 text-right border-t border-brand-200/50">
+                                    <a href="{{ url_for('attendance.class_attendance', class_id=tt.school_class_id) }}" 
+                                       class="text-[10px] font-black text-brand-700 hover:text-brand-900 hover:underline">
+                                        Attendance →
+                                    </a>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="h-full rounded-xl bg-slate-50/40 border border-dashed border-slate-200/60 flex items-center justify-center text-[10px] font-medium text-slate-300">
+                                Free Period
+                            </div>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="py-8 text-center text-slate-400 font-bold text-xs">
+                            No period timetable structure configured.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

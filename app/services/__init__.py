@@ -1,4 +1,8 @@
 from app.services.academic_service import get_active_academic_session, set_active_academic_session
+from app.services.admin_dashboard_service import get_admin_dashboard_summary
+from app.services.teacher_dashboard_service import get_teacher_dashboard_summary
+from app.services.student_dashboard_service import get_student_dashboard_summary
+from app.services.parent_dashboard_service import get_parent_dashboard_summary
 from app.services.setting_service import get_setting, set_setting, get_all_settings
 from app.services.class_service import get_classes_for_session, create_class, create_section
 from app.services.subject_service import get_all_subjects, get_subjects_for_class, assign_subject_to_class
@@ -41,6 +45,13 @@ from app.services.question_bank_service import (
 )
 from app.services.ai_question_service import (
     generate_ai_questions, improve_question_with_ai, convert_document_to_questions
+)
+from app.services.examination_service import (
+    get_exam_types, create_exam_type, delete_exam_type, get_grade_rules, delete_grade_rule, calculate_grade_from_percentage,
+    create_examination, update_examination, delete_examination, get_examinations, assign_classes_to_exam, add_exam_subject,
+    attach_question_paper_to_exam_subject, check_schedule_conflicts, save_bulk_exam_marks,
+    calculate_and_publish_exam_results, correct_published_result, get_student_published_results,
+    get_exam_performance_statistics, generate_result_sheet_csv, generate_ai_exam_insights
 )
 from app.services.finance_service import (
     get_all_categories, create_category, update_category, toggle_category_status,

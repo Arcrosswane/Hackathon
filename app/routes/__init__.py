@@ -16,6 +16,7 @@ from app.routes.accounts import accounts_bp
 from app.routes.payroll import payroll_bp
 from app.routes.attendance import attendance_bp
 from app.routes.question_bank import question_bank_bp
+from app.routes.examination import examination_bp
 
 __all__ = [
     'auth_bp', 
@@ -35,5 +36,6 @@ __all__ = [
     'accounts_bp',
     'payroll_bp',
     'attendance_bp',
-    'question_bank_bp'
+    'question_bank_bp',
+    'examination_bp'
 ]

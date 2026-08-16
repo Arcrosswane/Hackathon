@@ -51,6 +51,21 @@ class Student(db.Model):
 
     # Property Aliases
     @property
+    def roll_number(self):
+        en = self.get_current_enrollment()
+        return en.roll_number if en and en.roll_number else self.registration_number
+
+    @property
+    def section_id(self):
+        en = self.get_current_enrollment()
+        return en.section_id if en else None
+
+    @property
+    def section(self):
+        en = self.get_current_enrollment()
+        return en.section if en else None
+
+    @property
     def admission_number(self):
         return self.registration_number
 

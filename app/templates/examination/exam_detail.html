@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+
+{% block title %}{{ exam.name }} — Setup & Schedule{% endblock %}
+{% block header_title %}{{ exam.name }} Setup{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Navigation -->
+    <div class="flex items-center justify-between">
+        <a href="{{ url_for('examination.exams_list') }}" 
+           class="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-black text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs">
+            <span>◀</span>
+            <span>Back to Examinations Directory</span>
+        </a>
+
+        <div class="flex items-center space-x-2">
+            <span class="px-3 py-1 rounded-full text-xs font-black
+                {% if exam.status == 'RESULT_PUBLISHED' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                {% elif exam.status == 'SCHEDULED' %}bg-indigo-50 text-indigo-700 border border-indigo-200
+                {% else %}bg-slate-100 text-slate-700 border border-slate-200{% endif %}">
+                STATUS: {{ exam.status }}
+            </span>
+
+            <a href="{{ url_for('examination.result_sheet', exam_id=exam.id) }}" 
+               class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs shadow-md transition-all">
+                📊 Result Matrix & Publication
+            </a>
+        </div>
+    </div>
+
+    <!-- Exam Info Banner -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-3">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+                <span class="px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 text-[10px] font-extrabold uppercase">
+                    {{ exam.exam_type.name if exam.exam_type else 'General Examination' }}
+                </span>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight mt-1">{{ exam.name }}</h1>
+                <p class="text-xs text-slate-500 mt-0.5">{{ exam.description or 'No guidelines specified.' }}</p>
+            </div>
+
+            <div class="flex items-center space-x-4 text-xs font-bold text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-200/60">
+                <div>
+                    <span class="text-[10px] text-slate-400 block uppercase">Start Date</span>
+                    <span class="text-slate-900 font-black">{{ exam.start_date.strftime('%b %d, %Y') if exam.start_date else 'TBD' }}</span>
+                </div>
+                <div class="border-r border-slate-200 h-6"></div>
+                <div>
+                    <span class="text-[10px] text-slate-400 block uppercase">End Date</span>
+                    <span class="text-slate-900 font-black">{{ exam.end_date.strftime('%b %d, %Y') if exam.end_date else 'TBD' }}</span>
+                </div>
+                <div class="border-r border-slate-200 h-6"></div>
+                <div>
+                    <span class="text-[10px] text-slate-400 block uppercase">Assigned Classes</span>
+                    <span class="text-slate-900 font-black">{{ exam.exam_classes|length }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assign Classes Form -->
+        <form method="POST" action="{{ url_for('examination.exam_detail', exam_id=exam.id) }}" class="space-y-3 pt-1">
+            <input type="hidden" name="action" value="assign_classes">
+            
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-black uppercase text-slate-700 tracking-wider">Assigned Classes for this Examination:</span>
+                <button type="submit" class="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-2xs">
+                    💾 Save Class Assignments
+                </button>
+            </div>
+
+            <div class="flex flex-wrap gap-2 text-xs font-bold">
+                {% for c in all_classes %}
+                <label class="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/70 flex items-center space-x-1.5 cursor-pointer hover:bg-slate-100">
+                    <input type="checkbox" name="class_ids" value="{{ c.id }}" {% if c.id in assigned_class_ids %}checked{% endif %} class="rounded text-brand-600 focus:ring-brand-500">
+                    <span>Grade {{ c.display_name }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Schedule Subject Section -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-4">
+        
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <div>
+                <h2 class="text-lg font-black text-slate-900">Scheduled Exam Subjects ({{ exam.exam_subjects|length }})</h2>
+                <p class="text-xs text-slate-500">Schedule date/times, max/pass marks, and attach Module 15 Question Papers.</p>
+            </div>
+
+            <button onclick="document.getElementById('scheduleSubjectModal').classList.remove('hidden')" 
+                    class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-1.5">
+                <span>📅 Schedule New Subject</span>
+            </button>
+        </div>
+
+        <!-- Scheduled Exam Subjects Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-500 uppercase tracking-wider font-extrabold border-b border-slate-200/80">
+                        <th class="py-3 px-4">Class</th>
+                        <th class="py-3 px-4">Subject</th>
+                        <th class="py-3 px-4">Exam Date & Time</th>
+                        <th class="py-3 px-4">Max / Pass Marks</th>
+                        <th class="py-3 px-4">Module 15 Question Paper</th>
+                        <th class="py-3 px-4">Status</th>
+                        <th class="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-bold text-slate-800">
+                    {% for es in exam.exam_subjects %}
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                        <td class="py-3 px-4 font-black">Grade {{ es.school_class.display_name if es.school_class else '—' }}</td>
+                        <td class="py-3 px-4 text-slate-900 font-extrabold">{{ es.subject.name if es.subject else '—' }}</td>
+                        <td class="py-3 px-4">
+                            {% if es.exam_date %}
+                            <div>📅 {{ es.exam_date.strftime('%b %d, %Y') }}</div>
+                            <div class="text-[10px] text-slate-400">
+                                {{ es.start_time.strftime('%I:%M %p') if es.start_time else '' }} - {{ es.end_time.strftime('%I:%M %p') if es.end_time else '' }}
+                            </div>
+                            {% else %}
+                            <span class="text-slate-400 italic">Not Scheduled</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="px-2 py-0.5 rounded-md bg-slate-100 font-black text-slate-900">
+                                {{ es.max_marks|int if es.max_marks == es.max_marks|int else es.max_marks }}m
+                            </span>
+                            <span class="text-[10px] text-slate-400 font-bold ml-1">(Pass: {{ es.pass_marks|int if es.pass_marks == es.pass_marks|int else es.pass_marks }}m)</span>
+                        </td>
+                        <td class="py-3 px-4">
+                            {% if es.question_paper %}
+                            <div class="flex items-center space-x-1.5">
+                                <span class="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200 text-[10px] font-black">
+                                    📄 {{ es.question_paper.title }}
+                                </span>
+                                <a href="{{ url_for('question_bank.view_paper_print', paper_id=es.question_paper_id) }}" target="_blank" class="text-purple-600 hover:text-purple-900 font-black text-[10px]">View</a>
+                            </div>
+                            {% else %}
+                            <button type="button" onclick="openAttachPaperModal({{ es.id }}, {{ es.class_id }}, {{ es.subject_id }})" 
+                                    class="text-indigo-600 hover:text-indigo-800 font-extrabold text-xs">
+                                📎 Attach Paper
+                            </button>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase
+                                {% if es.status == 'EVALUATED' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                                {% else %}bg-indigo-50 text-indigo-700 border border-indigo-200{% endif %}">
+                                {{ es.status }}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4 text-right">
+                            <div class="flex items-center justify-end space-x-1.5">
+                                <a href="{{ url_for('examination.marks_entry', exam_subject_id=es.id, mode='view') }}" 
+                                   class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs transition-colors">
+                                    👁️ View
+                                </a>
+                                <a href="{{ url_for('examination.marks_entry', exam_subject_id=es.id, mode='edit') }}" 
+                                   class="px-2.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs transition-colors shadow-2xs">
+                                    ✏️ Edit Marks
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colSpan="7" class="py-8 text-center text-slate-400 font-medium">
+                            No subjects scheduled yet for this examination. Click "Schedule New Subject" above.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- SCHEDULE SUBJECT MODAL -->
+<div id="scheduleSubjectModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-base font-black text-slate-900">Schedule Exam Subject</h3>
+            <button onclick="document.getElementById('scheduleSubjectModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 font-bold text-lg">×</button>
+        </div>
+
+        <form method="POST" action="{{ url_for('examination.exam_detail', exam_id=exam.id) }}" class="space-y-4 text-xs font-bold text-slate-700">
+            <input type="hidden" name="action" value="schedule_subject">
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block mb-1">Class *</label>
+                    <select name="class_id" required class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-slate-900">
+                        {% for c in all_classes %}
+                        <option value="{{ c.id }}" {% if c.id in assigned_class_ids %}selected{% endif %}>Grade {{ c.display_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block mb-1">Subject *</label>
+                    <select name="subject_id" required class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-slate-900">
+                        {% for s in all_subjects %}
+                        <option value="{{ s.id }}">{{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="block mb-1">Exam Date *</label>
+                    <input type="date" name="exam_date" required class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold">
+                </div>
+                <div>
+                    <label class="block mb-1">Start Time</label>
+                    <input type="time" name="start_time" value="09:30" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold">
+                </div>
+                <div>
+                    <label class="block mb-1">End Time</label>
+                    <input type="time" name="end_time" value="12:30" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block mb-1">Maximum Marks *</label>
+                    <input type="number" step="1" name="max_marks" value="100" required class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold">
+                </div>
+                <div>
+                    <label class="block mb-1">Passing Marks *</label>
+                    <input type="number" step="1" name="pass_marks" value="33" required class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold">
+                </div>
+            </div>
+
+            <div>
+                <label class="block mb-1">Attach Question Paper from Module 15 (Optional)</label>
+                <select name="question_paper_id" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-slate-900">
+                    <option value="">None / Manual Paper</option>
+                    {% for p in available_papers %}
+                    <option value="{{ p.id }}">{{ p.title }} (Grade {{ p.school_class.display_name if p.school_class else '—' }} - {{ p.subject.name if p.subject else '—' }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+                <button type="button" onclick="document.getElementById('scheduleSubjectModal').classList.add('hidden')" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold">Cancel</button>
+                <button type="submit" class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold shadow-md">Schedule Subject</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ATTACH QUESTION PAPER MODAL -->
+<div id="attachPaperModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-base font-black text-slate-900">Attach Module 15 Question Paper</h3>
+            <button onclick="document.getElementById('attachPaperModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 font-bold text-lg">×</button>
+        </div>
+
+        <form id="attachPaperForm" method="POST" action="" class="space-y-4 text-xs font-bold text-slate-700">
+            <div>
+                <label class="block mb-1">Select Finalized Question Paper</label>
+                <select name="question_paper_id" required class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-slate-900">
+                    <option value="">Detach Paper</option>
+                    {% for p in available_papers %}
+                    <option value="{{ p.id }}">{{ p.title }} ({{ p.total_marks }}m)</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+                <button type="button" onclick="document.getElementById('attachPaperModal').classList.add('hidden')" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold">Cancel</button>
+                <button type="submit" class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold shadow-md">Save Attachment</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openAttachPaperModal(esId, clsId, subId) {
+    const form = document.getElementById('attachPaperForm');
+    form.action = '/examinations/subjects/' + esId + '/attach-paper';
+    document.getElementById('attachPaperModal').classList.remove('hidden');
+}
+</script>
+{% endblock %}

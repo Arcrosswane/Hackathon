@@ -88,10 +88,9 @@ def get_classes_for_subject(subject_id, active_only=True):
         query = query.filter(SchoolClass.is_active == True, SubjectClass.is_active == True)
     return query.order_by(SchoolClass.numeric_order.asc(), SchoolClass.name.asc()).all()
 
-def assign_subject_to_class(subject_id, class_id):
+def assign_subject_to_class(subject_id, class_id, teacher_id=None):
     """
-    Assign a subject to a class.
-    Enforces uniqueness so duplicate assignment is prevented.
+    Assign a subject to a class, optionally linking a responsible teacher.
     """
     subject = Subject.query.get(subject_id)
     school_class = SchoolClass.query.get(class_id)
@@ -105,13 +104,12 @@ def assign_subject_to_class(subject_id, class_id):
 
     existing = SubjectClass.query.filter_by(subject_id=subject_id, class_id=class_id).first()
     if existing:
-        if not existing.is_active:
-            existing.is_active = True
-            db.session.commit()
-            return existing
-        raise ValueError(f"Subject '{subject.name}' is already assigned to {school_class.display_name}.")
+        existing.is_active = True
+        existing.teacher_id = teacher_id
+        db.session.commit()
+        return existing
 
-    assignment = SubjectClass(subject_id=subject_id, class_id=class_id, is_active=True)
+    assignment = SubjectClass(subject_id=subject_id, class_id=class_id, teacher_id=teacher_id, is_active=True)
     db.session.add(assignment)
     db.session.commit()
     return assignment
@@ -124,3 +122,9 @@ def remove_subject_from_class(subject_id, class_id):
         db.session.commit()
         return True
     return False
+
+def get_subject_class_assignments(class_id):
+    """Return dictionary map of subject_id -> SubjectClass for a class."""
+    assignments = SubjectClass.query.filter_by(class_id=class_id, is_active=True).all()
+    return {a.subject_id: a for a in assignments}
+

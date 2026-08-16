@@ -19,7 +19,7 @@ timetables_bp = Blueprint('timetables', __name__, url_prefix='/admin/academics/t
 
 @timetables_bp.route('', methods=['GET'])
 @login_required
-@role_required('admin')
+@role_required('admin', 'teacher', 'employee', 'student', 'parent')
 def index():
     try:
         db.create_all()
@@ -374,3 +374,12 @@ def validate_conflict_api():
     )
 
     return jsonify({'conflicts': conflicts, 'has_conflict': len(conflicts) > 0})
+
+
+@timetables_bp.route('/live-class')
+@login_required
+@role_required('admin', 'teacher', 'employee', 'student', 'parent')
+def live_class():
+    """Placeholder route for future Live Class feature."""
+    flash("Live Class Integration is a future feature.", "info")
+    return redirect(url_for('timetables.index'))

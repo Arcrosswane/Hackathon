@@ -37,6 +37,10 @@ from app.models.question_bank import (
     Question, QuestionPaper, QuestionPaperSection,
     QuestionPaperQuestion, AIQuestionGenerationLog
 )
+from app.models.examination import (
+    ExamType, Examination, ExaminationClass, ExaminationSubject,
+    ExaminationResult, ExamOverallResult, GradeRule
+)
 
 __all__ = [
     'db',
@@ -86,5 +90,12 @@ __all__ = [
     'QuestionPaper',
     'QuestionPaperSection',
     'QuestionPaperQuestion',
-    'AIQuestionGenerationLog'
+    'AIQuestionGenerationLog',
+    'ExamType',
+    'Examination',
+    'ExaminationClass',
+    'ExaminationSubject',
+    'ExaminationResult',
+    'ExamOverallResult',
+    'GradeRule'
 ]

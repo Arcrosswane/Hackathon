@@ -3,6 +3,7 @@ from app.models import db, Subject, SubjectClass, SchoolClass, AcademicSession
 from app.utils.decorators import login_required, role_required
 from app.services.academic_service import get_active_academic_session
 from app.services.class_service import get_classes_for_session
+from app.services.employee_service import get_teachers
 from app.services.subject_service import (
     get_all_subjects,
     get_subject_by_id,
@@ -11,7 +12,8 @@ from app.services.subject_service import (
     get_subjects_for_class,
     get_classes_for_subject,
     assign_subject_to_class,
-    remove_subject_from_class
+    remove_subject_from_class,
+    get_subject_class_assignments
 )
 
 subjects_bp = Blueprint('subjects', __name__, url_prefix='/admin/academics/subjects')
@@ -148,6 +150,14 @@ def toggle_status(subject_id):
 @login_required
 @role_required('admin')
 def assignments():
+    try:
+        from sqlalchemy import text
+        with db.engine.connect() as conn:
+            conn.execute(text("ALTER TABLE subject_classes ADD COLUMN teacher_id INT NULL;"))
+            conn.commit()
+    except Exception:
+        pass
+
     active_session = get_active_academic_session()
     sessions_list = AcademicSession.query.order_by(AcademicSession.start_date.desc()).all()
 
@@ -187,15 +197,15 @@ def assignments():
         existing_assignments = SubjectClass.query.filter_by(class_id=target_class_id).all()
         existing_subject_ids = {a.subject_id for a in existing_assignments}
 
-        # Add new assignments
-        added_count = 0
+        # Add/update subject assignments with teacher mapping
+        updated_count = 0
         for sid in selected_subject_ids:
-            if sid not in existing_subject_ids:
-                try:
-                    assign_subject_to_class(sid, target_class_id)
-                    added_count += 1
-                except Exception as e:
-                    flash(f'Notice: {str(e)}', 'warning')
+            teacher_id = request.form.get(f'teacher_id_{sid}', type=int)
+            try:
+                assign_subject_to_class(sid, target_class_id, teacher_id=teacher_id)
+                updated_count += 1
+            except Exception as e:
+                flash(f'Notice: {str(e)}', 'warning')
 
         # Remove unchecked assignments
         removed_count = 0
@@ -204,17 +214,19 @@ def assignments():
                 remove_subject_from_class(a.subject_id, target_class_id)
                 removed_count += 1
 
-        flash(f'Subject assignments updated for {target_class.display_name}! ({added_count} added, {removed_count} removed)', 'success')
+        flash(f'Subject & Teacher assignments updated for {target_class.display_name}! ({updated_count} active, {removed_count} removed)', 'success')
         return redirect(url_for('subjects.assignments', session_id=selected_session_id, class_id=target_class_id))
 
-    # All available subjects
+    # All available subjects & teachers
     all_subjects = get_all_subjects(active_only=False)
+    teachers_list = get_teachers()
 
-    # Currently assigned subject IDs for selected class
+    # Currently assigned subject IDs and SubjectClass map for selected class
     assigned_subject_ids = set()
+    subject_class_map = {}
     if selected_class:
-        assigned_subs = get_subjects_for_class(selected_class.id, active_only=False)
-        assigned_subject_ids = {s.id for s in assigned_subs}
+        subject_class_map = get_subject_class_assignments(selected_class.id)
+        assigned_subject_ids = set(subject_class_map.keys())
 
     return render_template(
         'subjects/assignments.html',
@@ -224,7 +236,9 @@ def assignments():
         selected_class_id=selected_class_id,
         selected_class=selected_class,
         all_subjects=all_subjects,
-        assigned_subject_ids=assigned_subject_ids
+        assigned_subject_ids=assigned_subject_ids,
+        teachers_list=teachers_list,
+        subject_class_map=subject_class_map
     )
 
 

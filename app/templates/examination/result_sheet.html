@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}{{ exam.name }} — Result Matrix & Publication{% endblock %}
+{% block header_title %}Result Matrix & Publication{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Navigation -->
+    <div class="flex items-center justify-between">
+        <a href="{{ url_for('examination.exam_detail', exam_id=exam.id) }}" 
+           class="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-black text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs">
+            <span>◀</span>
+            <span>Back to {{ exam.name }} Setup</span>
+        </a>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <!-- CSV Export Button -->
+            <a href="{{ url_for('examination.export_result_csv', exam_id=exam.id, class_id=selected_class_id or '') }}" 
+               class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-1.5">
+                <span>📥 Export Result CSV</span>
+            </a>
+
+            <!-- Publish Results Button (Admin Only) -->
+            {% if session.get('user_role', '').lower() == 'admin' %}
+            <form method="POST" action="{{ url_for('examination.publish_results_route', exam_id=exam.id) }}" onsubmit="return confirm('🎉 Are you sure you want to calculate final grades and publish results for all students?')">
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-brand-600 hover:from-purple-700 hover:to-brand-700 text-white font-extrabold text-xs shadow-lg transition-all flex items-center space-x-1.5">
+                    <span>🚀 Publish Exam Results</span>
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Header Info Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span class="px-2.5 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30 text-[10px] font-extrabold uppercase tracking-wider">
+                    EXAM RESULT MATRIX
+                </span>
+                <span class="text-xs text-slate-300 font-bold">STATUS: {{ exam.status }}</span>
+            </div>
+            <h1 class="text-2xl font-black mt-1 tracking-tight">{{ exam.name }}</h1>
+            <p class="text-xs text-slate-300 mt-1 max-w-xl">
+                Authoritative server-calculated result sheet. Results are visible to students and parents only after publication.
+            </p>
+        </div>
+
+        <!-- AI Insights Trigger -->
+        <form method="POST" action="{{ url_for('examination.generate_ai_insights_route', exam_id=exam.id) }}">
+            <input type="hidden" name="class_id" value="{{ selected_class_id or '' }}">
+            <button type="submit" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs border border-white/20 transition-all flex items-center space-x-1.5">
+                <span>✨ Generate AI Class Insights</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- AI Performance Insights Panel (If Generated) -->
+    {% if ai_summary %}
+    <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border border-indigo-200 p-6 space-y-3 shadow-xs">
+        <div class="flex items-center space-x-2 border-b border-indigo-200/80 pb-2">
+            <span class="text-base">✨</span>
+            <h3 class="text-base font-black text-indigo-950">Gemini AI Class Exam Insights</h3>
+        </div>
+        <div class="text-xs text-indigo-950 font-medium leading-relaxed space-y-2">
+            {{ ai_summary | replace('\n', '<br>') | safe }}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Statistics Summary Bar -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+            <span class="text-[10px] font-extrabold uppercase text-slate-400 block">Appeared</span>
+            <span class="text-xl font-black text-slate-900 mt-0.5 block">{{ stats.appeared }}</span>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+            <span class="text-[10px] font-extrabold uppercase text-slate-400 block">Absent</span>
+            <span class="text-xl font-black text-amber-600 mt-0.5 block">{{ stats.absent }}</span>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+            <span class="text-[10px] font-extrabold uppercase text-slate-400 block">Passed</span>
+            <span class="text-xl font-black text-emerald-600 mt-0.5 block">{{ stats.passed }}</span>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+            <span class="text-[10px] font-extrabold uppercase text-slate-400 block">Failed</span>
+            <span class="text-xl font-black text-rose-600 mt-0.5 block">{{ stats.failed }}</span>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+            <span class="text-[10px] font-extrabold uppercase text-slate-400 block">Pass Rate</span>
+            <span class="text-xl font-black text-indigo-600 mt-0.5 block">{{ stats.pass_rate }}%</span>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+            <span class="text-[10px] font-extrabold uppercase text-slate-400 block">Average %</span>
+            <span class="text-xl font-black text-slate-900 mt-0.5 block">{{ stats.average_pct }}%</span>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+            <span class="text-[10px] font-extrabold uppercase text-slate-400 block">High / Low %</span>
+            <span class="text-sm font-black text-slate-900 mt-1 block">{{ stats.highest_pct }}% / {{ stats.lowest_pct }}%</span>
+        </div>
+    </div>
+
+    <!-- Class Filter Bar -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-4">
+        <form method="GET" action="{{ url_for('examination.result_sheet', exam_id=exam.id) }}" class="flex items-center space-x-3 text-xs font-bold">
+            <span class="text-slate-600 font-extrabold uppercase tracking-wider text-[11px]">Filter Class:</span>
+            <select name="class_id" onchange="this.form.submit()" class="px-3 py-1.5 rounded-xl border border-slate-300 font-bold text-slate-900">
+                <option value="">All Assigned Classes</option>
+                {% for c in all_classes %}
+                <option value="{{ c.id }}" {% if selected_class_id == c.id %}selected{% endif %}>Grade {{ c.display_name }}</option>
+                {% endfor %}
+            </select>
+        </form>
+
+        <span class="text-xs font-bold text-slate-500">
+            Total Enrolled: <span class="font-black text-slate-900">{{ students|length }} Students</span>
+        </span>
+    </div>
+
+    <!-- Result Sheet Matrix Table -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-6 space-y-4">
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-500 uppercase tracking-wider font-extrabold border-b border-slate-200/80">
+                        <th class="py-3 px-3">Roll</th>
+                        <th class="py-3 px-4">Student Name</th>
+                        <th class="py-3 px-3">Class</th>
+
+                        {% for es in exam_subjects %}
+                        <th class="py-3 px-3">
+                            <div>{{ es.subject.name if es.subject else 'Subj' }}</div>
+                            <div class="text-[9px] text-slate-400 font-bold">({{ es.max_marks|int }}m)</div>
+                        </th>
+                        {% endfor %}
+
+                        <th class="py-3 px-3">Total Obtained</th>
+                        <th class="py-3 px-3">Overall %</th>
+                        <th class="py-3 px-3">Grade</th>
+                        <th class="py-3 px-4 text-right">Result</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-bold text-slate-800">
+                    {% for st in students %}
+                    {% set ov = overalls_map.get(st.id) %}
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                        <td class="py-3 px-3 font-black text-slate-900">{{ st.roll_number or '—' }}</td>
+                        <td class="py-3 px-4 font-extrabold text-slate-900">{{ st.full_name }}</td>
+                        <td class="py-3 px-3 text-slate-500">{{ st.school_class.display_name if st.school_class else '—' }}</td>
+
+                        {% for es in exam_subjects %}
+                        {% set res = results_map.get((st.id, es.id)) %}
+                        <td class="py-3 px-3">
+                            {% if not res %}
+                            <span class="text-slate-300 font-normal">—</span>
+                            {% elif res.attendance_status == 'ABSENT' %}
+                            <span class="px-2 py-0.5 rounded bg-rose-50 text-rose-700 text-[10px] font-black">ABSENT</span>
+                            {% else %}
+                            <div>
+                                <span class="font-extrabold text-slate-900">{{ res.marks_obtained }}</span>
+                                <span class="text-[10px] text-slate-400">({{ res.grade or 'E' }})</span>
+                            </div>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+
+                        <td class="py-3 px-3 font-black text-slate-900">
+                            {% if ov %}
+                            {{ ov.total_obtained }} / {{ ov.total_max }}
+                            {% else %}
+                            <span class="text-slate-400 font-normal">—</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="py-3 px-3 font-black text-slate-900">
+                            {% if ov %}
+                            {{ ov.overall_percentage }}%
+                            {% else %}
+                            <span class="text-slate-400 font-normal">—</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="py-3 px-3">
+                            {% if ov %}
+                            <span class="px-2 py-0.5 rounded bg-slate-100 font-black text-slate-900 text-xs">{{ ov.overall_grade or 'E' }}</span>
+                            {% else %}
+                            <span class="text-slate-400 font-normal">—</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="py-3 px-4 text-right">
+                            {% if ov %}
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase
+                                {% if ov.overall_result == 'PASS' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                                {% else %}bg-rose-50 text-rose-700 border border-rose-200{% endif %}">
+                                {{ ov.overall_result }}
+                            </span>
+                            {% else %}
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-extrabold">DRAFT</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colSpan="{{ 7 + exam_subjects|length }}" class="py-8 text-center text-slate-400 font-medium">
+                            No student result data found. Enter marks for scheduled subjects first.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

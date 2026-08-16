@@ -1,149 +1,426 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Dashboard — StratLearn{% endblock %}
-{% block header_title %}Administrator Overview{% endblock %}
+{% block title %}Admin Command Center — StratLearn{% endblock %}
+{% block header_title %}Central School Administration Command Center{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto space-y-6">
+<div class="space-y-6 max-w-7xl mx-auto animate-fade-in">
 
-    <!-- Welcome Hero Banner -->
-    <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-purple-950 rounded-2xl p-6 sm:p-8 text-white shadow-lg border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div class="space-y-1">
-            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                <span class="w-2 h-2 rounded-full bg-purple-400"></span>
-                <span>System Administrator</span>
+    <!-- 1. HEADER & CONTEXT BANNER WITH SHIMMER & FLOATING ICON -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 sm:p-8 text-white shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-all duration-500 hover:shadow-2xl hover:border-slate-700 group">
+        <!-- Shimmer Overlay -->
+        <div class="absolute inset-0 animate-shimmer pointer-events-none"></div>
+
+        <div class="space-y-2 relative z-10">
+            <div class="flex items-center space-x-2">
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                    🏛️ COMMAND CENTER
+                </span>
+                <span class="text-xs text-slate-400 font-bold">Academic Session: {{ summary.active_session.name if summary.active_session else '2026-2027' }}</span>
             </div>
-            <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Welcome, Administrator</h2>
-            <p class="text-xs sm:text-sm text-slate-300">StratLearn Base Architecture & School Operations Control</p>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
+                <span>Good day, Administrator</span>
+                <span class="inline-block animate-float text-xl">👋</span>
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium">
+                Here is the real-time operational, financial, and academic overview across {{ summary.school.name if summary.school else 'StratLearn Institute' }}.
+            </p>
         </div>
 
-        <div class="bg-white/10 backdrop-blur-md border border-white/15 p-4 rounded-xl text-xs space-y-1">
+        <div class="relative z-10 bg-white/10 backdrop-blur-md border border-white/15 p-4 rounded-xl text-xs space-y-2 min-w-[220px] transition-all duration-300 hover:bg-white/20 hover:scale-105">
             <div class="flex items-center justify-between gap-4">
-                <span class="text-slate-300">Database Engine:</span>
-                <span class="font-bold text-white font-mono">XAMPP MySQL</span>
+                <span class="text-slate-300 font-bold">Today:</span>
+                <span class="font-black text-white font-mono">{{ summary.today.strftime('%b %d, %Y (%a)') }}</span>
             </div>
             <div class="flex items-center justify-between gap-4">
-                <span class="text-slate-300">Architecture:</span>
-                <span class="font-bold text-emerald-400 font-mono">Application Factory</span>
+                <span class="text-slate-300 font-bold">System Status:</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5"></span> ACTIVE & ISOLATED
+                </span>
             </div>
         </div>
     </div>
 
-    <!-- School Setup Status Identity Card / Warning Banner -->
-    {% if school and school.name %}
-    <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div class="flex items-center space-x-4">
-            <div class="w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 font-bold text-2xl flex items-center justify-center border border-brand-100 shadow-xs">
-                🏫
+    <!-- 2. QUICK ACTIONS SHORTCUTS BAR WITH 3D TILT & HOVER LIFT -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs animate-scale-up hover-lift" style="animation-delay: 0.05s;">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-xs font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span class="animate-bounce">⚡</span>
+                <span>Frequent Administrative Quick Actions</span>
+            </h3>
+            <span class="text-[10px] font-bold text-slate-400">1-Click Module Shortcuts</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+            <a href="{{ url_for('students.index') }}" 
+               class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-brand-50 hover:border-brand-400 hover:-translate-y-1.5 hover:rotate-1 hover:shadow-lg active:scale-95 text-slate-800 hover:text-brand-900 transition-all duration-300 ease-out text-center group font-bold text-xs flex flex-col items-center justify-center space-y-1">
+                <span class="text-xl group-hover:scale-125 group-hover:-rotate-12 transition-transform duration-300 animate-float" style="animation-duration: 4s;">👤</span>
+                <span class="truncate">Add Student</span>
+            </a>
+
+            <a href="{{ url_for('employees.index') }}" 
+               class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-brand-50 hover:border-brand-400 hover:-translate-y-1.5 hover:-rotate-1 hover:shadow-lg active:scale-95 text-slate-800 hover:text-brand-900 transition-all duration-300 ease-out text-center group font-bold text-xs flex flex-col items-center justify-center space-y-1">
+                <span class="text-xl group-hover:scale-125 group-hover:rotate-12 transition-transform duration-300 animate-float" style="animation-duration: 4.5s;">💼</span>
+                <span class="truncate">Add Employee</span>
+            </a>
+
+            <a href="{{ url_for('attendance.class_attendance') }}" 
+               class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-brand-50 hover:border-brand-400 hover:-translate-y-1.5 hover:rotate-1 hover:shadow-lg active:scale-95 text-slate-800 hover:text-brand-900 transition-all duration-300 ease-out text-center group font-bold text-xs flex flex-col items-center justify-center space-y-1">
+                <span class="text-xl group-hover:scale-125 group-hover:-rotate-12 transition-transform duration-300 animate-float" style="animation-duration: 3.8s;">📋</span>
+                <span class="truncate">Record Attendance</span>
+            </a>
+
+            <a href="{{ url_for('examination.exams_list') }}" 
+               class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-brand-50 hover:border-brand-400 hover:-translate-y-1.5 hover:-rotate-1 hover:shadow-lg active:scale-95 text-slate-800 hover:text-brand-900 transition-all duration-300 ease-out text-center group font-bold text-xs flex flex-col items-center justify-center space-y-1">
+                <span class="text-xl group-hover:scale-125 group-hover:rotate-12 transition-transform duration-300 animate-float" style="animation-duration: 4.2s;">📝</span>
+                <span class="truncate">Create Exam</span>
+            </a>
+
+            <a href="{{ url_for('question_bank.ai_generate') }}" 
+               class="p-3 rounded-xl border border-purple-200 bg-purple-50/50 hover:bg-purple-100 hover:border-purple-400 hover:-translate-y-1.5 hover:rotate-1 hover:shadow-lg active:scale-95 text-purple-900 transition-all duration-300 ease-out text-center group font-bold text-xs flex flex-col items-center justify-center space-y-1">
+                <span class="text-xl group-hover:scale-130 group-hover:rotate-180 transition-transform duration-500 animate-float" style="animation-duration: 3.5s;">✨</span>
+                <span class="truncate">AI Question Paper</span>
+            </a>
+
+            <a href="{{ url_for('fees.invoices_list') }}" 
+               class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-brand-50 hover:border-brand-400 hover:-translate-y-1.5 hover:-rotate-1 hover:shadow-lg active:scale-95 text-slate-800 hover:text-brand-900 transition-all duration-300 ease-out text-center group font-bold text-xs flex flex-col items-center justify-center space-y-1">
+                <span class="text-xl group-hover:scale-125 group-hover:rotate-12 transition-transform duration-300 animate-float" style="animation-duration: 4.8s;">💰</span>
+                <span class="truncate">Fee Invoices</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 3. LEVEL 1 — PRIMARY KPI CARDS WITH FLOATING ICONS & GLOW BORDERS -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 animate-scale-up" style="animation-delay: 0.1s;">
+        
+        <!-- KPI 1: Active Students -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover-lift hover:border-purple-300 hover:shadow-purple-100/50 group space-y-3 relative overflow-hidden">
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] font-black text-slate-400 uppercase tracking-wider">Total Students</span>
+                <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 font-bold flex items-center justify-center group-hover:scale-125 group-hover:rotate-12 transition-all duration-300 animate-float">🎓</div>
             </div>
             <div>
-                <h3 class="text-lg font-bold text-slate-900 tracking-tight">{{ school.name }}</h3>
-                <p class="text-xs text-slate-500 mt-0.5">
-                    Academic Session: <span class="font-semibold text-slate-800 font-mono">{{ school.academic_session or '2026-27' }}</span>
+                <p class="text-2xl font-black text-slate-900 group-hover:text-purple-700 transition-colors">{{ summary.level1_kpis.get('total_students', 0) }}</p>
+                <p class="text-[11px] text-emerald-600 font-bold mt-0.5">+{{ summary.students_overview.get('new_admissions', 0) }} admissions (30d)</p>
+            </div>
+            <div class="pt-2 border-t border-slate-100 text-right">
+                <a href="{{ url_for('students.index') }}" class="text-[11px] font-black text-brand-600 group-hover:text-brand-800 inline-flex items-center space-x-1 transition-colors">
+                    <span>View Roster →</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- KPI 2: Total Staff -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover-lift hover:border-sky-300 hover:shadow-sky-100/50 group space-y-3 relative overflow-hidden">
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] font-black text-slate-400 uppercase tracking-wider">Total Staff</span>
+                <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 font-bold flex items-center justify-center group-hover:scale-125 group-hover:-rotate-12 transition-all duration-300 animate-float" style="animation-delay: 0.5s;">💼</div>
+            </div>
+            <div>
+                <p class="text-2xl font-black text-slate-900 group-hover:text-sky-700 transition-colors">{{ summary.level1_kpis.get('total_employees', 0) }}</p>
+                <p class="text-[11px] text-slate-500 font-bold mt-0.5">{{ summary.staff_overview.get('teaching_staff', 0) }} Teachers • {{ summary.staff_overview.get('admin_staff', 0) }} Admin</p>
+            </div>
+            <div class="pt-2 border-t border-slate-100 text-right">
+                <a href="{{ url_for('employees.index') }}" class="text-[11px] font-black text-brand-600 group-hover:text-brand-800 inline-flex items-center space-x-1 transition-colors">
+                    <span>Staff Directory →</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- KPI 3: Today's Attendance -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover-lift hover:border-emerald-300 hover:shadow-emerald-100/50 group space-y-3 relative overflow-hidden">
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] font-black text-slate-400 uppercase tracking-wider">Today's Attendance</span>
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 font-bold flex items-center justify-center group-hover:scale-125 group-hover:rotate-12 transition-all duration-300 animate-float" style="animation-delay: 1s;">📋</div>
+            </div>
+            <div>
+                <p class="text-2xl font-black text-slate-900 group-hover:text-emerald-700 transition-colors">{{ summary.level1_kpis.get('today_attendance_pct', 0.0) }}%</p>
+                <p class="text-[11px] text-slate-500 font-bold mt-0.5">
+                    {% if summary.attendance_overview.get('today_recorded') %}
+                    {{ summary.attendance_overview.get('present_count', 0) }} Present / {{ summary.attendance_overview.get('absent_count', 0) }} Absent
+                    {% else %}
+                    <span class="text-rose-500 font-bold">Not recorded today</span>
+                    {% endif %}
                 </p>
             </div>
+            <div class="pt-2 border-t border-slate-100 text-right">
+                <a href="{{ url_for('attendance.class_attendance') }}" class="text-[11px] font-black text-brand-600 group-hover:text-brand-800 inline-flex items-center space-x-1 transition-colors">
+                    <span>Attendance Matrix →</span>
+                </a>
+            </div>
         </div>
 
-        <a href="{{ url_for('school.setup') }}" 
-           class="px-4 py-2 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition-all shadow-xs flex items-center space-x-1.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-            <span>Edit School Setup</span>
-        </a>
-    </div>
-    {% else %}
-    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-lg">
-                ⚠️
+        <!-- KPI 4: Outstanding Fees -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover-lift hover:border-amber-300 hover:shadow-amber-100/50 group space-y-3 relative overflow-hidden">
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] font-black text-slate-400 uppercase tracking-wider">Outstanding Dues</span>
+                <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 font-bold flex items-center justify-center group-hover:scale-125 group-hover:-rotate-12 transition-all duration-300 animate-float" style="animation-delay: 1.5s;">💳</div>
             </div>
             <div>
-                <h4 class="font-bold text-amber-900 text-base">School setup incomplete</h4>
-                <p class="text-xs text-amber-700 mt-0.5">Complete your school profile to begin configuring StratLearn.</p>
+                <p class="text-2xl font-black text-slate-900 group-hover:text-amber-700 transition-colors">₹{{ summary.level1_kpis.get('total_outstanding_fees', 0.0)|int }}</p>
+                <p class="text-[11px] text-slate-500 font-bold mt-0.5">{{ summary.finance_overview.get('unpaid_invoices_count', 0) }} Unpaid Invoices</p>
+            </div>
+            <div class="pt-2 border-t border-slate-100 text-right">
+                <a href="{{ url_for('fees.invoices_list') }}" class="text-[11px] font-black text-brand-600 group-hover:text-brand-800 inline-flex items-center space-x-1 transition-colors">
+                    <span>Fee Invoices →</span>
+                </a>
             </div>
         </div>
 
-        <a href="{{ url_for('school.setup') }}" 
-           class="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all whitespace-nowrap">
-            [Complete Setup]
-        </a>
-    </div>
-    {% endif %}
-
-    <!-- Quick Overview Stats -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
+        <!-- KPI 5: Upcoming Exams -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover-lift hover:border-indigo-300 hover:shadow-indigo-100/50 group space-y-3 relative overflow-hidden">
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] font-black text-slate-400 uppercase tracking-wider">Upcoming Exams</span>
+                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 font-bold flex items-center justify-center group-hover:scale-125 group-hover:rotate-12 transition-all duration-300 animate-float" style="animation-delay: 2s;">📝</div>
+            </div>
             <div>
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Institute</p>
-                <p class="text-xl font-bold text-slate-900 mt-1 truncate">{{ school.name if school else 'Not Set' }}</p>
-                <span class="text-[11px] text-emerald-600 font-semibold">Active Profile</span>
+                <p class="text-2xl font-black text-slate-900 group-hover:text-indigo-700 transition-colors">{{ summary.level1_kpis.get('upcoming_exams_count', 0) }}</p>
+                <p class="text-[11px] text-indigo-600 font-bold mt-0.5">{{ summary.exams_overview.get('draft_results_count', 0) }} Draft result evaluations</p>
             </div>
-            <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
-                🏛️
-            </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
-            <div>
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">System Users</p>
-                <p class="text-xl font-bold text-slate-900 mt-1">3 Accounts</p>
-                <span class="text-[11px] text-slate-500 font-medium">Admin / Teacher / Student</span>
-            </div>
-            <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold">
-                👥
+            <div class="pt-2 border-t border-slate-100 text-right">
+                <a href="{{ url_for('examination.exams_list') }}" class="text-[11px] font-black text-brand-600 group-hover:text-brand-800 inline-flex items-center space-x-1 transition-colors">
+                    <span>Exam Catalog →</span>
+                </a>
             </div>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
-            <div>
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Academics</p>
-                <p class="text-xl font-bold text-slate-900 mt-1">Grade 9 - Sec E</p>
-                <span class="text-[11px] text-slate-500 font-medium">Class Rosters Active</span>
-            </div>
-            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
-                📚
-            </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
-            <div>
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Role Access</p>
-                <p class="text-xl font-bold text-slate-900 mt-1">Full Access</p>
-                <span class="text-[11px] text-emerald-600 font-semibold">Role Isolated</span>
-            </div>
-            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-                🔒
-            </div>
-        </div>
     </div>
 
-    <!-- Extensible Modules Grid -->
-    <div class="space-y-4 pt-2">
-        <div class="flex items-center justify-between">
-            <div>
-                <h3 class="text-lg font-extrabold text-slate-900 tracking-tight">Future Extensible Modules</h3>
-                <p class="text-xs text-slate-500">Ready to accept feature blueprints without architecture rewrite</p>
+    <!-- 4. LEVEL 2 — ACTION CENTER (THINGS REQUIRING ATTENTION) -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-4 animate-scale-up hover-lift" style="animation-delay: 0.15s;">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div class="flex items-center space-x-2">
+                <div class="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
+                <h2 class="text-base font-black text-slate-900">Action Center — Items Requiring Attention</h2>
             </div>
-            <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-bold border border-slate-200">
-                Base Layer Ready
+            <span class="text-xs font-bold text-slate-500">
+                Pending Actions: <span class="font-black text-slate-900">{{ summary.level2_pending_actions|length }}</span>
             </span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {% for mod in future_modules %}
-            <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs hover:shadow-md hover:border-slate-300 transition-all flex flex-col justify-between group">
-                <div>
-                    <div class="flex items-center justify-between mb-3">
-                        <h4 class="font-bold text-slate-900 text-base group-hover:text-brand-600 transition-colors">{{ mod.name }}</h4>
-                        <span class="text-[10px] font-extrabold uppercase tracking-wide px-2 py-0.5 bg-purple-50 text-purple-700 rounded-md border border-purple-200">
-                            Planned
+        <div class="space-y-3">
+            {% for action in summary.level2_pending_actions %}
+            <div class="p-4 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-300 hover:shadow-lg hover:scale-[1.01] group
+                {% if action.priority == 'HIGH' %}bg-rose-50/70 border-rose-200 text-rose-950 hover:border-rose-400
+                {% elif action.priority == 'MEDIUM' %}bg-amber-50/70 border-amber-200 text-amber-950 hover:border-amber-400
+                {% else %}bg-slate-50 border-slate-200 text-slate-900 hover:border-slate-400{% endif %}">
+                
+                <div class="space-y-1">
+                    <div class="flex items-center space-x-2">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider
+                            {% if action.priority == 'HIGH' %}bg-rose-500 text-white
+                            {% elif action.priority == 'MEDIUM' %}bg-amber-500 text-white
+                            {% else %}bg-slate-600 text-white{% endif %}">
+                            {{ action.priority }} PRIORITY
                         </span>
+                        <span class="text-xs font-black uppercase text-slate-500">{{ action.category }}</span>
                     </div>
-                    <p class="text-xs text-slate-500 leading-relaxed">{{ mod.desc }}</p>
+                    <h3 class="text-sm font-extrabold group-hover:text-brand-900 transition-colors">{{ action.title }}</h3>
+                    <p class="text-xs text-slate-600 font-medium">{{ action.description }}</p>
                 </div>
-                <div class="mt-5 pt-3 border-t border-slate-100 text-[11px] text-slate-400 flex items-center justify-between">
-                    <span class="font-semibold text-slate-500">Target Blueprint</span>
-                    <span class="font-mono text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">/admin/{{ mod.name.lower().replace(' ', '-').replace('&-', '') }}</span>
+
+                <a href="{{ action.action_url }}" 
+                   class="px-4 py-2 rounded-xl text-xs font-extrabold shadow-2xs transition-all duration-200 hover:scale-110 hover:shadow-md active:scale-95 whitespace-nowrap
+                       {% if action.priority == 'HIGH' %}bg-rose-600 hover:bg-rose-700 text-white
+                       {% elif action.priority == 'MEDIUM' %}bg-amber-600 hover:bg-amber-700 text-white
+                       {% else %}bg-slate-900 hover:bg-slate-800 text-white{% endif %}">
+                    {{ action.action_label }} →
+                </a>
+            </div>
+            {% else %}
+            <div class="py-6 text-center text-slate-400 font-bold text-xs bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                🎉 All operational items are up to date! No pending administrative actions.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 5. LEVEL 3 — TRENDS & OPERATIONAL VISUALIZATIONS -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-scale-up" style="animation-delay: 0.2s;">
+
+        <!-- Attendance 7-Day Trend Visualization with Growing Bars -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-4 lg:col-span-2 hover-lift">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="text-base font-black text-slate-900">Student Attendance Trend (Last 7 Days)</h3>
+                    <p class="text-xs text-slate-500">Daily student attendance percentage across all active classes.</p>
                 </div>
+                <a href="{{ url_for('attendance.class_matrix') }}" class="text-xs font-black text-brand-600 hover:text-brand-800 transition-colors hover:underline">
+                    Full Matrix →
+                </a>
+            </div>
+
+            <!-- Attendance Bar Chart Visualization -->
+            <div class="grid grid-cols-7 gap-2 items-end h-40 pt-4 px-2">
+                {% for d in summary.attendance_overview.get('seven_days_trend', []) %}
+                <div class="flex flex-col items-center h-full justify-end group cursor-pointer">
+                    <span class="text-[10px] font-black text-slate-700 mb-1 group-hover:text-brand-600 group-hover:scale-125 transition-all duration-300">
+                        {{ d.percentage }}%
+                    </span>
+                    <div class="w-full bg-slate-100 rounded-t-lg overflow-hidden flex flex-col justify-end" style="height: 100px;">
+                        <div class="w-full bg-gradient-to-t from-brand-700 via-sky-500 to-emerald-400 rounded-t-lg transition-all duration-1000 cubic-bezier(0.34, 1.56, 0.64, 1) group-hover:brightness-125 group-hover:scale-y-105" 
+                             style="height: {{ d.percentage if d.percentage > 0 else 4 }}%;"></div>
+                    </div>
+                    <span class="text-[10px] font-extrabold text-slate-500 mt-2 uppercase group-hover:text-brand-900 transition-colors">{{ d.day_name }}</span>
+                    <span class="text-[9px] text-slate-400 font-normal">{{ d.date }}</span>
+                </div>
+                {% else %}
+                <div class="col-span-7 text-center py-10 text-slate-400 text-xs font-medium">
+                    No historical attendance records logged for the past week.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Financial & Fee Snapshot Card -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-4 hover-lift">
+            <div class="border-b border-slate-100 pb-3">
+                <h3 class="text-base font-black text-slate-900">Finance & Fee Snapshot</h3>
+                <p class="text-xs text-slate-500">Current month revenue and expense accounting.</p>
+            </div>
+
+            <div class="space-y-3">
+                <div class="p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-100 flex items-center justify-between transition-all duration-300 hover:translate-x-1.5 hover:shadow-md hover:bg-emerald-100/70">
+                    <div>
+                        <span class="text-[10px] font-black text-emerald-700 uppercase tracking-wider block">Fees Collected (This Month)</span>
+                        <span class="text-lg font-black text-emerald-950">₹{{ summary.finance_overview.get('monthly_collections', 0.0)|int }}</span>
+                    </div>
+                    <a href="{{ url_for('fees.payments_list') }}" class="text-xs font-black text-emerald-700 hover:underline">History</a>
+                </div>
+
+                <div class="p-3.5 rounded-xl bg-amber-50/60 border border-amber-100 flex items-center justify-between transition-all duration-300 hover:translate-x-1.5 hover:shadow-md hover:bg-amber-100/70">
+                    <div>
+                        <span class="text-[10px] font-black text-amber-700 uppercase tracking-wider block">Outstanding Student Dues</span>
+                        <span class="text-lg font-black text-amber-950">₹{{ summary.finance_overview.get('total_outstanding', 0.0)|int }}</span>
+                    </div>
+                    <a href="{{ url_for('fees.invoices_list') }}" class="text-xs font-black text-amber-700 hover:underline">Invoices</a>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 transition-all duration-300 hover:bg-slate-100 hover:-translate-y-0.5">
+                        <span class="text-[10px] font-bold text-slate-500 block uppercase">Recorded Income</span>
+                        <span class="text-sm font-black text-slate-900">₹{{ summary.finance_overview.get('monthly_income', 0.0)|int }}</span>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 transition-all duration-300 hover:bg-slate-100 hover:-translate-y-0.5">
+                        <span class="text-[10px] font-bold text-slate-500 block uppercase">Recorded Expense</span>
+                        <span class="text-sm font-black text-slate-900">₹{{ summary.finance_overview.get('monthly_expense', 0.0)|int }}</span>
+                    </div>
+                </div>
+
+                <div class="pt-2 text-right">
+                    <a href="{{ url_for('accounts.dashboard') }}" class="text-xs font-black text-brand-600 hover:text-brand-800 transition-colors hover:underline">
+                        Finance Control Hub →
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 6. ACADEMIC & EXAMINATIONS HUB -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-scale-up" style="animation-delay: 0.25s;">
+
+        <!-- Upcoming Examinations (Module 16 Integration) -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-4 hover-lift">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="text-base font-black text-slate-900">Upcoming Examinations & Schedules</h3>
+                    <p class="text-xs text-slate-500">Scheduled tests and linked Module 15 question papers.</p>
+                </div>
+                <a href="{{ url_for('examination.exams_list') }}" class="text-xs font-black text-brand-600 hover:text-brand-800 transition-colors hover:underline">
+                    All Exams →
+                </a>
+            </div>
+
+            <div class="space-y-2.5">
+                {% for ex in summary.exams_overview.get('upcoming_exams', []) %}
+                <div class="p-3.5 rounded-xl border border-slate-200/80 bg-slate-50/60 flex items-center justify-between gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-slate-300 group">
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase border border-indigo-200">
+                                {{ ex.status }}
+                            </span>
+                            <span class="text-xs font-black text-slate-900 group-hover:text-indigo-900 transition-colors">{{ ex.name }}</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 mt-0.5">
+                            📅 {{ ex.start_date.strftime('%b %d') if ex.start_date else 'TBD' }} - {{ ex.end_date.strftime('%b %d, %Y') if ex.end_date else 'TBD' }}
+                        </p>
+                    </div>
+                    <a href="{{ url_for('examination.exam_detail', exam_id=ex.id) }}" 
+                       class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs transition-all duration-200 hover:scale-110 active:scale-95">
+                        Manage →
+                    </a>
+                </div>
+                {% else %}
+                <div class="py-6 text-center text-slate-400 font-bold text-xs bg-slate-50 rounded-xl">
+                    No active upcoming examinations scheduled.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Active Homework & Academic Submissions -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-4 hover-lift">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="text-base font-black text-slate-900">Active Homework & Homework Tasks</h3>
+                    <p class="text-xs text-slate-500">Current student homework assignments across subjects.</p>
+                </div>
+                <a href="{{ url_for('homework.manage') }}" class="text-xs font-black text-brand-600 hover:text-brand-800 transition-colors hover:underline">
+                    Homework Directory →
+                </a>
+            </div>
+
+            <div class="space-y-2.5">
+                {% for hw in summary.homework_overview.get('active_homework', []) %}
+                <div class="p-3.5 rounded-xl border border-slate-200/80 bg-slate-50/60 flex items-center justify-between gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-slate-300 group">
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2 py-0.5 rounded bg-brand-50 text-brand-700 text-[10px] font-black border border-brand-200">
+                                {{ hw.subject.name if hw.subject else 'Subject' }}
+                            </span>
+                            <span class="text-xs font-black text-slate-900 group-hover:text-brand-900 transition-colors">{{ hw.title }}</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 mt-0.5">
+                            Grade {{ hw.school_class.display_name if hw.school_class else '—' }} • Due: {{ hw.due_date.strftime('%b %d, %Y') if hw.due_date else 'TBD' }}
+                        </p>
+                    </div>
+                    <a href="{{ url_for('homework.manage') }}" 
+                       class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs transition-all duration-200 hover:scale-110 active:scale-95">
+                        View
+                    </a>
+                </div>
+                {% else %}
+                <div class="py-6 text-center text-slate-400 font-bold text-xs bg-slate-50 rounded-xl">
+                    No published homework tasks currently active.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 7. LEVEL 4 — RECENT ACTIVITY AUDIT FEED WITH HOVER GLOW -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-4 animate-scale-up hover-lift" style="animation-delay: 0.3s;">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h2 class="text-base font-black text-slate-900">Recent School Operations Activity Feed</h2>
+            <span class="text-xs font-bold text-slate-400">Live Audit Trail</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {% for act in summary.level4_activity %}
+            <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50/50 flex items-start space-x-3 transition-all duration-300 hover:bg-slate-100/90 hover:border-slate-300 hover:translate-x-1 group">
+                <span class="text-xl group-hover:scale-130 transition-transform duration-300 animate-float" style="animation-duration: 4s;">{{ act.icon }}</span>
+                <div class="flex-1 space-y-0.5">
+                    <p class="text-xs font-extrabold text-slate-900 group-hover:text-brand-900 transition-colors">{{ act.title }}</p>
+                    <p class="text-[11px] text-slate-500 font-medium">{{ act.meta }}</p>
+                    <p class="text-[10px] text-slate-400 font-mono pt-1">
+                        {{ act.timestamp.strftime('%b %d, %Y %I:%M %p') if act.timestamp else '' }}
+                    </p>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-span-2 py-6 text-center text-slate-400 font-bold text-xs bg-slate-50 rounded-xl">
+                No recent activity logged yet.
             </div>
             {% endfor %}
         </div>

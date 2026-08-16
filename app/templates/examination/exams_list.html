@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Examinations Management — StratLearn{% endblock %}
+{% block header_title %}Examinations Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span class="px-2.5 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30 text-[10px] font-extrabold uppercase tracking-wider">
+                    MODULE 16 — EXAMINATIONS
+                </span>
+                <span class="text-xs text-slate-300 font-bold">Academic Assessment & Results System</span>
+            </div>
+            <h1 class="text-2xl font-black mt-1 tracking-tight">School Examinations Directory</h1>
+            <p class="text-xs text-slate-300 mt-1 max-w-xl">
+                Create examinations, schedule subject tests, attach Module 15 Question Papers, enter student marks, and publish authoritative exam results.
+            </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ url_for('examination.exam_types_page') }}" 
+               class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs border border-white/20 transition-all flex items-center space-x-1.5">
+                <span>⚙️ Exam Types & Grading</span>
+            </a>
+
+            <button onclick="document.getElementById('createExamModal').classList.remove('hidden')" 
+                    class="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-1.5">
+                <span>➕ Create Examination</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters & Search -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+        <form method="GET" action="{{ url_for('examination.exams_list') }}" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 items-end">
+            
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Status</label>
+                <select name="status" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    <option value="">All Statuses</option>
+                    <option value="DRAFT" {% if status_filter == 'DRAFT' %}selected{% endif %}>DRAFT</option>
+                    <option value="SCHEDULED" {% if status_filter == 'SCHEDULED' %}selected{% endif %}>SCHEDULED</option>
+                    <option value="ONGOING" {% if status_filter == 'ONGOING' %}selected{% endif %}>ONGOING</option>
+                    <option value="COMPLETED" {% if status_filter == 'COMPLETED' %}selected{% endif %}>COMPLETED</option>
+                    <option value="RESULT_PUBLISHED" {% if status_filter == 'RESULT_PUBLISHED' %}selected{% endif %}>RESULT_PUBLISHED</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Class</label>
+                <select name="class_id" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    <option value="">All Classes</option>
+                    {% for c in all_classes %}
+                    <option value="{{ c.id }}" {% if class_filter == c.id %}selected{% endif %}>{{ c.display_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="sm:col-span-2">
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Search</label>
+                <input type="text" name="q" value="{{ search_q or '' }}" placeholder="Exam name, description..." 
+                       class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <button type="submit" class="w-full py-2 px-3 rounded-xl bg-slate-900 text-white font-extrabold text-xs hover:bg-slate-800 transition-colors">
+                    🔍 Filter
+                </button>
+                <a href="{{ url_for('examination.exams_list') }}" class="py-2 px-3 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200">
+                    Reset
+                </a>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- Examinations Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {% for exam in exams %}
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-6 hover:border-indigo-300 hover:shadow-md transition-all flex flex-col justify-between">
+            
+            <div>
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider
+                        {% if exam.status == 'RESULT_PUBLISHED' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                        {% elif exam.status == 'SCHEDULED' %}bg-indigo-50 text-indigo-700 border border-indigo-200
+                        {% elif exam.status == 'ONGOING' %}bg-purple-50 text-purple-700 border border-purple-200
+                        {% else %}bg-slate-100 text-slate-700 border border-slate-200{% endif %}">
+                        {{ exam.status }}
+                    </span>
+
+                    {% if exam.exam_type %}
+                    <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-extrabold uppercase">
+                        {{ exam.exam_type.name }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <h3 class="text-lg font-black text-slate-900 tracking-tight mt-1">{{ exam.name }}</h3>
+                <p class="text-xs text-slate-500 mt-1 line-clamp-2">{{ exam.description or 'Standard School Examination.' }}</p>
+
+                <div class="mt-4 pt-3 border-t border-slate-100 space-y-1 text-xs">
+                    <div class="flex items-center justify-between text-slate-600">
+                        <span class="font-bold">📅 Schedule Window:</span>
+                        <span class="font-black text-slate-900">
+                            {% if exam.start_date %}{{ exam.start_date.strftime('%b %d, %Y') }}{% else %}TBD{% endif %}
+                            —
+                            {% if exam.end_date %}{{ exam.end_date.strftime('%b %d, %Y') }}{% else %}TBD{% endif %}
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between text-slate-600">
+                        <span class="font-bold">📚 Assigned Classes:</span>
+                        <span class="font-black text-slate-900">{{ exam.exam_classes|length }} {{ 'Class' if exam.exam_classes|length == 1 else 'Classes' }}</span>
+                    </div>
+
+                    <div class="flex items-center justify-between text-slate-600">
+                        <span class="font-bold">📝 Scheduled Subjects:</span>
+                        <span class="font-black text-slate-900">{{ exam.exam_subjects|length }} {{ 'Subject' if exam.exam_subjects|length == 1 else 'Subjects' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-5 mt-4 border-t border-slate-100 flex items-center space-x-2">
+                <a href="{{ url_for('examination.exam_detail', exam_id=exam.id) }}" 
+                   class="flex-1 py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs text-center transition-colors shadow-2xs">
+                    ⚙️ Setup & Schedule
+                </a>
+
+                <a href="{{ url_for('examination.result_sheet', exam_id=exam.id) }}" 
+                   class="py-2.5 px-3 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 font-extrabold text-xs text-center border border-brand-200">
+                    📊 Result Matrix
+                </a>
+
+                {% if session.get('user_role', '').lower() == 'admin' %}
+                <form method="POST" action="{{ url_for('examination.delete_exam_route', exam_id=exam.id) }}" onsubmit="return confirm('🗑️ Are you sure you want to delete \'{{ exam.name }}\'? All scheduled subjects and results will be permanently removed.')">
+                    <button type="submit" class="py-2.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold text-xs text-center border border-rose-200" title="Delete Examination">
+                        🗑️
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+
+        </div>
+        {% else %}
+        <div class="col-span-full bg-white rounded-2xl border border-slate-200/80 p-12 text-center">
+            <span class="text-3xl block mb-2">🎓</span>
+            <h3 class="text-base font-black text-slate-900">No Examinations Found</h3>
+            <p class="text-xs text-slate-500 mt-1">Create your first examination to schedule subjects, attach question papers, and calculate results.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<!-- CREATE EXAM MODAL -->
+<div id="createExamModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-base font-black text-slate-900">Create New Examination</h3>
+            <button onclick="document.getElementById('createExamModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 font-bold text-lg">×</button>
+        </div>
+
+        <form method="POST" action="{{ url_for('examination.exams_list') }}" class="space-y-4 text-xs font-bold text-slate-700">
+            
+            <div>
+                <label class="block mb-1">Examination Name *</label>
+                <input type="text" name="name" required placeholder="e.g. Mid-Term Examination 2026, Annual Board 2026" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold">
+            </div>
+
+            <div>
+                <label class="block mb-1">Examination Category / Type</label>
+                <select name="exam_type_id" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-slate-900">
+                    <option value="">Select Category</option>
+                    {% for et in exam_types %}
+                    <option value="{{ et.id }}">{{ et.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block mb-1">Start Date</label>
+                    <input type="date" name="start_date" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold">
+                </div>
+                <div>
+                    <label class="block mb-1">End Date</label>
+                    <input type="date" name="end_date" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold">
+                </div>
+            </div>
+
+            <div>
+                <label class="block mb-1">Description / Guidelines</label>
+                <textarea name="description" rows="2" placeholder="General exam rules and guidelines..." class="w-full px-3 py-2 rounded-xl border border-slate-300"></textarea>
+            </div>
+
+            <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+                <button type="button" onclick="document.getElementById('createExamModal').classList.add('hidden')" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold">Cancel</button>
+                <button type="submit" class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold shadow-md">Create Examination</button>
+            </div>
+
+        </form>
+    </div>
+</div>
+{% endblock %}
