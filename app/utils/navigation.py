@@ -96,20 +96,21 @@ ADMIN_NAV = [
         ]
     },
     {
-        'label': 'Online Store & POS', 'icon': 'shopping-bag', 'is_future': True,
-        'subitems': [
-            {'label': 'Fee & Service Accounts', 'endpoint': 'fees.invoices_list'}
-        ]
-    },
-    {
         'label': 'Messaging', 'icon': 'chat',
         'subitems': [
-            {'label': 'Internal School Messages', 'endpoint': 'admin.dashboard'},
+            {'label': 'Internal School Messages', 'endpoint': 'messaging.inbox'},
             {'label': 'WhatsApp Gateway & Services', 'endpoint': 'admin.dashboard', 'is_future': True},
             {'label': 'SMS Services & Broadcasts', 'endpoint': 'admin.dashboard', 'is_future': True}
         ]
     },
-    {'label': 'Live Class', 'endpoint': 'timetables.live_class', 'icon': 'video-camera', 'is_future': True, 'subitems': []},
+    {
+        'label': 'School Store & POS', 'icon': 'shopping-bag',
+        'subitems': [
+            {'label': 'Store Command Center', 'endpoint': 'store.admin_dashboard'},
+            {'label': 'Products Master Roster', 'endpoint': 'store.admin_products'},
+            {'label': 'Physical Counter POS', 'endpoint': 'store.pos_terminal'}
+        ]
+    },
     {
         'label': 'Question Paper', 'icon': 'document-text',
         'subitems': [
@@ -132,15 +133,24 @@ ADMIN_NAV = [
         ]
     },
     {
-        'label': 'Reports', 'icon': 'chart-bar',
+        'label': 'Reports & Analytics', 'icon': 'chart-bar',
         'subitems': [
-            {'label': 'Exam Result Matrices', 'endpoint': 'examination.exams_list'}
+            {'label': 'Reports Directory', 'endpoint': 'reports.index'},
+            {'label': 'Academic Reports', 'endpoint': 'reports.academic'},
+            {'label': 'Print Report Cards', 'endpoint': 'reports.academic_report_card'},
+            {'label': 'Attendance Reports', 'endpoint': 'reports.attendance'},
+            {'label': 'Fee Collection Reports', 'endpoint': 'reports.fees'},
+            {'label': 'Payroll Reports', 'endpoint': 'reports.payroll'},
+            {'label': 'Student Roster Reports', 'endpoint': 'reports.students'},
+            {'label': 'Performance Analytics', 'endpoint': 'reports.performance'}
         ]
     },
     {
-        'label': 'Certificates', 'icon': 'academic-cap', 'is_future': True,
+        'label': 'Certificates', 'icon': 'academic-cap',
         'subitems': [
-            {'label': 'Issue Certificates', 'endpoint': 'students.index', 'is_future': True}
+            {'label': 'Certificates History', 'endpoint': 'certificates.index'},
+            {'label': 'Issue New Certificate', 'endpoint': 'certificates.create'},
+            {'label': 'Verify Certificate', 'endpoint': 'certificates.verify'}
         ]
     }
 ]
@@ -170,12 +180,19 @@ TEACHER_NAV = [
     {
         'label': 'Messaging', 'icon': 'chat',
         'subitems': [
-            {'label': 'Class & Parent Messages', 'endpoint': 'teacher.dashboard'},
+            {'label': 'Class & Parent Messages', 'endpoint': 'messaging.inbox'},
             {'label': 'WhatsApp Notifications', 'endpoint': 'teacher.dashboard', 'is_future': True},
             {'label': 'SMS Alerts', 'endpoint': 'teacher.dashboard', 'is_future': True}
         ]
     },
-    {'label': 'Live Class', 'endpoint': 'timetables.live_class', 'icon': 'video-camera', 'is_future': True, 'subitems': []},
+    {
+        'label': 'School Store & POS', 'icon': 'shopping-bag',
+        'subitems': [
+            {'label': 'Store Catalog & Ordering', 'endpoint': 'store.catalog'},
+            {'label': 'Order History & Receipts', 'endpoint': 'store.user_orders'},
+            {'label': 'Physical Counter POS', 'endpoint': 'store.pos_terminal'}
+        ]
+    },
     {
         'label': 'Question Paper', 'icon': 'document-text',
         'subitems': [
@@ -198,9 +215,14 @@ TEACHER_NAV = [
         ]
     },
     {
-        'label': 'Reports', 'icon': 'chart-bar',
+        'label': 'Reports & Certificates', 'icon': 'chart-bar',
         'subitems': [
-            {'label': 'Class Performance Reports', 'endpoint': 'examination.exams_list'}
+            {'label': 'Academic Reports', 'endpoint': 'reports.academic'},
+            {'label': 'Print Report Cards', 'endpoint': 'reports.academic_report_card'},
+            {'label': 'Class Attendance Reports', 'endpoint': 'reports.attendance'},
+            {'label': 'Class Performance', 'endpoint': 'reports.performance'},
+            {'label': 'Certificates History', 'endpoint': 'certificates.index'},
+            {'label': 'Issue Certificate', 'endpoint': 'certificates.create'}
         ]
     },
     {'label': 'Account Settings', 'endpoint': 'teacher.account', 'icon': 'cog', 'subitems': []},
@@ -209,35 +231,83 @@ TEACHER_NAV = [
 
 STUDENT_NAV = [
     {'label': 'Dashboard', 'endpoint': 'student.dashboard', 'icon': 'home', 'subitems': []},
-    {'label': 'Admission Letter', 'endpoint': 'students.index', 'icon': 'document', 'is_future': True, 'subitems': []},
-    {'label': 'Paid Fee Recipt', 'endpoint': 'fees.student_fee_account', 'icon': 'currency-dollar', 'subitems': []},
-    {'label': 'My Timetable', 'endpoint': 'timetables.index', 'icon': 'calendar', 'subitems': []},
-    {'label': 'My Report Card', 'endpoint': 'examination.student_results', 'icon': 'academic-cap', 'subitems': []},
-    {'label': 'Test Results', 'endpoint': 'question_bank.student_banks', 'icon': 'document-check', 'subitems': []},
-    {'label': 'Exam Result', 'endpoint': 'examination.student_results', 'icon': 'academic-cap', 'subitems': []},
-    {'label': 'Home Assignments', 'endpoint': 'homework.student_index', 'icon': 'document-text', 'subitems': []},
-    {'label': 'Online Store', 'endpoint': 'fees.student_fee_account', 'icon': 'shopping-bag', 'is_future': True, 'subitems': []},
+    {
+        'label': 'Academics & Timetable', 'icon': 'calendar',
+        'subitems': [
+            {'label': 'My Class Timetable', 'endpoint': 'timetables.index'},
+            {'label': 'Home Assignments', 'endpoint': 'homework.student_index'}
+        ]
+    },
+    {
+        'label': 'Exams & Performance', 'icon': 'academic-cap',
+        'subitems': [
+            {'label': 'Exam Results & Report Card', 'endpoint': 'examination.student_results'},
+            {'label': 'Test Papers & Question Banks', 'endpoint': 'question_bank.student_banks'}
+        ]
+    },
+    {
+        'label': 'Fees & Receipts', 'icon': 'currency-dollar',
+        'subitems': [
+            {'label': 'My Fee Account & Receipts', 'endpoint': 'fees.student_fee_account'}
+        ]
+    },
+    {
+        'label': 'Reports & Certificates', 'icon': 'chart-bar',
+        'subitems': [
+            {'label': 'My Official Report Card', 'endpoint': 'reports.academic_report_card'},
+            {'label': 'My Attendance Summary', 'endpoint': 'reports.attendance'},
+            {'label': 'My Certificates', 'endpoint': 'certificates.index'}
+        ]
+    },
     {
         'label': 'Messaging', 'icon': 'chat',
         'subitems': [
-            {'label': 'Teacher Communication', 'endpoint': 'student.dashboard'},
+            {'label': 'Teacher Communication', 'endpoint': 'messaging.inbox'},
             {'label': 'WhatsApp Notifications', 'endpoint': 'student.dashboard', 'is_future': True}
         ]
     },
-    {'label': 'Live Class', 'endpoint': 'timetables.live_class', 'icon': 'video-camera', 'is_future': True, 'subitems': []},
-    {'label': 'Account Settings', 'endpoint': 'student.account', 'icon': 'cog', 'subitems': []},
-    {'label': 'Log out', 'endpoint': 'auth.logout', 'icon': 'logout', 'subitems': []}
+    {'label': 'Account Settings', 'endpoint': 'student.account', 'icon': 'cog', 'subitems': []}
 ]
 
 PARENT_NAV = [
     {'label': 'Dashboard', 'endpoint': 'parent.dashboard', 'icon': 'home', 'subitems': []},
-    {'label': 'Child Attendance', 'endpoint': 'attendance.my_attendance', 'icon': 'clipboard-check', 'is_future': True, 'subitems': []},
-    {'label': 'Child Homework', 'endpoint': 'homework.parent_index', 'icon': 'document-text', 'subitems': []},
-    {'label': 'Child Development', 'endpoint': 'behaviour_skills.parent_child_development', 'icon': 'sparkles', 'subitems': []},
-    {'label': 'Fee Payment & History', 'endpoint': 'fees.student_fee_account', 'icon': 'currency-dollar', 'is_future': True, 'subitems': []},
-    {'label': 'Child Exam Results', 'endpoint': 'examination.parent_results', 'icon': 'academic-cap', 'subitems': []},
-    {'label': 'Account Settings', 'endpoint': 'parent.account', 'icon': 'cog', 'subitems': []},
-    {'label': 'Log out', 'endpoint': 'auth.logout', 'icon': 'logout', 'subitems': []}
+    {
+        'label': 'Child Academics', 'icon': 'academic-cap',
+        'subitems': [
+            {'label': 'Child Homework', 'endpoint': 'homework.parent_index'},
+            {'label': 'Child Development & Skills', 'endpoint': 'behaviour_skills.parent_child_development'},
+            {'label': 'Child Exam Results', 'endpoint': 'examination.parent_results'}
+        ]
+    },
+    {
+        'label': 'Reports & Certificates', 'icon': 'chart-bar',
+        'subitems': [
+            {'label': 'Child Official Report Card', 'endpoint': 'reports.academic_report_card'},
+            {'label': 'Child Attendance Summary', 'endpoint': 'reports.attendance'},
+            {'label': 'Child Fee Account', 'endpoint': 'reports.fees'},
+            {'label': 'Child Certificates', 'endpoint': 'certificates.index'}
+        ]
+    },
+    {
+        'label': 'Fees & Accounts', 'icon': 'currency-dollar',
+        'subitems': [
+            {'label': 'Fee Payment & History', 'endpoint': 'fees.student_fee_account'}
+        ]
+    },
+    {
+        'label': 'School Store & POS', 'icon': 'shopping-bag',
+        'subitems': [
+            {'label': 'School Store Catalog', 'endpoint': 'store.catalog'},
+            {'label': 'My Store Orders', 'endpoint': 'store.user_orders'}
+        ]
+    },
+    {
+        'label': 'Messaging', 'icon': 'chat',
+        'subitems': [
+            {'label': 'School Messaging', 'endpoint': 'messaging.inbox'}
+        ]
+    },
+    {'label': 'Account Settings', 'endpoint': 'parent.account', 'icon': 'cog', 'subitems': []}
 ]
 
 

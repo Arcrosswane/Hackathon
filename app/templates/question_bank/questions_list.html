@@ -4,40 +4,43 @@
 {% block header_title %}Question Banks Catalog{% endblock %}
 
 {% block content %}
-<div class="space-y-6">
+<div class="space-y-6 max-w-7xl mx-auto animate-fade-in">
 
-    <!-- Header Banner -->
-    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
+    <!-- 1. HEADER BANNER -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 sm:p-8 text-white shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-all duration-500 hover:shadow-2xl">
+        <div class="space-y-2 relative z-10">
             <div class="flex items-center space-x-2">
-                <span class="px-2.5 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30 text-[10px] font-extrabold uppercase tracking-wider">
-                    MODULE 15 — QUESTION BANKS
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                    📚 QUESTION BANK REPOSITORY
                 </span>
-                <span class="text-xs text-slate-300 font-bold">Subject & Class Academic Repositories</span>
+                <span class="text-xs text-slate-400 font-bold">Academic Assessment Catalog</span>
             </div>
-            <h1 class="text-2xl font-black mt-1 tracking-tight">
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
+                <span>
                 {% if view_mode == 'questions' and selected_class_id %}
                 Question Bank Roster
                 {% else %}
                 Teacher Question Banks
                 {% endif %}
+                </span>
+                <span class="inline-block animate-float text-xl">📚</span>
             </h1>
-            <p class="text-xs text-slate-300 mt-1 max-w-xl">
+            <p class="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium">
                 Manage subject-wise question banks, generate questions with AI, or import existing question papers from Excel/PDF files.
             </p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2.5 relative z-10">
             <!-- Import Document Modal Trigger -->
             <button onclick="document.getElementById('importDocModal').classList.remove('hidden')" 
-                    class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-1.5">
+                    class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-1.5">
                 <span>📤 Import Excel / PDF</span>
             </button>
 
             <!-- AI Generator Button -->
             <a href="{{ url_for('question_bank.ai_generate') }}" 
-               class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-1.5">
-                <span>✨ AI Question Generator</span>
+               class="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-1.5">
+                <span>✨ AI Generator</span>
             </a>
 
             <!-- Create Question Modal Trigger -->

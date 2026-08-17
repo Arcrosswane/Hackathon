@@ -4,20 +4,75 @@
 {% block header_title %}Fee Invoices & Demands{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto space-y-6">
+<div class="space-y-6 max-w-7xl mx-auto animate-fade-in">
 
-    <!-- Top Action Bar & Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
-        <div>
-            <h2 class="text-xl font-bold text-slate-900 tracking-tight">Fee Invoices Roster</h2>
-            <p class="text-xs font-medium text-slate-500 mt-1">Issued fee demands and student payment status tracking.</p>
+    <!-- 1. HEADER & CONTEXT BANNER -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 sm:p-8 text-white shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-all duration-500 hover:shadow-2xl">
+        <div class="space-y-2 relative z-10">
+            <div class="flex items-center space-x-2">
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    💳 FEE & SERVICE ACCOUNTS
+                </span>
+                <span class="text-xs text-slate-400 font-bold">Academic Fee Management</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
+                <span>Fee Invoices Roster</span>
+                <span class="inline-block animate-float text-xl">💳</span>
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium">
+                Issued fee demands, tuition invoices, student payment status tracking, and receipt generation.
+            </p>
         </div>
 
-        <a href="{{ url_for('fees.generate_invoices') }}" 
-           class="inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md shadow-brand-600/20 transition-all">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-            <span>Generate Invoices</span>
-        </a>
+        <div class="flex items-center space-x-3 relative z-10 shrink-0">
+            <a href="{{ url_for('fees.generate_invoices') }}" 
+               class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-2">
+                <span>+ Generate Invoices</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 2. KPI METRICS OVERVIEW CARDS ROW -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-black border border-indigo-100 shrink-0">
+                📄
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Total Invoices</p>
+                <h3 class="text-2xl font-black text-slate-900 font-mono">{{ invoices.items|length if invoices and invoices.items else 0 }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-black border border-emerald-100 shrink-0">
+                ✓
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Paid Invoices</p>
+                <h3 class="text-2xl font-black text-emerald-600 font-mono">{{ invoices.items|selectattr('status', 'equalto', 'PAID')|list|length if invoices and invoices.items else 0 }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-black border border-amber-100 shrink-0">
+                ⏳
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Unpaid / Partial</p>
+                <h3 class="text-2xl font-black text-amber-600 font-mono">{{ invoices.items|rejectattr('status', 'equalto', 'PAID')|list|length if invoices and invoices.items else 0 }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl font-black border border-purple-100 shrink-0">
+                🏫
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Classes</p>
+                <h3 class="text-2xl font-black text-purple-600 font-mono">{{ classes|length }}</h3>
+            </div>
+        </div>
     </div>
 
     <!-- Filter Bar -->

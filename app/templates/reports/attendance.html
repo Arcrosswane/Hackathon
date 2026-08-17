@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Attendance Reports — StratLearn{% endblock %}
+{% block header_title %}Attendance Statistics & Reports{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto animate-fade-in">
+
+    <!-- 1. HEADER & FILTERS -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 text-white shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                📋 ATTENDANCE REPORTS
+            </span>
+            <h1 class="text-2xl font-black tracking-tight mt-1">Student & Class Attendance Summary</h1>
+        </div>
+
+        <form method="GET" action="{{ url_for('reports.attendance') }}" class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            <select name="class_id" class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-semibold text-white focus:outline-none">
+                <option value="">All Classes</option>
+                {% for cls in classes %}
+                <option value="{{ cls.id }}" {% if selected_class_id == cls.id %}selected{% endif %}>Class {{ cls.name }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md">
+                Filter
+            </button>
+            <a href="{{ url_for('reports.export_csv', type='attendance') }}" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs shadow-md">
+                Export CSV
+            </a>
+        </form>
+    </div>
+
+    <!-- 2. TABLE SHEET -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4">
+        <h2 class="text-base font-extrabold text-slate-900">Attendance Summary Roster</h2>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-slate-200 text-[11px] font-black uppercase tracking-wider text-slate-400 bg-slate-50/50">
+                        <th class="py-3 px-4">Adm #</th>
+                        <th class="py-3 px-4">Student Name</th>
+                        <th class="py-3 px-4">Class</th>
+                        <th class="py-3 px-4">Total Working Days</th>
+                        <th class="py-3 px-4">Present Days</th>
+                        <th class="py-3 px-4">Absent Days</th>
+                        <th class="py-3 px-4">Attendance Pct</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                    {% for s in att_summary.students %}
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="py-3.5 px-4 font-mono font-bold text-slate-900">{{ s.admission_number }}</td>
+                        <td class="py-3.5 px-4 font-extrabold text-slate-900">{{ s.name }}</td>
+                        <td class="py-3.5 px-4 text-slate-500">{{ s.class_name }} {{ s.section_name }}</td>
+                        <td class="py-3.5 px-4 font-mono">{{ s.total_working_days }}</td>
+                        <td class="py-3.5 px-4 font-mono text-emerald-700 font-bold">{{ s.present_days }}</td>
+                        <td class="py-3.5 px-4 font-mono text-rose-600 font-bold">{{ s.absent_days }}</td>
+                        <td class="py-3.5 px-4 font-mono font-black text-indigo-700">{{ s.percentage }}%</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="py-12 text-center text-slate-400">No attendance records found for selected criteria.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -4,37 +4,90 @@
 {% block header_title %}Gemini AI Question Generator{% endblock %}
 
 {% block content %}
-<div class="space-y-6">
+<div class="space-y-6 max-w-7xl mx-auto animate-fade-in">
 
-    <!-- Header Banner -->
-    <div class="bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900 rounded-2xl p-6 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
+    <!-- 1. HEADER & CONTEXT BANNER -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 sm:p-8 text-white shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-all duration-500 hover:shadow-2xl">
+        <div class="space-y-2 relative z-10">
             <div class="flex items-center space-x-2">
-                <span class="px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px] font-extrabold uppercase tracking-wider">
-                    GEMINI AI & DOCUMENT CONVERTER
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                    🤖 GEMINI AI GENERATOR
                 </span>
-                <span class="text-xs text-slate-300 font-bold">Structured Candidate Synthesis</span>
+                <span class="text-xs text-slate-400 font-bold">Automated Syllabus Assessment Synthesis</span>
             </div>
-            <h1 class="text-2xl font-black mt-1 tracking-tight">AI Question & Document Generator</h1>
-            <p class="text-xs text-slate-300 mt-1 max-w-xl">
-                Generate questions with AI or import uploaded document papers. Review, edit on-screen, and save accepted items into your Question Bank.
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
+                <span>AI Question Generator</span>
+                <span class="inline-block animate-float text-xl">✨</span>
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium">
+                Generate tailored multiple-choice, short answer, and descriptive questions instantly with Gemini AI. Review on-screen and commit to your Question Bank.
             </p>
         </div>
 
-        <a href="{{ url_for('question_bank.questions_list') }}" 
-           class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs border border-white/20 transition-all flex items-center space-x-1.5">
-            <span>📚 Question Banks</span>
-        </a>
+        <div class="flex items-center space-x-3 shrink-0 relative z-10">
+            <a href="{{ url_for('question_bank.questions_list') }}" 
+               class="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs border border-white/20 transition-all flex items-center space-x-1.5">
+                <span>📚 View Question Catalog</span>
+            </a>
+        </div>
     </div>
 
-    <!-- AI Generator Input Form -->
-    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+    <!-- 2. KPI METRICS OVERVIEW CARDS ROW -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl font-black border border-purple-100 shrink-0">
+                ✨
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">AI Engine</p>
+                <h3 class="text-sm font-black text-slate-900 font-mono">Gemini 1.5 Flash</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-black border border-indigo-100 shrink-0">
+                🏫
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Target Classes</p>
+                <h3 class="text-2xl font-black text-slate-900 font-mono">{{ all_classes|length }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-black border border-emerald-100 shrink-0">
+                📖
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Subjects</p>
+                <h3 class="text-2xl font-black text-slate-900 font-mono">{{ all_subjects|length }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-xl font-black border border-sky-100 shrink-0">
+                📝
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Generated Items</p>
+                <h3 class="text-2xl font-black text-purple-600 font-mono">{{ generated_questions|length if generated_questions else 0 }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. MAIN AI GENERATOR INPUT FORM -->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+        <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+            <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">Configure Assessment Prompt & Parameters</h3>
+            <span class="text-xs text-purple-600 font-bold">Powered by StratLearn AI</span>
+        </div>
+
         <form method="POST" action="{{ url_for('question_bank.ai_generate') }}" class="space-y-4">
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Target Class *</label>
-                    <select name="class_id" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-600 mb-1">Target Class *</label>
+                    <select name="class_id" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-purple-500 focus:outline-none bg-slate-50">
                         {% for c in all_classes %}
                         <option value="{{ c.id }}">{{ c.display_name }}</option>
                         {% endfor %}
@@ -42,8 +95,8 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Subject *</label>
-                    <select name="subject_id" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-600 mb-1">Subject *</label>
+                    <select name="subject_id" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-purple-500 focus:outline-none bg-slate-50">
                         {% for s in all_subjects %}
                         <option value="{{ s.id }}">{{ s.name }}</option>
                         {% endfor %}
@@ -51,216 +104,102 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Difficulty Level</label>
-                    <select name="difficulty" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-purple-500 focus:outline-none">
-                        {% for d in valid_difficulties %}
-                        <option value="{{ d }}" {% if d == 'MEDIUM' %}selected{% endif %}>{{ d }}</option>
-                        {% endfor %}
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-600 mb-1">Question Type *</label>
+                    <select name="question_type" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-purple-500 focus:outline-none bg-slate-50">
+                        <option value="MCQ">Multiple Choice Questions (MCQ)</option>
+                        <option value="Short Answer">Short Answer Questions</option>
+                        <option value="Long Answer">Long Answer / Essay</option>
+                        <option value="Fill in the Blank">Fill in the Blanks</option>
                     </select>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Chapter(s) / Topic(s) *</label>
-                    <input type="text" name="chapters" required placeholder="e.g. Photosynthesis, Cellular Respiration, Matter" 
-                           class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-600 mb-1">Difficulty Level</label>
+                    <select name="difficulty" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-purple-500 focus:outline-none bg-slate-50">
+                        <option value="Easy">Easy (Foundational)</option>
+                        <option value="Medium" selected>Medium (Standard)</option>
+                        <option value="Hard">Hard (Advanced / Olympiad)</option>
+                    </select>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Number of Questions (1-25)</label>
-                    <input type="number" min="1" max="25" name="num_questions" value="5" 
-                           class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-600 mb-1">Number of Questions</label>
+                    <input type="number" name="count" min="1" max="20" value="5" required
+                           class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-purple-500 focus:outline-none bg-slate-50">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-600 mb-1">Topic / Chapter Title</label>
+                    <input type="text" name="topic" placeholder="e.g. Quadratic Equations, Photosynthesis"
+                           class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-purple-500 focus:outline-none bg-slate-50">
                 </div>
             </div>
 
-            <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Question Types</label>
-                <div class="flex flex-wrap gap-2 text-xs font-bold">
-                    {% for t in valid_types %}
-                    <label class="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center space-x-1.5 cursor-pointer hover:bg-slate-100">
-                        <input type="checkbox" name="question_types" value="{{ t }}" {% if t in ('MCQ', 'SHORT_ANSWER') %}checked{% endif %} class="rounded text-purple-600 focus:ring-purple-500">
-                        <span>{{ t }}</span>
-                    </label>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Custom Teacher Instructions (Optional)</label>
-                <input type="text" name="teacher_instructions" placeholder="e.g. Focus on real-world numerical application questions, CBSE 2026 style" 
-                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-purple-500 focus:outline-none">
-            </div>
-
-            <div class="pt-2 flex justify-end">
-                <button type="submit" class="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-lg shadow-purple-600/20 transition-all flex items-center space-x-2">
-                    <span>✨ Generate Candidate Questions with Gemini</span>
+            <div class="flex justify-end pt-2 border-t border-slate-100">
+                <button type="submit" class="px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-2">
+                    <span>✨ Synthesize Questions with AI</span>
                 </button>
             </div>
-
         </form>
     </div>
 
-    <!-- Candidate Questions Review & On-Screen Editor Section -->
-    {% if candidate_questions %}
-    <form method="POST" action="{{ url_for('question_bank.ai_accept') }}" class="space-y-4">
-        <input type="hidden" name="global_class_id" value="{{ selected_cls_id or '' }}">
-        <input type="hidden" name="global_subject_id" value="{{ selected_sub_id or '' }}">
-        
-        <div class="flex items-center justify-between">
-            <div>
-                <h2 class="text-base font-black text-slate-900">Candidate Questions for Review ({{ candidate_questions|length }})</h2>
-                <p class="text-xs text-slate-500">Review or edit questions below before accepting them into the Question Bank.</p>
+    <!-- 4. GENERATED CANDIDATE QUESTIONS REVIEW PANEL -->
+    {% if generated_questions %}
+    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center space-x-2">
+                <span>📋 Candidate AI Generated Questions</span>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] bg-purple-50 text-purple-700 font-mono font-bold">{{ generated_questions|length }} Candidates</span>
+            </h3>
+        </div>
+
+        <form method="POST" action="{{ url_for('question_bank.save_generated_questions') }}" class="space-y-4">
+            <input type="hidden" name="class_id" value="{{ class_id }}">
+            <input type="hidden" name="subject_id" value="{{ subject_id }}">
+
+            <div class="space-y-4">
+                {% for q in generated_questions %}
+                <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" name="save_q_{{ loop.index0 }}" checked class="w-4 h-4 text-purple-600 rounded">
+                            <span class="text-xs font-black text-slate-900">Question #{{ loop.index }}</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700 font-mono">{{ q.type }}</span>
+                        </div>
+                        <span class="text-xs font-mono font-bold text-purple-600">{{ q.marks }} Marks</span>
+                    </div>
+
+                    <textarea name="content_{{ loop.index0 }}" rows="2" required class="w-full p-3 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 bg-white">{{ q.content }}</textarea>
+
+                    {% if q.options %}
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        {% for opt in q.options %}
+                        <div class="flex items-center space-x-2">
+                            <span class="font-mono text-slate-400 font-bold">{{ loop.index }}.</span>
+                            <input type="text" name="opt_{{ loop.parent.loop.index0 }}_{{ loop.index0 }}" value="{{ opt }}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-slate-800 bg-white">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="pt-2 border-t border-slate-200 flex items-center justify-between text-xs">
+                        <span class="font-bold text-slate-600">Correct Answer:</span>
+                        <input type="text" name="answer_{{ loop.index0 }}" value="{{ q.answer }}" class="w-2/3 px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs font-bold text-slate-900 bg-white">
+                    </div>
+                </div>
+                {% endfor %}
             </div>
-            
-            <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition-all">
-                ✅ Accept Selected Questions into Bank
-            </button>
-        </div>
 
-        <div class="space-y-4">
-            {% for q in candidate_questions %}
-            {% set idx = loop.index0 %}
-            <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-3">
-                
-                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
-                    <div class="flex items-center space-x-3">
-                        <input type="checkbox" name="accept_indices" value="{{ idx }}" checked class="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500">
-                        <span class="font-black text-slate-900 text-xs">Question #{{ loop.index }}</span>
-                        
-                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-purple-50 text-purple-700 border border-purple-200">
-                            {{ q.question_type }}
-                        </span>
-                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-50 text-amber-700 border border-amber-200">
-                            {{ q.difficulty }}
-                        </span>
-                    </div>
-
-                    <div class="flex items-center space-x-2">
-                        <!-- Toggle Live Edit Mode Button -->
-                        <button type="button" onclick="toggleEditCard({{ idx }})" 
-                                class="px-3 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold text-xs border border-indigo-200 transition-colors flex items-center space-x-1">
-                            <span>✏️ Edit Values</span>
-                        </button>
-                    </div>
-                </div>
-
-                <input type="hidden" name="class_id_{{ idx }}" value="{{ q.class_id or '' }}">
-                <input type="hidden" name="subject_id_{{ idx }}" value="{{ q.subject_id or '' }}">
-
-                <!-- Editable Question Statement -->
-                <div>
-                    <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">Question Statement *</label>
-                    <textarea name="question_text_{{ idx }}" rows="2" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-brand-500 focus:outline-none">{{ q.question_text }}</textarea>
-                </div>
-
-                <!-- Basic Parameters (Type, Difficulty, Marks, Chapter) -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-bold">
-                    <div>
-                        <label class="block text-[10px] text-slate-400 uppercase mb-0.5">Type</label>
-                        <select name="question_type_{{ idx }}" onchange="toggleTypeBlock({{ idx }}, this.value)" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold">
-                            {% for t in valid_types %}
-                            <option value="{{ t }}" {% if q.question_type == t %}selected{% endif %}>{{ t }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-[10px] text-slate-400 uppercase mb-0.5">Difficulty</label>
-                        <select name="difficulty_{{ idx }}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold">
-                            {% for d in valid_difficulties %}
-                            <option value="{{ d }}" {% if q.difficulty == d %}selected{% endif %}>{{ d }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-[10px] text-slate-400 uppercase mb-0.5">Marks</label>
-                        <input type="number" step="0.5" name="marks_{{ idx }}" value="{{ q.marks }}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold">
-                    </div>
-
-                    <div>
-                        <label class="block text-[10px] text-slate-400 uppercase mb-0.5">Chapter</label>
-                        <input type="text" name="chapter_{{ idx }}" value="{{ q.chapter or '' }}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold">
-                    </div>
-                </div>
-
-                <!-- Editable MCQ Options Block (Shown only for MCQ type) -->
-                <div id="mcqBlock_{{ idx }}" class="{% if q.question_type != 'MCQ' %}hidden{% endif %} p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                    <span class="text-[10px] font-black text-indigo-900 block">MCQ Options & Correct Choice:</span>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-bold">
-                        <div>
-                            <label class="block text-[9px] text-slate-500">Option A</label>
-                            <input type="text" name="option_a_{{ idx }}" value="{{ q.option_a or '' }}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200">
-                        </div>
-                        <div>
-                            <label class="block text-[9px] text-slate-500">Option B</label>
-                            <input type="text" name="option_b_{{ idx }}" value="{{ q.option_b or '' }}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200">
-                        </div>
-                        <div>
-                            <label class="block text-[9px] text-slate-500">Option C</label>
-                            <input type="text" name="option_c_{{ idx }}" value="{{ q.option_c or '' }}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200">
-                        </div>
-                        <div>
-                            <label class="block text-[9px] text-slate-500">Option D</label>
-                            <input type="text" name="option_d_{{ idx }}" value="{{ q.option_d or '' }}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-extrabold text-slate-600 mt-1">Correct Option</label>
-                        <select name="correct_option_{{ idx }}" class="px-3 py-1 rounded-lg border border-slate-300 font-black">
-                            <option value="A" {% if q.correct_option == 'A' %}selected{% endif %}>A</option>
-                            <option value="B" {% if q.correct_option == 'B' %}selected{% endif %}>B</option>
-                            <option value="C" {% if q.correct_option == 'C' %}selected{% endif %}>C</option>
-                            <option value="D" {% if q.correct_option == 'D' %}selected{% endif %}>D</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Answer Text & Explanation -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    <div>
-                        <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">Model Answer / Key Points</label>
-                        <input type="text" name="answer_text_{{ idx }}" value="{{ q.answer_text or '' }}" class="w-full px-3 py-1.5 rounded-xl border border-slate-200 font-bold text-slate-800">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">Solution Explanation</label>
-                        <input type="text" name="explanation_{{ idx }}" value="{{ q.explanation or '' }}" class="w-full px-3 py-1.5 rounded-xl border border-slate-200 font-bold text-slate-800">
-                    </div>
-                </div>
-
+            <div class="flex justify-end pt-3 border-t border-slate-100">
+                <button type="submit" class="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition-all">
+                    💾 Save Approved Questions to Catalog
+                </button>
             </div>
-            {% endfor %}
-        </div>
-
-        <div class="pt-3 flex justify-end">
-            <button type="submit" class="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-lg shadow-emerald-600/20 transition-all">
-                ✅ Accept Selected Questions into Question Bank
-            </button>
-        </div>
-
-    </form>
+        </form>
+    </div>
     {% endif %}
 
 </div>
-
-<script>
-function toggleEditCard(idx) {
-    const mcqBlock = document.getElementById('mcqBlock_' + idx);
-    if (mcqBlock) {
-        mcqBlock.classList.toggle('bg-amber-50/50');
-    }
-}
-
-function toggleTypeBlock(idx, val) {
-    const mcqBlock = document.getElementById('mcqBlock_' + idx);
-    if (mcqBlock) {
-        if (val === 'MCQ') {
-            mcqBlock.classList.remove('hidden');
-        } else {
-            mcqBlock.classList.add('hidden');
-        }
-    }
-}
-</script>
 {% endblock %}

@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+
+{% block title %}School Messages — StratLearn{% endblock %}
+{% block header_title %}Centralized School Communication Portal{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto animate-fade-in" x-data="messagingApp()" x-cloak>
+
+    <!-- 1. HEADER & CONTEXT BANNER -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 sm:p-8 text-white shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-all duration-500 hover:shadow-2xl">
+        <div class="space-y-2 relative z-10">
+            <div class="flex items-center space-x-2">
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                    💬 MESSAGING SYSTEM
+                </span>
+                <span class="text-xs text-slate-400 font-bold">Role-Based Internal Communication</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
+                <span>School Communication Inbox</span>
+                <span class="inline-block animate-float text-xl">💬</span>
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium">
+                Connect directly with authorized teachers, parents, administrators, and staff in a secure, role-governed messaging workspace.
+            </p>
+        </div>
+
+        <div class="flex items-center space-x-3 shrink-0 relative z-10">
+            <div class="px-4 py-2.5 rounded-xl bg-white/10 text-white text-xs font-mono font-extrabold border border-white/20">
+                <span x-text="unreadCount + ' Unread Message(s)'"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. METRICS ROW -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-black border border-indigo-100 shrink-0">
+                💬
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Conversations</p>
+                <h3 class="text-2xl font-black text-slate-900 font-mono">{{ conversations|length }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl font-black border border-rose-100 shrink-0">
+                📬
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Unread Messages</p>
+                <h3 class="text-2xl font-black text-rose-600 font-mono" x-text="unreadCount">0</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-black border border-emerald-100 shrink-0">
+                👥
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Authorized Contacts</p>
+                <h3 class="text-2xl font-black text-slate-900 font-mono">{{ authorized_recipients|length }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. MAIN DASHBOARD MESSAGING WORKSPACE -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-xs grid grid-cols-1 lg:grid-cols-12 overflow-hidden h-[620px]">
+
+        <!-- LEFT PANEL: DIRECT CONTACTS & CHATS (Cols 4) -->
+        <div class="lg:col-span-4 border-r border-slate-200 bg-slate-50/70 flex flex-col h-full min-h-0"
+             :class="{ 'hidden lg:flex': activeConvId !== null && isMobileScreen }">
+            
+            <!-- Header Bar -->
+            <div class="p-3.5 bg-white border-b border-slate-200 space-y-2.5 shrink-0">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                        <span>💬 School Directory</span>
+                    </h2>
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-indigo-600 text-white font-mono shadow-2xs"
+                          x-text="unreadCount + ' UNREAD'">
+                    </span>
+                </div>
+
+                <!-- Instant Filter Search Bar -->
+                <div class="relative">
+                    <input type="text" x-model="searchQuery"
+                           placeholder="Search contact name, role, class..."
+                           class="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all">
+                    <span class="absolute left-2.5 top-2 text-slate-400 text-xs">🔍</span>
+                </div>
+            </div>
+
+            <!-- Scrollable Contacts List -->
+            <div class="flex-1 overflow-y-auto divide-y divide-slate-200/60">
+                <!-- EXISTING ACTIVE CONVERSATIONS -->
+                <template x-for="c in filteredConversations" :key="'conv-' + c.id">
+                    <div @click="selectConversation(c.id)"
+                         :class="{ 'bg-indigo-50/90 border-l-4 border-indigo-600': activeConvId === c.id, 'hover:bg-slate-100/80': activeConvId !== c.id }"
+                         class="p-3.5 cursor-pointer transition-all duration-150 flex items-start space-x-3 group relative">
+                        
+                        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-slate-900 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-2xs"
+                             x-text="getInitials(c.other_participant_name)">
+                        </div>
+
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-black text-slate-900 truncate group-hover:text-indigo-600"
+                                    x-text="c.other_participant_name"></h4>
+                                <span class="text-[10px] text-slate-400 font-mono" x-text="c.last_message_time || ''"></span>
+                            </div>
+
+                            <div class="flex items-center space-x-1.5 mt-0.5">
+                                <span class="px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider font-mono"
+                                      :class="getRoleBadgeClass(c.other_participant_role)"
+                                      x-text="c.other_participant_role">
+                                </span>
+                            </div>
+
+                            <p class="text-[11px] text-slate-500 truncate mt-1 font-medium"
+                               :class="{ 'font-black text-slate-900': c.unread_count > 0 }"
+                               x-text="c.last_message || 'No messages yet'"></p>
+                        </div>
+
+                        <template x-if="c.unread_count > 0">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500 absolute top-3.5 right-3 ring-2 ring-white"></span>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- DIRECT DIRECTORY CONTACTS -->
+                <div class="p-2.5 bg-slate-100/70 text-[10px] font-black text-slate-500 uppercase tracking-wider font-mono">
+                    Authorized Direct Directory
+                </div>
+
+                <template x-for="contact in filteredRecipients" :key="'contact-' + contact.id">
+                    <div @click="startDirectChat(contact.id)"
+                         class="p-3 hover:bg-indigo-50/50 cursor-pointer transition-all flex items-center justify-between group">
+                        <div class="flex items-center space-x-3 min-w-0">
+                            <div class="w-8 h-8 rounded-lg bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0"
+                                 x-text="getInitials(contact.name)">
+                            </div>
+                            <div class="min-w-0">
+                                <h5 class="text-xs font-extrabold text-slate-800 truncate group-hover:text-indigo-600" x-text="contact.name"></h5>
+                                <p class="text-[10px] text-slate-400 truncate" x-text="contact.info || contact.role"></p>
+                            </div>
+                        </div>
+                        <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase font-mono bg-white border border-slate-200 text-slate-600"
+                              x-text="contact.role"></span>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: CHAT WINDOW & MESSAGES (Cols 8) -->
+        <div class="lg:col-span-8 flex flex-col h-full bg-white min-h-0"
+             :class="{ 'hidden lg:flex': activeConvId === null && isMobileScreen }">
+            
+            <template x-if="activeConv">
+                <div class="flex flex-col h-full min-h-0">
+                    <!-- Chat Header -->
+                    <div class="p-3.5 border-b border-slate-200 bg-white flex items-center justify-between shrink-0 shadow-2xs">
+                        <div class="flex items-center space-x-3">
+                            <button type="button" @click="activeConvId = null" class="lg:hidden text-slate-500 hover:text-slate-900 font-bold text-sm">
+                                ←
+                            </button>
+                            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-slate-900 text-white font-black text-xs flex items-center justify-center">
+                                <span x-text="getInitials(activeConv.other_participant_name)"></span>
+                            </div>
+                            <div>
+                                <h3 class="text-xs font-black text-slate-900" x-text="activeConv.other_participant_name"></h3>
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-1.5 py-0.2 rounded text-[9px] font-black uppercase font-mono"
+                                          :class="getRoleBadgeClass(activeConv.other_participant_role)"
+                                          x-text="activeConv.other_participant_role">
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <span class="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full font-bold border border-emerald-200">
+                            🔒 Encrypted School Channel
+                        </span>
+                    </div>
+
+                    <!-- Messages Scrollable Thread -->
+                    <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/40">
+                        <template x-for="msg in messages" :key="msg.id">
+                            <div class="flex flex-col" :class="msg.sender_id === currentUserId ? 'items-end' : 'items-start'">
+                                <div class="max-w-[80%] rounded-2xl p-3 text-xs shadow-2xs font-medium leading-relaxed"
+                                     :class="msg.sender_id === currentUserId ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-white border border-slate-200 text-slate-800 rounded-bl-none'">
+                                    <p class="whitespace-pre-wrap break-words" x-text="msg.content"></p>
+                                </div>
+                                <span class="text-[9px] text-slate-400 font-mono mt-1 px-1" x-text="msg.timestamp"></span>
+                            </div>
+                        </template>
+
+                        <div x-show="messages.length === 0" class="py-12 text-center text-slate-400 text-xs font-bold">
+                            👋 No prior message history. Send a message below to begin conversation.
+                        </div>
+                    </div>
+
+                    <!-- Message Composer Input -->
+                    <div class="p-3.5 border-t border-slate-200 bg-white shrink-0">
+                        <form @submit.prevent="sendMessage()" class="flex items-center space-x-2">
+                            <input type="text" x-model="newMessageContent" placeholder="Write internal message..."
+                                   class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all bg-slate-50">
+                            <button type="submit" :disabled="!newMessageContent.trim() || isSending"
+                                    class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white text-xs font-black transition-all shadow-xs shrink-0">
+                                Send 🚀
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Blank Empty State -->
+            <template x-if="!activeConv">
+                <div class="flex-1 flex flex-col items-center justify-center p-8 text-center bg-slate-50/50">
+                    <div class="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-3xl mb-3 border border-indigo-100 shadow-2xs">
+                        💬
+                    </div>
+                    <h3 class="text-sm font-black text-slate-900">StratLearn Messaging Workspace</h3>
+                    <p class="text-xs text-slate-500 max-w-sm mt-1">Select a conversation or contact from the left directory to start messaging.</p>
+                </div>
+            </template>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+function messagingApp() {
+    return {
+        currentUserId: {{ current_user.id }},
+        conversations: {{ (conversations or [])|tojson|safe }},
+        recipients: {{ (authorized_recipients or [])|tojson|safe }},
+        unreadCount: {{ unread_count or 0 }},
+        activeConvId: null,
+        messages: [],
+        searchQuery: '',
+        newMessageContent: '',
+        isSending: false,
+
+        init() {
+            if (this.conversations.length > 0) {
+                this.selectConversation(this.conversations[0].id);
+            }
+        },
+
+        get activeConv() {
+            return this.conversations.find(c => c.id === this.activeConvId) || null;
+        },
+
+        get filteredConversations() {
+            if (!this.searchQuery.trim()) return this.conversations;
+            const q = this.searchQuery.toLowerCase();
+            return this.conversations.filter(c => 
+                c.other_participant_name.toLowerCase().includes(q) ||
+                c.other_participant_role.toLowerCase().includes(q)
+            );
+        },
+
+        get filteredRecipients() {
+            if (!this.searchQuery.trim()) return this.recipients;
+            const q = this.searchQuery.toLowerCase();
+            return this.recipients.filter(r => 
+                r.name.toLowerCase().includes(q) ||
+                r.role.toLowerCase().includes(q)
+            );
+        },
+
+        getInitials(name) {
+            if (!name) return 'U';
+            return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        },
+
+        getRoleBadgeClass(role) {
+            const r = (role || '').toLowerCase();
+            if (r === 'admin') return 'bg-purple-100 text-purple-800 border border-purple-200';
+            if (r === 'teacher') return 'bg-indigo-100 text-indigo-800 border border-indigo-200';
+            if (r === 'student') return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
+            return 'bg-amber-100 text-amber-800 border border-amber-200';
+        },
+
+        selectConversation(convId) {
+            this.activeConvId = convId;
+            fetch(`/messages/api/conversations/${convId}/messages`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        this.messages = data.messages;
+                        const conv = this.conversations.find(c => c.id === convId);
+                        if (conv && conv.unread_count > 0) {
+                            this.unreadCount = Math.max(0, this.unreadCount - conv.unread_count);
+                            conv.unread_count = 0;
+                        }
+                        this.scrollToBottom();
+                    }
+                });
+        },
+
+        startDirectChat(recipientUserId) {
+            fetch(`/messages/api/conversations/direct`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ recipient_user_id: recipientUserId })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const convId = data.conversation_id;
+                    const exists = this.conversations.find(c => c.id === convId);
+                    if (!exists) {
+                        const targetRecipient = this.recipients.find(r => r.id === recipientUserId);
+                        this.conversations.unshift({
+                            id: convId,
+                            other_participant_name: targetRecipient ? targetRecipient.name : 'User',
+                            other_participant_role: targetRecipient ? targetRecipient.role : 'Member',
+                            last_message: '',
+                            last_message_time: 'Just now',
+                            unread_count: 0
+                        });
+                    }
+                    this.selectConversation(convId);
+                }
+            });
+        },
+
+        sendMessage() {
+            if (!this.newMessageContent.trim() || !this.activeConvId || this.isSending) return;
+
+            this.isSending = true;
+            const content = this.newMessageContent.trim();
+            this.newMessageContent = '';
+
+            fetch(`/messages/api/conversations/${this.activeConvId}/send`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: content })
+            })
+            .then(r => r.json())
+            .then(data => {
+                this.isSending = false;
+                if (data.status === 'success') {
+                    this.messages.push(data.message);
+                    const conv = this.conversations.find(c => c.id === this.activeConvId);
+                    if (conv) {
+                        conv.last_message = data.message.content;
+                        conv.last_message_time = data.message.timestamp;
+                    }
+                    this.scrollToBottom();
+                }
+            })
+            .catch(err => {
+                this.isSending = false;
+            });
+        },
+
+        scrollToBottom() {
+            setTimeout(() => {
+                const container = document.getElementById('messagesContainer');
+                if (container) container.scrollTop = container.scrollHeight;
+            }, 50);
+        }
+    }
+}
+</script>
+{% endblock %}

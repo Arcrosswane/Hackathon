@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Reports & Analytics Hub — StratLearn{% endblock %}
+{% block header_title %}Unified School Reports & Analytics Hub{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto animate-fade-in">
+
+    <!-- 1. HERO BANNER -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 sm:p-8 text-white shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div class="space-y-2 relative z-10">
+            <div class="flex items-center space-x-2">
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    📊 SCHOOL DATA & ANALYTICS
+                </span>
+                <span class="text-xs text-slate-400 font-bold">Centralized School Reports</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
+                <span>Reports & Analytics Directory</span>
+                <span class="inline-block animate-float text-xl">📄</span>
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium">
+                Access official printable report cards, class result matrices, attendance statistics, fee collection ledgers, payroll summaries, and student analytics.
+            </p>
+        </div>
+
+        <div class="flex items-center space-x-3 relative z-10 shrink-0">
+            <a href="{{ url_for('certificates.index') }}" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-2">
+                <span>🎓 Certificates Portal</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 2. REPORTS DIRECTORY CARDS GRID -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <!-- Card: Academic Reports & Report Cards -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs flex flex-col justify-between space-y-4 hover:shadow-md transition-all">
+            <div class="space-y-3">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-black border border-indigo-100">
+                    🎓
+                </div>
+                <h3 class="text-base font-extrabold text-slate-900">Academic & Result Reports</h3>
+                <p class="text-xs text-slate-500 leading-relaxed font-medium">
+                    Student report cards, term exam result summaries, subject pass rates, and grade distribution analytics.
+                </p>
+            </div>
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+                <a href="{{ url_for('reports.academic') }}" class="text-xs font-bold text-indigo-600 hover:text-indigo-700">View Academic Reports →</a>
+                <a href="{{ url_for('reports.academic_report_card') }}" class="px-3 py-1.5 rounded-lg bg-slate-900 text-white font-bold text-xs hover:bg-slate-800">Print Report Card</a>
+            </div>
+        </div>
+
+        <!-- Card: Attendance Reports -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs flex flex-col justify-between space-y-4 hover:shadow-md transition-all">
+            <div class="space-y-3">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-black border border-emerald-100">
+                    📋
+                </div>
+                <h3 class="text-base font-extrabold text-slate-900">Attendance Statistics</h3>
+                <p class="text-xs text-slate-500 leading-relaxed font-medium">
+                    Class and section monthly attendance percentages, total working days, present/absent counts, and student summaries.
+                </p>
+            </div>
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+                <a href="{{ url_for('reports.attendance') }}" class="text-xs font-bold text-emerald-600 hover:text-emerald-700">View Attendance Reports →</a>
+                <a href="{{ url_for('reports.export_csv', type='attendance') }}" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200">Export CSV</a>
+            </div>
+        </div>
+
+        {% if user_role in ('admin', 'parent', 'guardian') %}
+        <!-- Card: Fee & Collection Reports -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs flex flex-col justify-between space-y-4 hover:shadow-md transition-all">
+            <div class="space-y-3">
+                <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl font-black border border-purple-100">
+                    💳
+                </div>
+                <h3 class="text-base font-extrabold text-slate-900">Fee Collection & Dues</h3>
+                <p class="text-xs text-slate-500 leading-relaxed font-medium">
+                    School fee collection ledgers, outstanding balances, class fee demands, and payment receipts breakdown.
+                </p>
+            </div>
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+                <a href="{{ url_for('reports.fees') }}" class="text-xs font-bold text-purple-600 hover:text-purple-700">View Fee Reports →</a>
+                <a href="{{ url_for('reports.export_csv', type='fees') }}" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200">Export CSV</a>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if user_role == 'admin' %}
+        <!-- Card: Payroll & Salary Reports -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs flex flex-col justify-between space-y-4 hover:shadow-md transition-all">
+            <div class="space-y-3">
+                <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-black border border-amber-100">
+                    💰
+                </div>
+                <h3 class="text-base font-extrabold text-slate-900">Payroll & Salary Reports</h3>
+                <p class="text-xs text-slate-500 leading-relaxed font-medium">
+                    Monthly staff salary disbursement ledgers, gross pay, tax deductions, and employee payroll history.
+                </p>
+            </div>
+            <div class="pt-4 border-t border-slate-100">
+                <a href="{{ url_for('reports.payroll') }}" class="text-xs font-bold text-amber-600 hover:text-amber-700">View Payroll Reports →</a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Card: Student Master Profiles -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs flex flex-col justify-between space-y-4 hover:shadow-md transition-all">
+            <div class="space-y-3">
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl font-black border border-blue-100">
+                    👨‍🎓
+                </div>
+                <h3 class="text-base font-extrabold text-slate-900">Student Roster Summary</h3>
+                <p class="text-xs text-slate-500 leading-relaxed font-medium">
+                    Classwise student enrollment directories, roll numbers, admission records, and student profile sheets.
+                </p>
+            </div>
+            <div class="pt-4 border-t border-slate-100">
+                <a href="{{ url_for('reports.students') }}" class="text-xs font-bold text-blue-600 hover:text-blue-700">View Student Directory →</a>
+            </div>
+        </div>
+
+        <!-- Card: Performance Analytics -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs flex flex-col justify-between space-y-4 hover:shadow-md transition-all">
+            <div class="space-y-3">
+                <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl font-black border border-rose-100">
+                    📈
+                </div>
+                <h3 class="text-base font-extrabold text-slate-900">Performance Analytics</h3>
+                <p class="text-xs text-slate-500 leading-relaxed font-medium">
+                    Subject benchmark averages, pass/fail distributions, and academic grade bands analytics.
+                </p>
+            </div>
+            <div class="pt-4 border-t border-slate-100">
+                <a href="{{ url_for('reports.performance') }}" class="text-xs font-bold text-rose-600 hover:text-rose-700">View Performance Analytics →</a>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

@@ -3,25 +3,75 @@
 {% block title %}Behaviour Observations - StratLearn{% endblock %}
 
 {% block content %}
-<div class="space-y-6">
+<div class="space-y-6 max-w-7xl mx-auto animate-fade-in">
 
-    <!-- Header & Action Bar -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
-        <div>
+    <!-- 1. HEADER & CONTEXT BANNER -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 sm:p-8 text-white shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-all duration-500 hover:shadow-2xl">
+        <div class="space-y-2 relative z-10">
             <div class="flex items-center space-x-2">
-                <span class="text-xs font-semibold text-brand-600">StratLearn</span>
-                <span class="text-slate-300">/</span>
-                <span class="text-xs font-semibold text-slate-500">Behaviour & Skills</span>
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                    ✨ BEHAVIOUR & CONDUCT
+                </span>
+                <span class="text-xs text-slate-400 font-bold">Student Development Tracking</span>
             </div>
-            <h1 class="text-2xl font-black text-slate-900 tracking-tight mt-1">Student Behaviour Observations</h1>
-            <p class="text-xs font-medium text-slate-500">Record positive conduct, classroom observations, and constructive improvement notes.</p>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
+                <span>Behaviour & Skills Observations</span>
+                <span class="inline-block animate-float text-xl">✨</span>
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium">
+                Record positive conduct, classroom observations, socio-emotional development, and constructive improvement notes.
+            </p>
         </div>
 
-        <a href="{{ url_for('behaviour_skills.create_behaviour') }}"
-           class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center space-x-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-            <span>+ Record Observation</span>
-        </a>
+        <div class="flex items-center space-x-3 relative z-10 shrink-0">
+            <a href="{{ url_for('behaviour_skills.create_behaviour') }}"
+               class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center space-x-2">
+                <span>+ Record Observation</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 2. KPI METRICS OVERVIEW CARDS ROW -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-black border border-indigo-100 shrink-0">
+                ✨
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Total Records</p>
+                <h3 class="text-2xl font-black text-slate-900 font-mono">{{ observations|length if observations else 0 }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-black border border-emerald-100 shrink-0">
+                🌟
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Positive Conduct</p>
+                <h3 class="text-2xl font-black text-emerald-600 font-mono">{{ observations|selectattr('nature', 'equalto', 'POSITIVE')|list|length if observations else 0 }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-black border border-amber-100 shrink-0">
+                ⚠️
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Needs Attention</p>
+                <h3 class="text-2xl font-black text-amber-600 font-mono">{{ observations|selectattr('nature', 'equalto', 'NEEDS_IMPROVEMENT')|list|length if observations else 0 }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl font-black border border-purple-100 shrink-0">
+                🏫
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Classes Tracked</p>
+                <h3 class="text-2xl font-black text-purple-600 font-mono">{{ classes|length }}</h3>
+            </div>
+        </div>
     </div>
 
     <!-- Filter Bar -->

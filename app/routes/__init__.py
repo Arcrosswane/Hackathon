@@ -17,6 +17,8 @@ from app.routes.payroll import payroll_bp
 from app.routes.attendance import attendance_bp
 from app.routes.question_bank import question_bank_bp
 from app.routes.examination import examination_bp
+from app.routes.reports import reports_bp
+from app.routes.certificates import certificates_bp
 
 __all__ = [
     'auth_bp', 
@@ -37,5 +39,7 @@ __all__ = [
     'payroll_bp',
     'attendance_bp',
     'question_bank_bp',
-    'examination_bp'
+    'examination_bp',
+    'reports_bp',
+    'certificates_bp'
 ]

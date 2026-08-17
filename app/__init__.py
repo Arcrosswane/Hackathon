@@ -35,6 +35,11 @@ def create_app(config_class=Config):
 
     # Register blueprints
     from app.routes.question_bank import question_bank_bp
+    from app.routes.messaging import messaging_bp
+    from app.routes.notifications import notifications_bp
+    from app.routes.store import store_bp
+    from app.routes.reports import reports_bp
+    from app.routes.certificates import certificates_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
@@ -57,9 +62,15 @@ def create_app(config_class=Config):
     app.register_blueprint(attendance_bp)
     app.register_blueprint(question_bank_bp)
     app.register_blueprint(examination_bp)
+    app.register_blueprint(messaging_bp)
+    app.register_blueprint(notifications_bp)
+    app.register_blueprint(store_bp)
+    app.register_blueprint(reports_bp)
+    app.register_blueprint(certificates_bp)
 
     # Register Python built-in helpers into Jinja template environment
     app.jinja_env.globals['int'] = int
+    app.jinja_env.globals['enumerate'] = enumerate
 
     # Auto table & column check
     with app.app_context():
@@ -179,10 +190,53 @@ def create_app(config_class=Config):
                 "ALTER TABLE attendance ADD COLUMN recorded_by_id INT NULL;",
                 "ALTER TABLE attendance ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP;",
                 "ALTER TABLE attendance ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP;",
-                "ALTER TABLE attendance MODIFY COLUMN institute_id INT NULL;"
+                "ALTER TABLE attendance MODIFY COLUMN institute_id INT NULL;",
+                # Store module — align legacy/partial tables with current models
+                "ALTER TABLE store_categories ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP;",
+                "ALTER TABLE store_categories ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP;",
+                "ALTER TABLE store_categories ADD COLUMN is_active TINYINT(1) DEFAULT 1;",
+                "ALTER TABLE store_products ADD COLUMN description TEXT NULL;",
+                "ALTER TABLE store_products ADD COLUMN cost_price DECIMAL(12,2) NULL;",
+                "ALTER TABLE store_products ADD COLUMN low_stock_threshold INT DEFAULT 5;",
+                "ALTER TABLE store_products ADD COLUMN image_path VARCHAR(255) NULL;",
+                "ALTER TABLE store_products ADD COLUMN is_active TINYINT(1) DEFAULT 1;",
+                "ALTER TABLE store_products ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP;",
+                "ALTER TABLE store_products ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP;",
+                "ALTER TABLE inventory_movements ADD COLUMN reference_type VARCHAR(30) NULL;",
+                "ALTER TABLE inventory_movements ADD COLUMN reference_id INT NULL;",
+                "ALTER TABLE inventory_movements ADD COLUMN performed_by_id INT NULL;",
+                "ALTER TABLE inventory_movements ADD COLUMN notes VARCHAR(255) NULL;",
+                "ALTER TABLE inventory_movements ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP;",
+                "ALTER TABLE inventory_movements ADD COLUMN school_id INT NULL;",
+                "ALTER TABLE store_orders ADD COLUMN student_id INT NULL;",
+                "ALTER TABLE store_orders ADD COLUMN payment_status VARCHAR(20) DEFAULT 'Pending';",
+                "ALTER TABLE store_orders ADD COLUMN order_status VARCHAR(30) DEFAULT 'Pending';",
+                "ALTER TABLE store_orders ADD COLUMN idempotency_key VARCHAR(64) NULL;",
+                "ALTER TABLE store_orders ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP;",
+                "ALTER TABLE store_orders ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP;",
+                "ALTER TABLE store_order_items ADD COLUMN sku VARCHAR(50) NULL;",
+                "ALTER TABLE pos_sales ADD COLUMN customer_name VARCHAR(150) NULL;",
+                "ALTER TABLE pos_sales ADD COLUMN customer_type VARCHAR(30) DEFAULT 'Walk-in';",
+                "ALTER TABLE pos_sales ADD COLUMN idempotency_key VARCHAR(64) NULL;",
+                "ALTER TABLE pos_sales ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP;",
+                "ALTER TABLE pos_sales ADD COLUMN cashier_id INT NULL;",
+                "ALTER TABLE pos_sale_items ADD COLUMN sku VARCHAR(50) NULL;",
+                "ALTER TABLE pos_sale_items ADD COLUMN sale_id INT NULL;",
+            ]
+            store_data_migrations = [
+                "UPDATE inventory_movements im INNER JOIN store_products sp ON im.product_id = sp.id SET im.school_id = sp.school_id WHERE im.school_id IS NULL;",
+                "UPDATE inventory_movements SET performed_by_id = user_id WHERE performed_by_id IS NULL AND user_id IS NOT NULL;",
+                "UPDATE pos_sales SET cashier_id = cashier_user_id WHERE cashier_id IS NULL AND cashier_user_id IS NOT NULL;",
+                "UPDATE pos_sale_items SET sale_id = pos_sale_id WHERE sale_id IS NULL AND pos_sale_id IS NOT NULL;",
             ]
             with db.engine.connect() as conn:
                 for stmt in alter_statements:
+                    try:
+                        conn.execute(text(stmt))
+                        conn.commit()
+                    except Exception:
+                        pass
+                for stmt in store_data_migrations:
                     try:
                         conn.execute(text(stmt))
                         conn.commit()
@@ -286,9 +340,14 @@ def create_app(config_class=Config):
         
         active_session = None
         current_school = None
+        unread_notif_count = 0
         try:
             active_session = get_active_academic_session()
             current_school = School.query.first()
+            if 'user_id' in session:
+                from app.models import User, Notification
+                u_id = session.get('user_id')
+                unread_notif_count = Notification.query.filter_by(recipient_id=u_id, read_at=None).count()
         except Exception:
             pass
 
@@ -297,7 +356,8 @@ def create_app(config_class=Config):
             current_username=username,
             nav_items=nav_items,
             active_session=active_session,
-            current_school=current_school
+            current_school=current_school,
+            unread_notification_count=unread_notif_count
         )
 
     # Root redirect

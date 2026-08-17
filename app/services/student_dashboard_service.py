@@ -75,7 +75,7 @@ def get_student_dashboard_summary(user_id=None, student_id=None, session_id=None
     except Exception as e:
         summary['enrollment'] = None
 
-    class_id = enrollment.school_class_id if enrollment else None
+    class_id = enrollment.class_id if enrollment else None
     section_id = enrollment.section_id if enrollment else None
 
     # ==========================================

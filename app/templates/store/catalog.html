@@ -1,0 +1,489 @@
+{% extends "base.html" %}
+
+{% block title %}School Store Catalog — StratLearn{% endblock %}
+{% block header_title %}School Store & Commerce Catalog{% endblock %}
+
+{% block content %}
+<div class="relative min-h-full" x-data="storeCatalogApp()">
+
+    <!-- MAIN CATALOG WORKSPACE CONTAINER (CENTERED CONTENT) -->
+    <div class="space-y-6 max-w-7xl mx-auto animate-fade-in">
+
+        <!-- 1. HEADER & CONTEXT BANNER -->
+        <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 sm:p-8 text-white shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-all duration-500 hover:shadow-2xl">
+            <div class="space-y-2 relative z-10">
+                <div class="flex items-center space-x-2">
+                    <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        🛍️ OFFICIAL SCHOOL COMMERCE
+                    </span>
+                    <span class="text-xs text-slate-400 font-bold">School Uniforms, Books & Stationery Store</span>
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
+                    <span>School Store & Supplies Catalog</span>
+                    <span class="inline-block animate-float text-xl">🎒</span>
+                </h1>
+                <p class="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium">
+                    Easily purchase or reserve prescribed textbooks, school uniforms, notebooks, and ID cards with school store counter pickup or online payment.
+                </p>
+            </div>
+
+            <div class="flex items-center space-x-3 relative z-10 shrink-0">
+                <a href="{{ url_for('store.user_orders') }}" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs border border-white/20 transition-all flex items-center space-x-2">
+                    <span>📄 My Orders & Receipts</span>
+                </a>
+                {% if (current_user.user_type or '').lower() in ('admin', 'teacher', 'employee') %}
+                <a href="{{ url_for('store.pos_terminal') }}" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-2">
+                    <span>💻 POS Terminal</span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 2. KPI METRICS OVERVIEW CARDS ROW -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-black border border-indigo-100 shrink-0">
+                    📦
+                </div>
+                <div>
+                    <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Available Products</p>
+                    <h3 class="text-2xl font-black text-slate-900 font-mono">{{ products|length }}</h3>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl font-black border border-purple-100 shrink-0">
+                    🏷️
+                </div>
+                <div>
+                    <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Categories</p>
+                    <h3 class="text-2xl font-black text-purple-600 font-mono">{{ categories|length }}</h3>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-black border border-emerald-100 shrink-0">
+                    🛒
+                </div>
+                <div>
+                    <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Items in Cart</p>
+                    <h3 class="text-2xl font-black text-emerald-600 font-mono" x-text="cartTotalQuantity">0</h3>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-black border border-amber-100 shrink-0">
+                    💳
+                </div>
+                <div>
+                    <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Cart Total</p>
+                    <h3 class="text-2xl font-black text-amber-600 font-mono" x-text="'₹' + cartTotalAmount.toFixed(2)">₹0.00</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. MAIN WORKSPACE GRID: CATALOG + EMBEDDED CART PANEL -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- LEFT COLUMN: PRODUCTS CATALOG & FILTERS -->
+            <div class="lg:col-span-2 space-y-6">
+
+                <!-- Search & Filter Bar -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <form method="GET" action="{{ url_for('store.catalog') }}" class="flex flex-wrap items-center gap-3 w-full">
+                        <div class="flex-1 min-w-[200px]">
+                            <input type="text" name="q" value="{{ search_q }}" placeholder="Search by item name (e.g. Uniform Shirt, Math Book)..."
+                                   class="w-full px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <select name="category_id" onchange="this.form.submit()"
+                                    class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                <option value="">All Categories</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}" {% if active_category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition-all">
+                            Filter
+                        </button>
+                        {% if search_q or active_category_id %}
+                        <a href="{{ url_for('store.catalog') }}" class="text-xs font-bold text-slate-500 hover:text-slate-700">Clear</a>
+                        {% endif %}
+                    </form>
+                </div>
+
+                <!-- Products Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {% for prod in products %}
+                    <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex flex-col justify-between space-y-4 hover:shadow-md transition-all">
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                    {{ prod.category_name }}
+                                </span>
+                                <span class="text-[10px] font-mono font-bold text-slate-400">SKU: {{ prod.sku }}</span>
+                            </div>
+                            <h3 class="text-base font-extrabold text-slate-900 tracking-tight leading-snug">{{ prod.name }}</h3>
+                            <p class="text-xs text-slate-500 font-medium line-clamp-2">{{ prod.description or 'Official prescribed item for current academic session.' }}</p>
+                        </div>
+
+                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 block uppercase tracking-wider text-[9px]">Unit Price</span>
+                                <span class="text-lg font-black text-slate-900 font-mono">{{ prod.formatted_price }}</span>
+                            </div>
+
+                            <div>
+                                {% if prod.is_available %}
+                                <button type="button"
+                                        data-id="{{ prod.id }}"
+                                        data-name="{{ prod.name }}"
+                                        data-sku="{{ prod.sku }}"
+                                        data-price="{{ prod.price }}"
+                                        @click="addToCartById({{ prod.id }})" 
+                                        class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition-all flex items-center space-x-1 cursor-pointer select-none">
+                                    <span class="pointer-events-none">+ Add to Cart</span>
+                                </button>
+                                {% else %}
+                                <span class="px-3 py-1.5 rounded-xl bg-rose-50 text-rose-600 font-bold text-xs border border-rose-200">
+                                    Out of Stock
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-span-full bg-white p-12 rounded-2xl border border-slate-200 text-center space-y-3">
+                        <div class="text-4xl">🎒</div>
+                        <h3 class="text-base font-bold text-slate-800">No items available</h3>
+                        <p class="text-xs text-slate-500">Try clearing your search query or category filter above.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: EMBEDDED CART & CHECKOUT PANEL -->
+            <div class="space-y-6">
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-6 sticky top-20">
+                    <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                        <div>
+                            <h2 class="text-base font-black text-slate-900 flex items-center gap-2">
+                                <span>Your Order Cart</span>
+                                <span class="px-2 py-0.5 rounded-full text-xs font-black bg-indigo-100 text-indigo-700" x-text="cartItems.length">0</span>
+                            </h2>
+                            <p class="text-[10px] text-slate-400 font-bold">Review selected items before placing order</p>
+                        </div>
+                        <button x-show="cartItems.length > 0" @click="clearCart()" class="text-xs font-bold text-rose-600 hover:text-rose-700">Clear</button>
+                    </div>
+
+                    <!-- Cart Items List -->
+                    <div class="space-y-3 max-h-72 overflow-y-auto pr-1">
+                        <template x-if="cartItems.length === 0">
+                            <div class="py-8 text-center text-slate-400 space-y-2">
+                                <div class="text-3xl">🛒</div>
+                                <p class="text-xs font-semibold">Your cart is empty.</p>
+                                <p class="text-[11px] text-slate-400">Click <strong>+ Add to Cart</strong> on any item to begin your order.</p>
+                            </div>
+                        </template>
+
+                        <template x-for="(item, index) in cartItems" :key="item.id">
+                            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3">
+                                <div class="min-w-0 flex-1">
+                                    <h4 class="font-bold text-slate-900 text-xs truncate" x-text="item.name"></h4>
+                                    <p class="text-[10px] font-mono text-slate-500" x-text="'₹' + item.price.toFixed(2) + ' each'"></p>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <input type="number" min="1" :value="item.quantity" @change="updateQuantity(index, $event.target.value)"
+                                           class="w-12 px-2 py-1 rounded-lg border border-slate-300 text-xs font-mono font-bold text-center">
+                                    <button @click="removeFromCart(index)" class="text-rose-500 hover:text-rose-700 font-bold text-xs">×</button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Checkout Form -->
+                    <div x-show="cartItems.length > 0" class="pt-4 border-t border-slate-100 space-y-4">
+                        {% if children %}
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Select Student <span class="text-rose-500">*</span></label>
+                            <select x-model="selectedStudentId" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                {% for child in children %}
+                                <option value="{{ child.id }}">{{ child.first_name }} {{ child.last_name }} (Class {{ child.school_class.name if child.school_class else '' }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% endif %}
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Payment Method</label>
+                            <select x-model="paymentMethod" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                <option value="Online Payment Gateway">💳 Online Payment Gateway (Simulated Card / UPI / NetBanking)</option>
+                                <option value="Pay at School Store Counter">💵 Pay Cash / UPI at School Store Counter (Room #102)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Order Notes (Optional)</label>
+                            <input type="text" x-model="orderNotes" placeholder="e.g. Size M shirt, standard notebook ruling"
+                                   class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        </div>
+
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1 font-mono text-xs">
+                            <div class="flex justify-between font-bold text-slate-900">
+                                <span>Total Payable Amount</span>
+                                <span class="text-indigo-600 text-sm font-black" x-text="'₹' + cartTotalAmount.toFixed(2)"></span>
+                            </div>
+                        </div>
+
+                        <button @click="proceedToCheckout()" :disabled="isSubmitting"
+                                class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center space-x-2 disabled:opacity-50">
+                            <span x-text="paymentMethod === 'Online Payment Gateway' ? '💳 Proceed to Payment Gateway' : '🚀 Confirm & Place Counter Order'"></span>
+                        </button>
+                        
+                        <p class="text-[10px] text-slate-400 text-center font-bold">
+                            🔒 Official School Guarantee: Size exchange available upon counter pickup.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- 4. SIMULATED ONLINE PAYMENT GATEWAY MODAL (SCOPED EXCLUSIVELY TO FIT 100% OF <main> EDGE-TO-EDGE) -->
+    <div x-show="showPaymentModal" x-cloak 
+         class="absolute -inset-4 sm:-inset-6 lg:-inset-8 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full overflow-hidden space-y-5 p-6 animate-fade-in" @click.away="showPaymentModal = false">
+            
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-lg shadow-md">
+                        🔒
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black text-slate-900 tracking-tight">StratLearn Payment Gateway</h3>
+                        <p class="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                            <span>256-Bit SSL Encrypted</span>
+                            <span>• Simulated Checkout</span>
+                        </p>
+                    </div>
+                </div>
+                <button @click="showPaymentModal = false" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+            </div>
+
+            <!-- Amount Banner -->
+            <div class="bg-slate-950 text-white p-4 rounded-2xl flex items-center justify-between font-mono">
+                <div>
+                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Amount to Pay</span>
+                    <h4 class="text-xl font-black text-emerald-400" x-text="'₹' + cartTotalAmount.toFixed(2)"></h4>
+                </div>
+                <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/30">
+                    TEST GATEWAY
+                </span>
+            </div>
+
+            <!-- Payment Method Tabs -->
+            <div class="flex border-b border-slate-200 text-xs font-bold">
+                <button @click="gatewayTab = 'card'" :class="gatewayTab === 'card' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-slate-500'" class="pb-2 px-3 flex-1 text-center font-extrabold">
+                    💳 Card
+                </button>
+                <button @click="gatewayTab = 'upi'" :class="gatewayTab === 'upi' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-slate-500'" class="pb-2 px-3 flex-1 text-center font-extrabold">
+                    📱 UPI / QR
+                </button>
+                <button @click="gatewayTab = 'netbanking'" :class="gatewayTab === 'netbanking' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-slate-500'" class="pb-2 px-3 flex-1 text-center font-extrabold">
+                    🏦 NetBanking
+                </button>
+            </div>
+
+            <!-- Tab Content: Card -->
+            <div x-show="gatewayTab === 'card'" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Card Number</label>
+                    <input type="text" x-model="simCardNumber" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-mono font-bold text-slate-900">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Expiry Date</label>
+                        <input type="text" x-model="simCardExpiry" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-mono font-bold text-slate-900">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">CVV</label>
+                        <input type="password" x-model="simCardCvv" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-mono font-bold text-slate-900">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Cardholder Name</label>
+                    <input type="text" x-model="simCardName" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-bold text-slate-900">
+                </div>
+            </div>
+
+            <!-- Tab Content: UPI -->
+            <div x-show="gatewayTab === 'upi'" class="space-y-3 text-xs text-center">
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 inline-block">
+                    <div class="w-32 h-32 bg-slate-900 rounded-xl mx-auto flex items-center justify-center text-white font-mono text-2xl font-black shadow-inner">
+                        [ QR CODE ]
+                    </div>
+                    <p class="text-[10px] font-mono text-slate-500 mt-2 font-bold">UPI ID: stratlearn.store@upi</p>
+                </div>
+                <p class="text-xs text-slate-600 font-semibold">Scan with Google Pay, PhonePe, or Paytm app to approve simulated payment.</p>
+            </div>
+
+            <!-- Tab Content: NetBanking -->
+            <div x-show="gatewayTab === 'netbanking'" class="space-y-3 text-xs">
+                <label class="block font-bold text-slate-700 mb-1">Select Bank</label>
+                <select x-model="simBank" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-bold text-slate-900">
+                    <option value="HDFC Bank">HDFC Bank</option>
+                    <option value="State Bank of India">State Bank of India (SBI)</option>
+                    <option value="ICICI Bank">ICICI Bank</option>
+                    <option value="Axis Bank">Axis Bank</option>
+                </select>
+            </div>
+
+            <!-- Modal Action Buttons -->
+            <div class="pt-3 border-t border-slate-100 space-y-2">
+                <button @click="executeSimulatedPayment()" :disabled="isSubmitting"
+                        class="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-lg transition-all flex items-center justify-center space-x-2 disabled:opacity-50">
+                    <span x-text="isSubmitting ? 'Processing Payment with Bank...' : '⚡ Pay ₹' + cartTotalAmount.toFixed(2) + ' Now (Simulated)'"></span>
+                </button>
+                <button @click="showPaymentModal = false" class="w-full py-2 text-xs font-bold text-slate-500 hover:text-slate-700">
+                    Cancel & Return to Cart
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+window.storeCatalogApp = function storeCatalogApp() {
+    return {
+        allProducts: {{ products|tojson|safe }},
+        cartItems: [],
+        selectedStudentId: {% if children %}'{{ children[0].id }}'{% else %}null{% endif %},
+        paymentMethod: 'Online Payment Gateway',
+        orderNotes: '',
+        isSubmitting: false,
+        showPaymentModal: false,
+        gatewayTab: 'card',
+
+        simCardNumber: '4111 2222 3333 4444',
+        simCardExpiry: '12/28',
+        simCardCvv: '123',
+        simCardName: 'Parent / Student Test User',
+        simBank: 'HDFC Bank',
+
+        init() {
+            console.log("🛒 [STORE DEBUG] storeCatalogApp initialized.");
+        },
+
+        get cartTotalQuantity() {
+            return this.cartItems.reduce((sum, item) => sum + parseInt(item.quantity || 1), 0);
+        },
+
+        get cartTotalAmount() {
+            return this.cartItems.reduce((sum, item) => sum + (parseFloat(item.price || 0) * parseInt(item.quantity || 1)), 0);
+        },
+
+        addToCartById(id) {
+            const targetId = parseInt(id);
+            const prod = this.allProducts.find(p => parseInt(p.id) === targetId);
+            if (!prod) return;
+
+            const existingIndex = this.cartItems.findIndex(i => parseInt(i.id) === targetId);
+            if (existingIndex > -1) {
+                this.cartItems[existingIndex].quantity += 1;
+            } else {
+                this.cartItems.push({
+                    id: prod.id,
+                    name: prod.name,
+                    sku: prod.sku,
+                    price: parseFloat(prod.price || 0),
+                    quantity: 1
+                });
+            }
+        },
+
+        updateQuantity(index, newQty) {
+            const parsed = parseInt(newQty);
+            if (parsed > 0) {
+                this.cartItems[index].quantity = parsed;
+            } else {
+                this.cartItems.splice(index, 1);
+            }
+        },
+
+        removeFromCart(index) {
+            this.cartItems.splice(index, 1);
+        },
+
+        clearCart() {
+            this.cartItems = [];
+        },
+
+        proceedToCheckout() {
+            if (this.cartItems.length === 0) return;
+            if (this.paymentMethod === 'Online Payment Gateway') {
+                this.showPaymentModal = true;
+            } else {
+                this.submitOrder('Pending');
+            }
+        },
+
+        async executeSimulatedPayment() {
+            this.isSubmitting = true;
+            await new Promise(r => setTimeout(r, 1000));
+            await this.submitOrder('Paid');
+        },
+
+        async submitOrder(paymentStatusOverride) {
+            if (this.cartItems.length === 0) return;
+            this.isSubmitting = true;
+
+            const finalStatus = paymentStatusOverride || (this.paymentMethod === 'Online Payment Gateway' ? 'Paid' : 'Pending');
+
+            const payload = {
+                items: this.cartItems.map(i => ({ product_id: i.id, quantity: i.quantity })),
+                student_id: this.selectedStudentId,
+                payment_method: this.paymentMethod,
+                payment_status: finalStatus,
+                notes: this.orderNotes
+            };
+
+            try {
+                const res = await fetch("{{ url_for('store.submit_order') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    if (finalStatus === 'Paid') {
+                        alert('✓ Payment Successful! Transaction Approved. Your receipt is ready.');
+                    } else {
+                        alert(data.message);
+                    }
+                    window.location.href = "{{ url_for('store.user_orders') }}";
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (err) {
+                alert('Failed to place order. Please try again.');
+            } finally {
+                this.isSubmitting = false;
+                this.showPaymentModal = false;
+            }
+        }
+    };
+};
+document.addEventListener('alpine:init', () => {
+    if (window.Alpine) {
+        Alpine.data('storeCatalogApp', window.storeCatalogApp);
+    }
+});
+</script>
+{% endblock %}

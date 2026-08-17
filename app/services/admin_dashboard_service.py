@@ -39,7 +39,8 @@ def get_admin_dashboard_summary(school_id=None, session_id=None):
         'finance_overview': {},
         'payroll_overview': {},
         'exams_overview': {},
-        'homework_overview': {}
+        'homework_overview': {},
+        'store_overview': {}
     }
 
     # ==========================================
@@ -300,6 +301,36 @@ def get_admin_dashboard_summary(school_id=None, session_id=None):
             })
     except Exception as e:
         summary['homework_overview'] = {'active_homework_count': 0, 'active_homework': [], 'pending_eval_submissions': 0, 'error': str(e)}
+
+    # ==========================================
+    # 7b. STORE & POS SNAPSHOT
+    # ==========================================
+    try:
+        from app.services.store_service import get_store_dashboard_metrics, resolve_school_id
+        sch_id = school.id if school else resolve_school_id()
+        store_metrics = get_store_dashboard_metrics(sch_id) if sch_id else {}
+        summary['store_overview'] = store_metrics
+
+        if store_metrics.get('pending_orders', 0) > 0:
+            summary['level2_pending_actions'].append({
+                'priority': 'MEDIUM',
+                'category': 'STORE',
+                'title': f"{store_metrics['pending_orders']} Pending Store Orders",
+                'description': 'Online store orders awaiting confirmation and processing.',
+                'action_label': 'Manage Store Orders',
+                'action_url': '/store/admin',
+            })
+        if store_metrics.get('low_stock_count', 0) > 0:
+            summary['level2_pending_actions'].append({
+                'priority': 'HIGH',
+                'category': 'STORE',
+                'title': f"{store_metrics['low_stock_count']} Products Low on Stock",
+                'description': 'School store inventory below threshold. Restock required.',
+                'action_label': 'View Inventory',
+                'action_url': '/store/admin',
+            })
+    except Exception as e:
+        summary['store_overview'] = {'today_sales': 0, 'pending_orders': 0, 'low_stock_count': 0, 'error': str(e)}
 
     # ==========================================
     # 8. RECENT ACTIVITY FEED

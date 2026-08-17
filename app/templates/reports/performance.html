@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Academic Performance Analytics — StratLearn{% endblock %}
+{% block header_title %}Academic Performance Analytics & Benchmarks{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto animate-fade-in">
+
+    <!-- 1. HEADER & FILTERS -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 text-white shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                📈 PERFORMANCE BENCHMARKS
+            </span>
+            <h1 class="text-2xl font-black tracking-tight mt-1">Class & Subject Analytics</h1>
+        </div>
+
+        <form method="GET" action="{{ url_for('reports.performance') }}" class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            <select name="class_id" class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-semibold text-white focus:outline-none">
+                <option value="">All Classes</option>
+                {% for cls in classes %}
+                <option value="{{ cls.id }}" {% if selected_class_id == cls.id %}selected{% endif %}>Class {{ cls.name }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md">
+                Filter Analytics
+            </button>
+        </form>
+    </div>
+
+    <!-- 2. ANALYTICS CARDS -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-3">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-black uppercase text-slate-400">Class Average Score</span>
+                <span class="text-xl">🏆</span>
+            </div>
+            <h3 class="text-3xl font-black text-indigo-600 font-mono">{{ class_summary.average_percentage }}%</h3>
+            <p class="text-xs text-slate-500 font-medium">Average benchmark performance across evaluated subjects.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-3">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-black uppercase text-slate-400">Pass Rate</span>
+                <span class="text-xl">✅</span>
+            </div>
+            <h3 class="text-3xl font-black text-emerald-600 font-mono">
+                {% if class_summary.total_students > 0 %}
+                {{ "%.1f"|format(class_summary.passed / class_summary.total_students * 100) }}%
+                {% else %}100%{% endif %}
+            </h3>
+            <p class="text-xs text-slate-500 font-medium">{{ class_summary.passed }} passed out of {{ class_summary.total_students }} total students.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-3">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-black uppercase text-slate-400">Needs Support</span>
+                <span class="text-xl">⚠️</span>
+            </div>
+            <h3 class="text-3xl font-black text-rose-600 font-mono">{{ class_summary.failed }}</h3>
+            <p class="text-xs text-slate-500 font-medium">Students scoring below pass threshold (33%).</p>
+        </div>
+
+    </div>
+
+    <!-- 3. TOP RANKERS ROSTER -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4">
+        <h2 class="text-base font-extrabold text-slate-900">Student Academic Ranks</h2>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-slate-200 text-[11px] font-black uppercase tracking-wider text-slate-400 bg-slate-50/50">
+                        <th class="py-3 px-4">Rank</th>
+                        <th class="py-3 px-4">Student Name</th>
+                        <th class="py-3 px-4">Class</th>
+                        <th class="py-3 px-4">Percentage</th>
+                        <th class="py-3 px-4">Result Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                    {% for row in class_summary.students_summary %}
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="py-3.5 px-4 font-mono font-bold text-slate-900">#{{ loop.index }}</td>
+                        <td class="py-3.5 px-4 font-extrabold text-slate-900">{{ row.name }}</td>
+                        <td class="py-3.5 px-4 text-slate-500">{{ row.class_name }}</td>
+                        <td class="py-3.5 px-4 font-mono font-black text-indigo-700">{{ row.percentage }}%</td>
+                        <td class="py-3.5 px-4">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider
+                                {% if row.status == 'PASS' %}bg-emerald-100 text-emerald-800 border border-emerald-200{% else %}bg-rose-100 text-rose-800 border border-rose-200{% endif %}">
+                                {{ row.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="py-12 text-center text-slate-400">No performance records match selected filters.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

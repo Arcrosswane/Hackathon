@@ -378,7 +378,6 @@ def validate_conflict_api():
 
 @timetables_bp.route('/live-class')
 @login_required
-@role_required('admin', 'teacher', 'employee', 'student', 'parent')
 def live_class():
     """Placeholder route for future Live Class feature."""
     flash("Live Class Integration is a future feature.", "info")

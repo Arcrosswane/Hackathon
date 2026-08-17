@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Store Orders Queue — StratLearn Admin{% endblock %}
+{% block header_title %}Store Orders Queue & Lifecycle Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto animate-fade-in">
+
+    <!-- 1. HEADER BANNER -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 sm:p-8 text-white shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div class="space-y-2 relative z-10">
+            <div class="flex items-center space-x-2">
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    📄 ORDERS QUEUE MASTER
+                </span>
+                <span class="text-xs text-slate-400 font-bold">Online Student & Parent Orders</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
+                <span>Store Orders Queue</span>
+                <span class="inline-block animate-float text-xl">📄</span>
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium">
+                Review submitted online orders, update preparation and counter pickup statuses, process cancellations, and verify buyer payments.
+            </p>
+        </div>
+
+        <div class="flex items-center space-x-3 relative z-10 shrink-0">
+            <a href="{{ url_for('store.admin_dashboard') }}" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs border border-white/20 transition-all">
+                <span>← Command Center</span>
+            </a>
+            <a href="{{ url_for('store.pos_terminal') }}" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-2">
+                <span>💻 POS Terminal</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 2. QUICK ACTIONS SHORTCUTS BAR -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-xs font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span>⚡ Store Management Shortcuts</span>
+            </h3>
+            <span class="text-[10px] font-bold text-slate-400">Direct Page Navigation</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+            <a href="{{ url_for('store.admin_dashboard') }}" class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-400 text-slate-800 text-center font-bold text-xs flex flex-col items-center justify-center space-y-1">
+                <span class="text-xl">🏛️</span>
+                <span class="truncate">Command Center</span>
+            </a>
+            <a href="{{ url_for('store.admin_products') }}" class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-400 text-slate-800 text-center font-bold text-xs flex flex-col items-center justify-center space-y-1">
+                <span class="text-xl">📦</span>
+                <span class="truncate">Products Roster</span>
+            </a>
+            <a href="{{ url_for('store.admin_create_product') }}" class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-400 text-slate-800 text-center font-bold text-xs flex flex-col items-center justify-center space-y-1">
+                <span class="text-xl">➕</span>
+                <span class="truncate">Add Product</span>
+            </a>
+            <a href="{{ url_for('store.admin_adjust_inventory') }}" class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-400 text-slate-800 text-center font-bold text-xs flex flex-col items-center justify-center space-y-1">
+                <span class="text-xl">⚙️</span>
+                <span class="truncate">Adjust Stock</span>
+            </a>
+            <a href="{{ url_for('store.admin_orders') }}" class="p-3 rounded-xl border border-indigo-300 bg-indigo-50 text-indigo-900 text-center font-bold text-xs flex flex-col items-center justify-center space-y-1">
+                <span class="text-xl">📄</span>
+                <span class="truncate">Orders Queue</span>
+            </a>
+            <a href="{{ url_for('store.pos_terminal') }}" class="p-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-900 text-center font-bold text-xs flex flex-col items-center justify-center space-y-1">
+                <span class="text-xl">💻</span>
+                <span class="truncate">POS Terminal</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 3. KPI METRICS OVERVIEW CARDS ROW -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-black border border-indigo-100 shrink-0">
+                📄
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Total Queue</p>
+                <h3 class="text-2xl font-black text-slate-900 font-mono">{{ orders|length }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-black border border-amber-100 shrink-0">
+                ⏳
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Pending Orders</p>
+                <h3 class="text-2xl font-black text-amber-600 font-mono">{{ orders|selectattr('order_status', 'equalto', 'Pending')|list|length }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-black border border-emerald-100 shrink-0">
+                ✓
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Completed Orders</p>
+                <h3 class="text-2xl font-black text-emerald-600 font-mono">{{ orders|selectattr('order_status', 'equalto', 'Completed')|list|length }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl font-black border border-purple-100 shrink-0">
+                💳
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Total Value</p>
+                <h3 class="text-xl font-black text-purple-600 font-mono">₹{{ "%.2f"|format(orders|sum(attribute='total_amount')) }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. FILTER BAR -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-4">
+        <form method="GET" action="{{ url_for('store.admin_orders') }}" class="flex items-center space-x-3">
+            <select name="status" onchange="this.form.submit()" class="px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <option value="">All Statuses</option>
+                <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+                <option value="Confirmed" {% if status_filter == 'Confirmed' %}selected{% endif %}>Confirmed</option>
+                <option value="Preparing" {% if status_filter == 'Preparing' %}selected{% endif %}>Preparing</option>
+                <option value="Ready for Pickup" {% if status_filter == 'Ready for Pickup' %}selected{% endif %}>Ready for Pickup</option>
+                <option value="Completed" {% if status_filter == 'Completed' %}selected{% endif %}>Completed</option>
+                <option value="Cancelled" {% if status_filter == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+            </select>
+            {% if status_filter %}
+            <a href="{{ url_for('store.admin_orders') }}" class="text-xs font-bold text-slate-500 hover:text-slate-700">Clear Filter</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- 5. ORDERS DATA TABLE WORKSPACE -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-slate-200 text-[11px] font-black uppercase tracking-wider text-slate-400 bg-slate-50/50">
+                        <th class="py-3 px-4">Order #</th>
+                        <th class="py-3 px-4">Buyer Name</th>
+                        <th class="py-3 px-4">Date & Time</th>
+                        <th class="py-3 px-4">Total Amount</th>
+                        <th class="py-3 px-4">Payment Method</th>
+                        <th class="py-3 px-4">Current Status</th>
+                        <th class="py-3 px-4 text-right">Update Lifecycle Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                    {% for ord in orders %}
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="py-3.5 px-4 font-mono font-bold text-slate-900">
+                            <a href="{{ url_for('store.order_detail', order_id=ord.id) }}" class="text-indigo-600 hover:underline">
+                                {{ ord.order_number }}
+                            </a>
+                        </td>
+                        <td class="py-3.5 px-4 font-bold text-slate-900">{{ ord.buyer.username.capitalize() if ord.buyer else 'N/A' }}</td>
+                        <td class="py-3.5 px-4 text-slate-500 font-mono">{{ ord.created_at.strftime('%b %d, %Y %I:%M %p') }}</td>
+                        <td class="py-3.5 px-4 font-mono font-bold text-slate-900">₹{{ "%.2f"|format(ord.total_amount) }}</td>
+                        <td class="py-3.5 px-4 text-slate-600">{{ ord.payment_method }}</td>
+                        <td class="py-3.5 px-4">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider
+                                {% if ord.order_status == 'Completed' %}
+                                    bg-emerald-100 text-emerald-800 border border-emerald-200
+                                {% elif ord.order_status == 'Cancelled' %}
+                                    bg-rose-100 text-rose-800 border border-rose-200
+                                {% else %}
+                                    bg-amber-100 text-amber-800 border border-amber-200
+                                {% endif %}">
+                                {{ ord.order_status }}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4 text-right">
+                            <form method="POST" action="{{ url_for('store.admin_update_order_status', order_id=ord.id) }}" class="inline-flex items-center space-x-2">
+                                <select name="order_status" class="px-2 py-1 rounded-lg border border-slate-200 text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                    <option value="Pending" {% if ord.order_status == 'Pending' %}selected{% endif %}>Pending</option>
+                                    <option value="Confirmed" {% if ord.order_status == 'Confirmed' %}selected{% endif %}>Confirmed</option>
+                                    <option value="Preparing" {% if ord.order_status == 'Preparing' %}selected{% endif %}>Preparing</option>
+                                    <option value="Ready for Pickup" {% if ord.order_status == 'Ready for Pickup' %}selected{% endif %}>Ready for Pickup</option>
+                                    <option value="Completed" {% if ord.order_status == 'Completed' %}selected{% endif %}>Completed</option>
+                                    <option value="Cancelled" {% if ord.order_status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                                </select>
+                                <button type="submit" class="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-all">
+                                    Save Status
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="py-12 text-center text-slate-400">
+                            <div class="text-3xl mb-2">📄</div>
+                            <p class="font-bold">No orders found in queue.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

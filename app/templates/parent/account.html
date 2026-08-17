@@ -58,7 +58,7 @@
                 </div>
                 <div>
                     <h4 class="text-xs font-extrabold text-slate-900">{{ link.student.full_name }}</h4>
-                    <p class="text-[11px] text-slate-500 font-mono">Admission: {{ link.student.registration_number }} • Relationship: {{ link.relationship_type or 'Parent' }}</p>
+                    <p class="text-[11px] text-slate-500 font-mono">Admission: {{ link.student.registration_number }} • Relationship: {{ link.relationship or 'Parent' }}</p>
                 </div>
             </div>
             {% else %}

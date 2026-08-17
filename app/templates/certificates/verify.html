@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Certificate Verification — StratLearn{% endblock %}
+{% block header_title %}Public Certificate Verification Portal{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-2xl mx-auto animate-fade-in">
+
+    <!-- 1. HERO BANNER -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 text-white shadow-xl border border-slate-800 text-center space-y-2">
+        <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 inline-block">
+            🔒 PUBLIC SECURITY PORTAL
+        </span>
+        <h1 class="text-2xl font-black tracking-tight">Official Certificate Verification</h1>
+        <p class="text-xs text-slate-300">Enter the unique certificate number (e.g. CERT-2026-XXXXXX) to verify authentic school records.</p>
+    </div>
+
+    <!-- 2. VERIFICATION SEARCH FORM -->
+    <form method="POST" action="{{ url_for('certificates.verify') }}" class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4">
+        <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Certificate Number</label>
+            <div class="flex gap-2">
+                <input type="text" name="cert_number" value="{{ query_num }}" placeholder="CERT-2026-XXXXXX" required
+                       class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 font-mono font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs shadow-md">
+                    Verify Now
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- 3. VERIFICATION RESULT BANNER -->
+    {% if result %}
+    <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-md space-y-4 text-center">
+        {% if result.is_valid %}
+        <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl font-black mx-auto">
+            ✓
+        </div>
+        <h2 class="text-lg font-black text-emerald-700">Official Certificate Verified</h2>
+        <p class="text-xs text-slate-500 font-medium">The certificate number matches an authentic, issued school record.</p>
+
+        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-xs text-left font-semibold">
+            <div class="flex justify-between py-1 border-b border-slate-200">
+                <span class="text-slate-500">Certificate Number:</span>
+                <span class="font-mono font-bold text-slate-900">{{ result.certificate_number }}</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-slate-200">
+                <span class="text-slate-500">Certificate Type:</span>
+                <span class="font-bold text-slate-900">{{ result.certificate_type }}</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-slate-200">
+                <span class="text-slate-500">Student Initials / Name:</span>
+                <span class="font-bold text-slate-900">{{ result.student_name }}</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-slate-200">
+                <span class="text-slate-500">Issuing Institution:</span>
+                <span class="font-bold text-slate-900">{{ result.school_name }}</span>
+            </div>
+            <div class="flex justify-between py-1">
+                <span class="text-slate-500">Date of Issue:</span>
+                <span class="font-mono font-bold text-slate-900">{{ result.issue_date }}</span>
+            </div>
+        </div>
+        {% else %}
+        <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-2xl font-black mx-auto">
+            ✕
+        </div>
+        <h2 class="text-lg font-black text-rose-700">Verification Failed</h2>
+        <p class="text-xs text-rose-600 font-semibold">{{ result.message }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

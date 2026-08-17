@@ -41,9 +41,14 @@ from app.models.examination import (
     ExamType, Examination, ExaminationClass, ExaminationSubject,
     ExaminationResult, ExamOverallResult, GradeRule
 )
+from app.models.messaging import Conversation, ConversationParticipant, Message, MessageReadState
+from app.models.notification import Notification, NotificationPreference
+from app.models.store import StoreCategory, StoreProduct, InventoryMovement, StoreOrder, StoreOrderItem, POSSale, POSSaleItem
+from app.models.certificate import Certificate
 
 __all__ = [
     'db',
+    'Certificate',
     'Institute',
     'SchoolClass',
     'Section',
@@ -97,5 +102,12 @@ __all__ = [
     'ExaminationSubject',
     'ExaminationResult',
     'ExamOverallResult',
-    'GradeRule'
+    'GradeRule',
+    'StoreCategory',
+    'StoreProduct',
+    'InventoryMovement',
+    'StoreOrder',
+    'StoreOrderItem',
+    'PosSale',
+    'PosSaleItem',
 ]

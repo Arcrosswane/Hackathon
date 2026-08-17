@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %}Store Orders — Admin{% endblock %}
+{% block header_title %}Store Orders Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto animate-fade-in">
+
+    <!-- 1. HERO BANNER -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 sm:p-8 text-white shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-all duration-500 hover:shadow-2xl group">
+        <div class="absolute inset-0 animate-shimmer pointer-events-none"></div>
+        <div class="space-y-2 relative z-10">
+            <div class="flex items-center space-x-2 flex-wrap gap-y-2">
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                    📋 ALL STORE ORDERS
+                </span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
+                <span>Order Management</span>
+                <span class="inline-block animate-float text-xl">🏪</span>
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium">
+                View, filter, search, and update the status of all store orders. Process pending orders and manage returns.
+            </p>
+        </div>
+        <div class="relative z-10 bg-white/10 backdrop-blur-md border border-white/15 p-4 rounded-xl text-xs space-y-2 min-w-[240px] transition-all duration-300 hover:bg-white/20 hover:scale-105">
+            <div class="flex items-center justify-between gap-4">
+                <span class="text-slate-300 font-bold">Total Orders:</span>
+                <span class="font-black text-white font-mono text-lg">{{ orders|length }}</span>
+            </div>
+            <div class="flex items-center justify-between gap-4">
+                <span class="text-slate-300 font-bold">Pending:</span>
+                <span class="font-black text-amber-300 font-mono">{{ orders|selectattr('order_status','equalto','Pending')|list|length }}</span>
+            </div>
+            <div class="flex items-center justify-between gap-4 pt-1 border-t border-white/10">
+                <span class="text-slate-300 font-bold">Completed:</span>
+                <span class="font-black text-emerald-300 font-mono">{{ orders|selectattr('order_status','equalto','Completed')|list|length }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. QUICK ACTIONS -->
+    <div class="grid grid-cols-2 lg:grid-cols-6 gap-3 animate-scale-up" style="animation-delay: 0.05s;">
+        <a href="{{ url_for('store.admin_dashboard') }}"
+           class="p-4 rounded-2xl border border-slate-200 bg-white hover:bg-indigo-50 hover:border-indigo-400 hover:-translate-y-1 hover:shadow-md active:scale-95 text-slate-800 hover:text-indigo-900 transition-all duration-200 text-center group font-bold text-xs flex flex-col items-center justify-center space-y-1.5">
+            <span class="text-2xl group-hover:scale-125 transition-transform duration-200">📊</span>
+            <span>Store Dashboard</span>
+        </a>
+        <a href="{{ url_for('store.pos_terminal') }}"
+           class="p-4 rounded-2xl border border-slate-200 bg-white hover:bg-emerald-50 hover:border-emerald-400 hover:-translate-y-1 hover:shadow-md active:scale-95 text-slate-800 hover:text-emerald-900 transition-all duration-200 text-center group font-bold text-xs flex flex-col items-center justify-center space-y-1.5">
+            <span class="text-2xl group-hover:scale-125 transition-transform duration-200 animate-float" style="animation-duration: 4s;">🏪</span>
+            <span>POS Terminal</span>
+        </a>
+        <a href="{{ url_for('store.catalog') }}"
+           class="p-4 rounded-2xl border border-slate-200 bg-white hover:bg-sky-50 hover:border-sky-400 hover:-translate-y-1 hover:shadow-md active:scale-95 text-slate-800 hover:text-sky-900 transition-all duration-200 text-center group font-bold text-xs flex flex-col items-center justify-center space-y-1.5">
+            <span class="text-2xl group-hover:scale-125 transition-transform duration-200">🛒</span>
+            <span>Store Catalog</span>
+        </a>
+        <a href="#" onclick="window.location.reload(); return false;"
+           class="p-4 rounded-2xl border border-slate-200 bg-white hover:bg-purple-50 hover:border-purple-400 hover:-translate-y-1 hover:shadow-md active:scale-95 text-slate-800 hover:text-purple-900 transition-all duration-200 text-center group font-bold text-xs flex flex-col items-center justify-center space-y-1.5">
+            <span class="text-2xl group-hover:scale-125 transition-transform duration-200 animate-float" style="animation-duration: 4.5s;">🔄</span>
+            <span>Refresh</span>
+        </a>
+        <a href="{{ url_for('admin.dashboard') }}"
+           class="p-4 rounded-2xl border border-slate-200 bg-white hover:bg-rose-50 hover:border-rose-400 hover:-translate-y-1 hover:shadow-md active:scale-95 text-slate-800 hover:text-rose-900 transition-all duration-200 text-center group font-bold text-xs flex flex-col items-center justify-center space-y-1.5">
+            <span class="text-2xl group-hover:scale-125 transition-transform duration-200">🏠</span>
+            <span>Admin Home</span>
+        </a>
+        <div class="p-4 rounded-2xl border border-amber-200 bg-amber-50/50 hover:bg-amber-100 hover:border-amber-400 hover:-translate-y-1 hover:shadow-md active:scale-95 text-amber-900 transition-all duration-200 text-center group font-bold text-xs flex flex-col items-center justify-center space-y-1.5 cursor-default">
+            <span class="text-2xl group-hover:scale-125 transition-transform duration-200">💡</span>
+            <span>Click row to view</span>
+        </div>
+    </div>
+
+    <!-- 3. SEARCH & FILTER BAR -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 animate-scale-up hover-lift" style="animation-delay: 0.08s;">
+        <form method="GET" action="{{ url_for('store.admin_orders') }}" class="flex flex-col lg:flex-row lg:items-center gap-4">
+            <div class="relative flex-1 max-w-md">
+                <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <input type="text" name="q" value="{{ search_q or '' }}" placeholder="Search order number or buyer username..."
+                       class="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white transition-all">
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs font-black text-slate-400 uppercase tracking-wider mr-1">Status:</span>
+                <a href="{{ url_for('store.admin_orders', q=search_q or None) }}"
+                   class="px-3 py-1.5 rounded-full text-xs font-bold transition-all border
+                   {% if not status_filter %}bg-purple-600 text-white border-purple-600 shadow-xs{% else %}bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-800{% endif %}">
+                    All
+                </a>
+                {% for st in valid_statuses %}
+                {% set count = orders_all_count if orders_all_count is defined else 0 %}
+                <a href="{{ url_for('store.admin_orders', status=st, q=search_q or None) }}"
+                   class="px-3 py-1.5 rounded-full text-xs font-bold transition-all border
+                   {% if status_filter == st %}bg-purple-600 text-white border-purple-600 shadow-xs{% else %}bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-800{% endif %}">
+                    {{ st }}
+                </a>
+                {% endfor %}
+            </div>
+
+            <div class="flex items-center gap-2 lg:ml-auto">
+                <button type="submit" class="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-black transition-all active:scale-95 shadow-xs">
+                    Search
+                </button>
+                <a href="{{ url_for('store.admin_orders') }}"
+                   class="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-xs font-bold transition-all active:scale-95">
+                    Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- 4. ORDERS TABLE -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden animate-scale-up hover-lift" style="animation-delay: 0.1s;">
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+                <thead>
+                    <tr class="bg-gradient-to-r from-slate-50 to-indigo-50/50 border-b-2 border-slate-200">
+                        <th class="text-left py-4 px-4 font-black uppercase tracking-wider text-[10px] text-slate-500">Order #</th>
+                        <th class="text-left py-4 px-4 font-black uppercase tracking-wider text-[10px] text-slate-500">Buyer</th>
+                        <th class="text-left py-4 px-4 font-black uppercase tracking-wider text-[10px] text-slate-500">For Student</th>
+                        <th class="text-left py-4 px-4 font-black uppercase tracking-wider text-[10px] text-slate-500">Items</th>
+                        <th class="text-left py-4 px-4 font-black uppercase tracking-wider text-[10px] text-slate-500">Amount</th>
+                        <th class="text-left py-4 px-4 font-black uppercase tracking-wider text-[10px] text-slate-500">Payment</th>
+                        <th class="text-left py-4 px-4 font-black uppercase tracking-wider text-[10px] text-slate-500">Status</th>
+                        <th class="text-left py-4 px-4 font-black uppercase tracking-wider text-[10px] text-slate-500">Date</th>
+                        <th class="text-right py-4 px-4 font-black uppercase tracking-wider text-[10px] text-slate-500">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for order in orders %}
+                    <tr class="group hover:bg-indigo-50/30 transition-colors cursor-pointer" onclick="window.location.href='{{ url_for("store.order_detail", order_id=order.id) }}'">
+                        <td class="py-4 px-4">
+                            <span class="font-mono font-black text-slate-900 text-sm group-hover:text-indigo-700 transition-colors">{{ order.order_number }}</span>
+                        </td>
+                        <td class="py-4 px-4">
+                            <div>
+                                <span class="font-bold text-slate-800">{{ order.buyer.username if order.buyer else 'N/A' }}</span>
+                                {% if order.buyer %}
+                                <span class="block text-[10px] text-slate-500">{{ order.buyer.user_type }}</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="py-4 px-4">
+                            {% if order.student %}
+                            <span class="font-bold text-slate-700 text-[11px]">
+                                {{ order.student.first_name }} {{ order.student.last_name }}
+                            </span>
+                            {% if order.student.admission_number %}
+                            <span class="block text-[10px] font-mono text-slate-500">{{ order.student.admission_number }}</span>
+                            {% endif %}
+                            {% else %}
+                            <span class="text-[10px] text-slate-400 font-bold">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-4">
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold">
+                                <span class="font-mono">{{ order.items|sum(attribute='quantity') }}</span>
+                                <span>items</span>
+                                <span class="text-slate-400">({{ order.items|length }})</span>
+                            </span>
+                        </td>
+                        <td class="py-4 px-4">
+                            <span class="font-black text-slate-900 text-sm font-mono">₹{{ "%.2f"|format(order.total_amount|float) }}</span>
+                        </td>
+                        <td class="py-4 px-4">
+                            <span class="inline-flex flex-col gap-0.5">
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold
+                                    {% if order.payment_status == 'Paid' %}bg-emerald-100 text-emerald-700
+                                    {% elif order.payment_status in ('Cancelled', 'Returned') %}bg-slate-100 text-slate-700
+                                    {% else %}bg-amber-100 text-amber-700{% endif %}">
+                                    {{ order.payment_status }}
+                                </span>
+                                <span class="text-[9px] text-slate-500 font-bold">{{ order.payment_method }}</span>
+                            </span>
+                        </td>
+                        <td class="py-4 px-4">
+                            <form method="POST" action="{{ url_for('store.admin_update_order_status', order_id=order.id) }}" class="flex items-center gap-1" onclick="event.stopPropagation();">
+                                <select name="order_status" onchange="this.form.submit()"
+                                        class="text-[10px] font-black rounded-md border border-slate-200 bg-white px-2 py-1 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 cursor-pointer transition-all
+                                            {% if order.order_status == 'Pending' %}text-amber-700 bg-amber-50
+                                            {% elif order.order_status == 'Confirmed' %}text-sky-700 bg-sky-50
+                                            {% elif order.order_status == 'Preparing' %}text-indigo-700 bg-indigo-50
+                                            {% elif order.order_status == 'Ready for Pickup' %}text-purple-700 bg-purple-50
+                                            {% elif order.order_status == 'Completed' %}text-emerald-700 bg-emerald-50
+                                            {% elif order.order_status == 'Cancelled' %}text-slate-700 bg-slate-100
+                                            {% elif order.order_status == 'Returned' %}text-rose-700 bg-rose-50
+                                            {% endif %}">
+                                    {% for st in valid_statuses %}
+                                    <option value="{{ st }}" {% if order.order_status == st %}selected{% endif %}>{{ st }}</option>
+                                    {% endfor %}
+                                </select>
+                            </form>
+                        </td>
+                        <td class="py-4 px-4">
+                            <span class="text-[10px] font-mono text-slate-600 font-bold">
+                                {{ order.created_at.strftime('%b %d, %Y') if order.created_at else '' }}
+                            </span>
+                            <span class="block text-[9px] text-slate-400">
+                                {{ order.created_at.strftime('%I:%M %p') if order.created_at else '' }}
+                            </span>
+                        </td>
+                        <td class="py-4 px-4 text-right space-x-1 whitespace-nowrap" onclick="event.stopPropagation();">
+                            <a href="{{ url_for('store.order_detail', order_id=order.id) }}"
+                               class="inline-block px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] font-black hover:bg-indigo-100 hover:scale-105 transition-all">
+                                👁️ Details
+                            </a>
+                            {% if order.order_status == 'Completed' %}
+                            <form method="POST" action="{{ url_for('store.admin_return_order', order_id=order.id) }}" class="inline" onsubmit="return confirm('Process return for order {{ order.order_number }}? Stock will be restored.');">
+                                <button type="submit"
+                                        class="px-2.5 py-1 rounded-md bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-black hover:bg-rose-100 hover:scale-105 transition-all">
+                                    ↩️ Return
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="py-16 text-center">
+                            <div class="space-y-4">
+                                <div class="text-7xl opacity-30 animate-float">📭</div>
+                                <div class="space-y-1">
+                                    <h3 class="text-lg font-extrabold text-slate-700">No orders found</h3>
+                                    <p class="text-sm text-slate-500 max-w-md mx-auto font-medium">
+                                        {% if status_filter or search_q %}
+                                        Try adjusting your filters or search terms.
+                                        {% else %}
+                                        Orders will appear here once placed by students or parents.
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <a href="{{ url_for('store.catalog') }}"
+                                   class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-black shadow-xs transition-all active:scale-95">
+                                    <span>🛒</span><span>View Catalog</span>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

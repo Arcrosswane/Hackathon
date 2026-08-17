@@ -4,27 +4,73 @@
 {% block header_title %}Question Papers Directory{% endblock %}
 
 {% block content %}
-<div class="space-y-6">
+<div class="space-y-6 max-w-7xl mx-auto animate-fade-in">
 
-    <!-- Header Banner -->
-    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
+    <!-- 1. HEADER BANNER -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 sm:p-8 text-white shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-all duration-500 hover:shadow-2xl">
+        <div class="space-y-2 relative z-10">
             <div class="flex items-center space-x-2">
-                <span class="px-2.5 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30 text-[10px] font-extrabold uppercase tracking-wider">
-                    MODULE 15 — QUESTION PAPERS
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                    📄 QUESTION PAPERS REPOSITORY
                 </span>
-                <span class="text-xs text-slate-300 font-bold">Exam & Assessment Assembly</span>
+                <span class="text-xs text-slate-400 font-bold">Exam & Assessment Assembly</span>
             </div>
-            <h1 class="text-2xl font-black mt-1 tracking-tight">Question Papers Directory</h1>
-            <p class="text-xs text-slate-300 mt-1 max-w-xl">
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
+                <span>Question Papers Directory</span>
+                <span class="inline-block animate-float text-xl">📄</span>
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium">
                 Create, assemble sections, snapshot, print student test papers and teacher answer keys, or duplicate existing papers into new drafts.
             </p>
         </div>
 
         <button onclick="document.getElementById('createPaperModal').classList.remove('hidden')" 
-                class="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-1.5">
+                class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-1.5 relative z-10 shrink-0">
             <span>➕ Create Question Paper</span>
         </button>
+    </div>
+
+    <!-- 2. KPI METRICS OVERVIEW CARDS ROW -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-black border border-indigo-100 shrink-0">
+                📄
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Total Papers</p>
+                <h3 class="text-2xl font-black text-slate-900 font-mono">{{ papers|length }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-black border border-emerald-100 shrink-0">
+                ✓
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Finalized Papers</p>
+                <h3 class="text-2xl font-black text-emerald-600 font-mono">{{ papers|selectattr('status', 'equalto', 'FINAL')|list|length }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-black border border-amber-100 shrink-0">
+                ✏️
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Draft Papers</p>
+                <h3 class="text-2xl font-black text-amber-600 font-mono">{{ papers|selectattr('status', 'equalto', 'DRAFT')|list|length }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl font-black border border-purple-100 shrink-0">
+                🖨️
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Print Engine</p>
+                <h3 class="text-sm font-black text-purple-600 font-mono">READY</h3>
+            </div>
+        </div>
     </div>
 
     <!-- Papers Grid -->

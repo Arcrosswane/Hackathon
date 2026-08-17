@@ -62,7 +62,7 @@ def get_parent_dashboard_summary(user_id=None, child_id=None, session_id=None):
                 'link': link,
                 'student': link.student,
                 'enrollment': en,
-                'relationship': link.relationship_type or 'Parent'
+                'relationship': getattr(link, 'relationship', 'Parent') or 'Parent'
             })
 
     summary['linked_children'] = authorized_children
@@ -86,7 +86,7 @@ def get_parent_dashboard_summary(user_id=None, child_id=None, session_id=None):
     summary['selected_child'] = selected_student
     summary['selected_enrollment'] = selected_enrollment
 
-    class_id = selected_enrollment.school_class_id if selected_enrollment else None
+    class_id = selected_enrollment.class_id if selected_enrollment else None
     section_id = selected_enrollment.section_id if selected_enrollment else None
 
     # ==========================================

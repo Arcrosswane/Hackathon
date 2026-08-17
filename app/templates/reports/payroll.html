@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Payroll Reports — StratLearn{% endblock %}
+{% block header_title %}Staff Payroll & Salary Reports{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto animate-fade-in">
+
+    <!-- 1. HEADER -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 text-white shadow-xl border border-slate-800 flex items-center justify-between">
+        <div>
+            <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                💰 PAYROLL REPORTS
+            </span>
+            <h1 class="text-2xl font-black tracking-tight mt-1">Employee Salary Disbursement Ledgers</h1>
+        </div>
+    </div>
+
+    <!-- 2. KPI METRICS -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+            <p class="text-[11px] font-black uppercase text-slate-400">Total Gross Salary</p>
+            <h3 class="text-2xl font-black text-slate-900 font-mono">₹{{ "%.2f"|format(payroll_summary.total_gross) }}</h3>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+            <p class="text-[11px] font-black uppercase text-slate-400">Total Statutory Deductions</p>
+            <h3 class="text-2xl font-black text-amber-600 font-mono">₹{{ "%.2f"|format(payroll_summary.total_deductions) }}</h3>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+            <p class="text-[11px] font-black uppercase text-slate-400">Net Disbursed Salary</p>
+            <h3 class="text-2xl font-black text-emerald-600 font-mono">₹{{ "%.2f"|format(payroll_summary.total_disbursed) }}</h3>
+        </div>
+    </div>
+
+    <!-- 3. TABLE -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4">
+        <h2 class="text-base font-extrabold text-slate-900">Payroll Disbursement Records</h2>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-slate-200 text-[11px] font-black uppercase tracking-wider text-slate-400 bg-slate-50/50">
+                        <th class="py-3 px-4">Payroll #</th>
+                        <th class="py-3 px-4">Employee Name</th>
+                        <th class="py-3 px-4">Period</th>
+                        <th class="py-3 px-4">Gross Salary</th>
+                        <th class="py-3 px-4">Deductions</th>
+                        <th class="py-3 px-4">Net Salary</th>
+                        <th class="py-3 px-4">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                    {% for rec in payroll_summary.payroll_records %}
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="py-3.5 px-4 font-mono font-bold text-slate-900">{{ rec.payroll_number }}</td>
+                        <td class="py-3.5 px-4 font-extrabold text-slate-900">{{ rec.employee_name }}</td>
+                        <td class="py-3.5 px-4 text-slate-500 font-mono">{{ rec.month_year }}</td>
+                        <td class="py-3.5 px-4 font-mono">₹{{ "%.2f"|format(rec.gross_salary) }}</td>
+                        <td class="py-3.5 px-4 font-mono text-amber-600">₹{{ "%.2f"|format(rec.total_deductions) }}</td>
+                        <td class="py-3.5 px-4 font-mono font-black text-emerald-700">₹{{ "%.2f"|format(rec.net_salary) }}</td>
+                        <td class="py-3.5 px-4">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                {{ rec.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="py-12 text-center text-slate-400">No payroll records found for active school.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

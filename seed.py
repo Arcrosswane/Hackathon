@@ -741,6 +741,10 @@ def seed_database():
                         transaction_reference="UPI/884729104",
                         notes="First Term Partial Fee Payment"
                     )
+                    print(f"✓ Seeded partial payment of ₹5,000 for invoice #{inv.invoice_number}.")
+                except Exception as ex:
+                    print(f"⚠ Notice seeding student invoice/payment: {ex}")
+
             # Seed Module 12 Financial Categories & Sample Transactions
             from app.models.finance import FinanceCategory, FinancialTransaction
             from app.services.finance_service import create_category, create_manual_transaction, sync_all_fee_payments_to_finance

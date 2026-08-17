@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Products Master Roster — StratLearn Admin{% endblock %}
+{% block header_title %}Products Master Roster{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto animate-fade-in">
+
+    <!-- 1. HEADER BANNER -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 sm:p-8 text-white shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div class="space-y-2 relative z-10">
+            <div class="flex items-center space-x-2">
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    📦 STORE CATALOG MASTER
+                </span>
+                <span class="text-xs text-slate-400 font-bold">Product Directory & Stock Levels</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
+                <span>Products Master Roster</span>
+                <span class="inline-block animate-float text-xl">📦</span>
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium">
+                Comprehensive directory of school uniforms, textbooks, stationery sets, and supplies with live stock controls and pricing metrics.
+            </p>
+        </div>
+
+        <div class="flex items-center space-x-3 relative z-10 shrink-0">
+            <a href="{{ url_for('store.admin_dashboard') }}" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs border border-white/20 transition-all">
+                <span>← Command Center</span>
+            </a>
+            <a href="{{ url_for('store.admin_create_product') }}" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-2">
+                <span>+ Add New Product</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 2. QUICK ACTIONS SHORTCUTS BAR -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-xs font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span>⚡ Store Management Shortcuts</span>
+            </h3>
+            <span class="text-[10px] font-bold text-slate-400">Direct Page Navigation</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+            <a href="{{ url_for('store.admin_dashboard') }}" class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-400 text-slate-800 text-center font-bold text-xs flex flex-col items-center justify-center space-y-1">
+                <span class="text-xl">🏛️</span>
+                <span class="truncate">Command Center</span>
+            </a>
+            <a href="{{ url_for('store.admin_products') }}" class="p-3 rounded-xl border border-indigo-300 bg-indigo-50 text-indigo-900 text-center font-bold text-xs flex flex-col items-center justify-center space-y-1">
+                <span class="text-xl">📦</span>
+                <span class="truncate">Products Roster</span>
+            </a>
+            <a href="{{ url_for('store.admin_create_product') }}" class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-400 text-slate-800 text-center font-bold text-xs flex flex-col items-center justify-center space-y-1">
+                <span class="text-xl">➕</span>
+                <span class="truncate">Add Product</span>
+            </a>
+            <a href="{{ url_for('store.admin_adjust_inventory') }}" class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-400 text-slate-800 text-center font-bold text-xs flex flex-col items-center justify-center space-y-1">
+                <span class="text-xl">⚙️</span>
+                <span class="truncate">Adjust Stock</span>
+            </a>
+            <a href="{{ url_for('store.admin_orders') }}" class="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-400 text-slate-800 text-center font-bold text-xs flex flex-col items-center justify-center space-y-1">
+                <span class="text-xl">📄</span>
+                <span class="truncate">Orders Queue</span>
+            </a>
+            <a href="{{ url_for('store.pos_terminal') }}" class="p-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-900 text-center font-bold text-xs flex flex-col items-center justify-center space-y-1">
+                <span class="text-xl">💻</span>
+                <span class="truncate">POS Terminal</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 3. KPI METRICS OVERVIEW CARDS ROW -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-black border border-indigo-100 shrink-0">
+                📦
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Total Products</p>
+                <h3 class="text-2xl font-black text-slate-900 font-mono">{{ products|length }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-black border border-emerald-100 shrink-0">
+                ✓
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">In-Stock Items</p>
+                <h3 class="text-2xl font-black text-emerald-600 font-mono">{{ products|selectattr('is_available')|list|length }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl font-black border border-rose-100 shrink-0">
+                ⚠️
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Low Stock Warnings</p>
+                <h3 class="text-2xl font-black text-rose-600 font-mono">{{ products|selectattr('is_low_stock')|list|length }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl font-black border border-purple-100 shrink-0">
+                🏷️
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Categories</p>
+                <h3 class="text-2xl font-black text-purple-600 font-mono">{{ categories|length }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. SEARCH & FILTER BAR -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+        <form method="GET" action="{{ url_for('store.admin_products') }}" class="flex flex-wrap items-center gap-3 w-full">
+            <div class="flex-1 min-w-[200px]">
+                <input type="text" name="q" value="{{ search_q }}" placeholder="Search by name, SKU code..."
+                       class="w-full px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+            <div>
+                <select name="category_id" onchange="this.form.submit()"
+                        class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if active_category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition-all">Filter</button>
+        </form>
+    </div>
+
+    <!-- 5. PRODUCTS DATA TABLE WORKSPACE -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-slate-200 text-[11px] font-black uppercase tracking-wider text-slate-400 bg-slate-50/50">
+                        <th class="py-3 px-4">SKU</th>
+                        <th class="py-3 px-4">Product Name</th>
+                        <th class="py-3 px-4">Category</th>
+                        <th class="py-3 px-4">Selling Price</th>
+                        <th class="py-3 px-4">Stock Level</th>
+                        <th class="py-3 px-4">Alert Limit</th>
+                        <th class="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                    {% for p in products %}
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="py-3.5 px-4 font-mono font-bold text-slate-900">{{ p.sku }}</td>
+                        <td class="py-3.5 px-4 font-bold text-slate-900">{{ p.name }}</td>
+                        <td class="py-3.5 px-4"><span class="px-2.5 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-600 font-bold border border-slate-200">{{ p.category.name if p.category else 'General' }}</span></td>
+                        <td class="py-3.5 px-4 font-mono font-bold text-slate-900">₹{{ "%.2f"|format(p.selling_price) }}</td>
+                        <td class="py-3.5 px-4">
+                            <span class="font-mono font-bold px-2 py-0.5 rounded-md text-xs
+                                {% if p.is_low_stock() %}bg-rose-100 text-rose-700 border border-rose-200{% else %}bg-emerald-100 text-emerald-700 border border-emerald-200{% endif %}">
+                                {{ p.stock_quantity }} units
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-500 font-mono">{{ p.low_stock_threshold }} units</td>
+                        <td class="py-3.5 px-4 text-right">
+                            <a href="{{ url_for('store.admin_adjust_inventory', product_id=p.id) }}" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs border border-slate-200 transition-all inline-flex items-center space-x-1">
+                                <span>⚙️ Adjust Stock</span>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="py-12 text-center text-slate-400">
+                            <div class="text-3xl mb-2">📦</div>
+                            <p class="font-bold">No products found in store catalog.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

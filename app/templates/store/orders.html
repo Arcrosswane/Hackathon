@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}My Store Orders — StratLearn{% endblock %}
+{% block header_title %}Store Orders & Receipts History{% endblock %}
+
+{% block content %}
+<div class="w-full space-y-6 animate-fade-in" x-data="{ selectedOrder: null }">
+
+    <!-- 1. HEADER & CONTEXT BANNER -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 sm:p-8 text-white shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-all duration-500 hover:shadow-2xl">
+        <div class="space-y-2 relative z-10">
+            <div class="flex items-center space-x-2">
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    📄 ORDER HISTORY & RECEIPTS
+                </span>
+                <span class="text-xs text-slate-400 font-bold">School Store Purchases</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
+                <span>Store Purchase Ledger & Receipts</span>
+                <span class="inline-block animate-float text-xl">📄</span>
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium">
+                Track status of your school store orders, inspect itemized historical purchases, and view printable receipt vouchers.
+            </p>
+        </div>
+
+        <div class="flex items-center space-x-3 relative z-10 shrink-0">
+            <a href="{{ url_for('store.catalog') }}" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-2">
+                <span>+ Place New Order</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 3. KPI METRICS OVERVIEW CARDS ROW -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-black border border-indigo-100 shrink-0">
+                📄
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Total Orders</p>
+                <h3 class="text-2xl font-black text-slate-900 font-mono">{{ orders|length }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-black border border-amber-100 shrink-0">
+                ⏳
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Pending Pickup</p>
+                <h3 class="text-2xl font-black text-amber-600 font-mono">{{ orders|selectattr('order_status', 'in', ['Pending', 'Confirmed', 'Preparing', 'Ready for Pickup'])|list|length }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-black border border-emerald-100 shrink-0">
+                ✓
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Completed</p>
+                <h3 class="text-2xl font-black text-emerald-600 font-mono">{{ orders|selectattr('order_status', 'equalto', 'Completed')|list|length }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl font-black border border-purple-100 shrink-0">
+                💳
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Total Value</p>
+                <h3 class="text-xl font-black text-purple-600 font-mono">₹{{ "%.2f"|format(orders|sum(attribute='total_amount')) }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. ORDERS TABLE WORKSPACE CARD -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4">
+        <h2 class="text-base font-extrabold text-slate-900">Your Purchases Ledger</h2>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-slate-200 text-[11px] font-black uppercase tracking-wider text-slate-400 bg-slate-50/50">
+                        <th class="py-3 px-4">Order #</th>
+                        <th class="py-3 px-4">Date & Time</th>
+                        <th class="py-3 px-4">Items Count</th>
+                        <th class="py-3 px-4">Total Amount</th>
+                        <th class="py-3 px-4">Payment Method</th>
+                        <th class="py-3 px-4">Status</th>
+                        <th class="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                    {% for ord in orders %}
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="py-3.5 px-4 font-mono font-bold text-slate-900">{{ ord.order_number }}</td>
+                        <td class="py-3.5 px-4 text-slate-500">{{ ord.created_at.strftime('%b %d, %Y %I:%M %p') }}</td>
+                        <td class="py-3.5 px-4">{{ ord.items|length }} item(s)</td>
+                        <td class="py-3.5 px-4 font-mono font-bold text-slate-900">₹{{ "%.2f"|format(ord.total_amount) }}</td>
+                        <td class="py-3.5 px-4 text-slate-600">{{ ord.payment_method }}</td>
+                        <td class="py-3.5 px-4">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider
+                                {% if ord.order_status == 'Completed' %}
+                                    bg-emerald-100 text-emerald-800 border border-emerald-200
+                                {% elif ord.order_status == 'Cancelled' %}
+                                    bg-rose-100 text-rose-800 border border-rose-200
+                                {% else %}
+                                    bg-amber-100 text-amber-800 border border-amber-200
+                                {% endif %}">
+                                {{ ord.order_status }}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4 text-right space-x-1">
+                            <a href="{{ url_for('store.order_detail', order_id=ord.id) }}" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-all inline-flex items-center space-x-1">
+                                <span>📄 View Receipt Voucher</span>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="py-12 text-center text-slate-400">
+                            <div class="text-3xl mb-2">📄</div>
+                            <p class="font-bold">No store orders placed yet.</p>
+                            <p class="text-xs text-slate-500 mt-1">Visit the <a href="{{ url_for('store.catalog') }}" class="text-indigo-600 font-bold hover:underline">Store Catalog</a> to place your first order!</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

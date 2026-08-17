@@ -1,0 +1,380 @@
+{% extends "base.html" %}
+
+{% block title %}School Store POS Terminal — StratLearn{% endblock %}
+{% block header_title %}Physical Store POS Counter Terminal{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto animate-fade-in" x-data="posTerminalApp({{ products|tojson }})">
+
+    <!-- 1. HEADER & CONTEXT BANNER -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 sm:p-8 text-white shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-all duration-500 hover:shadow-2xl">
+        <div class="space-y-2 relative z-10">
+            <div class="flex items-center space-x-2">
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    💻 PHYSICAL COUNTER POS
+                </span>
+                <span class="text-xs text-slate-400 font-bold">Fast School Sales Terminal</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
+                <span>Point-of-Sale Counter Terminal</span>
+                <span class="inline-block animate-float text-xl">💳</span>
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium">
+                Rapid physical sale terminal for counter staff with SKU barcode scanning, quick category lookup, customer tagging, and instant receipt generation.
+            </p>
+        </div>
+
+        <div class="flex items-center space-x-3 relative z-10 shrink-0">
+            <a href="{{ url_for('store.admin_dashboard') }}" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs border border-white/20 transition-all flex items-center space-x-2">
+                <span>📦 Store Admin</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 2. KPI METRICS OVERVIEW CARDS ROW -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-black border border-indigo-100 shrink-0">
+                📦
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">In-Stock Products</p>
+                <h3 class="text-2xl font-black text-slate-900 font-mono">{{ products|length }}</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl font-black border border-purple-100 shrink-0">
+                🛒
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Selected Items</p>
+                <h3 class="text-2xl font-black text-purple-600 font-mono" x-text="cartTotalQuantity">0</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-black border border-emerald-100 shrink-0">
+                💰
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Sale Total</p>
+                <h3 class="text-2xl font-black text-emerald-600 font-mono" x-text="'₹' + cartTotalAmount.toFixed(2)">₹0.00</h3>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-black border border-amber-100 shrink-0">
+                👤
+            </div>
+            <div>
+                <p class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Cashier</p>
+                <h3 class="text-sm font-black text-amber-600 font-mono truncate">{{ current_user.username.capitalize() }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. POS MAIN WORKSPACE GRID -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- LEFT COLUMN: SKU SEARCH & PRODUCT SELECTION GRID -->
+        <div class="lg:col-span-2 space-y-6">
+
+            <!-- SKU Barcode / Search Box -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+                <form @submit.prevent="scanSKU()" class="flex items-center gap-3">
+                    <div class="relative flex-1">
+                        <input type="text" x-model="skuInput" placeholder="Scan SKU barcode or type product name..."
+                               class="w-full pl-4 pr-10 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        <span class="absolute right-3 top-2.5 text-xs text-slate-400">🔍</span>
+                    </div>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-extrabold text-xs hover:bg-slate-800 transition-all shrink-0">
+                        Scan SKU
+                    </button>
+                </form>
+            </div>
+
+            <!-- Products Catalog Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <template x-for="prod in filteredProducts" :key="prod.id">
+                    <button @click="addToPosCart(prod)"
+                            class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs flex flex-col justify-between text-left space-y-2 hover:border-emerald-500 hover:shadow-md transition-all group">
+                        <div>
+                            <span class="text-[9px] font-mono font-bold text-slate-400 block truncate" x-text="prod.sku"></span>
+                            <h4 class="text-xs font-black text-slate-900 group-hover:text-emerald-700 leading-snug line-clamp-2" x-text="prod.name"></h4>
+                        </div>
+                        <div class="pt-2 border-t border-slate-100 flex items-center justify-between w-full">
+                            <span class="text-xs font-black text-slate-900 font-mono" x-text="prod.formatted_price"></span>
+                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-mono" x-text="prod.stock + ' left'"></span>
+                        </div>
+                    </button>
+                </template>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: POS VOUCHER & CHECKOUT PANEL -->
+        <div class="space-y-6">
+            <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-6 sticky top-20">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                    <h2 class="text-lg font-black text-slate-900 flex items-center gap-2">
+                        <span>Counter Receipt</span>
+                        <span class="px-2 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-800" x-text="cartItems.length">0</span>
+                    </h2>
+                    <button x-show="cartItems.length > 0" @click="clearCart()" class="text-xs font-bold text-rose-600 hover:text-rose-700">Clear</button>
+                </div>
+
+                <!-- POS Cart Items List -->
+                <div class="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+                    <template x-if="cartItems.length === 0">
+                        <div class="py-8 text-center text-slate-400 space-y-2">
+                            <div class="text-3xl">💻</div>
+                            <p class="text-xs font-semibold">Scan SKU or click items to add to POS sale.</p>
+                        </div>
+                    </template>
+
+                    <template x-for="(item, index) in cartItems" :key="item.id">
+                        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-2">
+                            <div class="min-w-0 flex-1">
+                                <h4 class="text-xs font-bold text-slate-900 truncate" x-text="item.name"></h4>
+                                <div class="text-[11px] font-mono text-emerald-600 font-bold" x-text="'₹' + item.price.toFixed(2)"></div>
+                            </div>
+                            <div class="flex items-center space-x-1.5">
+                                <button @click="updateQty(index, -1)" class="w-5 h-5 rounded bg-white border border-slate-300 font-bold text-xs flex items-center justify-center">-</button>
+                                <span class="text-xs font-bold font-mono text-slate-900 w-4 text-center" x-text="item.quantity"></span>
+                                <button @click="updateQty(index, 1)" class="w-5 h-5 rounded bg-white border border-slate-300 font-bold text-xs flex items-center justify-center">+</button>
+                                <button @click="removeItem(index)" class="text-rose-500 font-bold text-xs pl-1">×</button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- POS Customer & Checkout Form -->
+                <div x-show="cartItems.length > 0" class="pt-4 border-t border-slate-100 space-y-4">
+                    <div class="space-y-2 text-xs">
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Customer Type</label>
+                            <select x-model="customerType" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-900">
+                                <option value="Walk-in">Walk-in Customer</option>
+                                <option value="Student">Student</option>
+                                <option value="Parent">Parent</option>
+                                <option value="Teacher">Teacher / Staff</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Customer Name / Reg #</label>
+                            <input type="text" x-model="customerName" placeholder="e.g. John Doe (Grade 9)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-900">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Payment Method</label>
+                            <select x-model="paymentMethod" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-900">
+                                <option value="CASH">Cash</option>
+                                <option value="UPI">UPI / QR Code</option>
+                                <option value="CARD">Debit / Credit Card</option>
+                            </select>
+                        </div>
+
+                        <div class="flex justify-between text-sm font-black text-slate-900 pt-3 border-t border-slate-200">
+                            <span>Total Payable</span>
+                            <span class="font-mono text-emerald-600 text-base" x-text="'₹' + cartTotalAmount.toFixed(2)"></span>
+                        </div>
+                    </div>
+
+                    <button @click="processPosCheckout()" :disabled="isSubmitting"
+                            class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center space-x-2 disabled:opacity-50">
+                        <span x-text="isSubmitting ? 'Processing Counter Sale...' : '⚡ Complete Sale & Generate Receipt'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- POS RECEIPT MODAL -->
+    <div x-show="completedReceipt" x-cloak class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-6 shadow-2xl animate-scale-up">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white font-black flex items-center justify-center text-sm">S</div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-sm leading-tight">StratLearn POS Counter Receipt</h3>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Official Counter Voucher</p>
+                    </div>
+                </div>
+                <button @click="completedReceipt = null" class="text-slate-400 hover:text-slate-600 text-xl font-bold">×</button>
+            </div>
+
+            <template x-if="completedReceipt">
+                <div class="space-y-4 text-xs">
+                    <div class="bg-slate-50 p-3 rounded-xl space-y-1 font-mono text-[11px]">
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Sale #:</span>
+                            <span class="font-bold text-slate-900" x-text="completedReceipt.sale_number"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Date:</span>
+                            <span class="text-slate-700" x-text="completedReceipt.created_at"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Customer:</span>
+                            <span class="font-bold text-slate-900" x-text="completedReceipt.customer_name"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Cashier:</span>
+                            <span class="text-slate-700" x-text="completedReceipt.cashier_name"></span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <p class="font-bold uppercase text-[10px] tracking-wider text-slate-400">Purchased Items</p>
+                        <div class="divide-y divide-slate-100">
+                            <template x-for="item in completedReceipt.items" :key="item.sku">
+                                <div class="py-2 flex justify-between">
+                                    <div>
+                                        <p class="font-bold text-slate-900" x-text="item.name"></p>
+                                        <p class="text-[10px] text-slate-400 font-mono" x-text="item.quantity + ' x ₹' + item.unit_price.toFixed(2)"></p>
+                                    </div>
+                                    <span class="font-mono font-bold text-slate-900" x-text="'₹' + item.line_total.toFixed(2)"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-200 flex justify-between items-center text-sm font-black text-slate-900">
+                        <span>Total Paid</span>
+                        <span class="font-mono text-emerald-600 text-base" x-text="'₹' + completedReceipt.total_amount.toFixed(2)"></span>
+                    </div>
+                </div>
+            </template>
+
+            <div class="pt-2 flex justify-end space-x-2">
+                <button @click="window.print()" class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-all">
+                    🖨️ Print Counter Voucher
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+function posTerminalApp(initialProducts) {
+    return {
+        products: initialProducts || [],
+        skuInput: '',
+        cartItems: [],
+        customerName: 'Walk-in Customer',
+        customerType: 'Walk-in',
+        paymentMethod: 'CASH',
+        isSubmitting: false,
+        completedReceipt: null,
+
+        get filteredProducts() {
+            if (!this.skuInput.trim()) return this.products;
+            const q = this.skuInput.toLowerCase().trim();
+            return this.products.filter(p =>
+                p.name.toLowerCase().includes(q) ||
+                p.sku.toLowerCase().includes(q)
+            );
+        },
+
+        get cartTotalQuantity() {
+            return this.cartItems.reduce((acc, item) => acc + item.quantity, 0);
+        },
+
+        get cartTotalAmount() {
+            return this.cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+        },
+
+        scanSKU() {
+            if (!this.skuInput.trim()) return;
+            const q = this.skuInput.toLowerCase().trim();
+            const match = this.products.find(p => p.sku.toLowerCase() === q || p.name.toLowerCase() === q);
+            if (match) {
+                this.addToPosCart(match);
+                this.skuInput = '';
+            } else {
+                alert('Product SKU not found.');
+            }
+        },
+
+        addToPosCart(product) {
+            const existing = this.cartItems.find(i => i.id === product.id);
+            if (existing) {
+                if (existing.quantity < product.stock) {
+                    existing.quantity++;
+                } else {
+                    alert('Stock limit reached for this item.');
+                }
+            } else {
+                this.cartItems.push({
+                    id: product.id,
+                    name: product.name,
+                    sku: product.sku,
+                    price: product.price,
+                    stock: product.stock,
+                    quantity: 1
+                });
+            }
+        },
+
+        updateQty(index, change) {
+            const item = this.cartItems[index];
+            if (!item) return;
+            const newQty = item.quantity + change;
+            if (newQty > item.stock) {
+                alert('Cannot exceed stock.');
+                return;
+            }
+            if (newQty <= 0) {
+                this.removeItem(index);
+            } else {
+                item.quantity = newQty;
+            }
+        },
+
+        removeItem(index) {
+            this.cartItems.splice(index, 1);
+        },
+
+        clearCart() {
+            this.cartItems = [];
+        },
+
+        async processPosCheckout() {
+            if (this.cartItems.length === 0) return;
+            this.isSubmitting = true;
+
+            const payload = {
+                items: this.cartItems.map(i => ({ product_id: i.id, quantity: i.quantity, sku: i.sku })),
+                customer_name: this.customerName,
+                customer_type: this.customerType,
+                payment_method: this.paymentMethod
+            };
+
+            try {
+                const res = await fetch("{{ url_for('store.pos_checkout') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok && data.status === 'success') {
+                    this.completedReceipt = data.receipt;
+                    this.clearCart();
+                    this.customerName = 'Walk-in Customer';
+                } else {
+                    alert(data.message || 'POS Checkout failed.');
+                }
+            } catch (err) {
+                alert('Network error during POS checkout.');
+            } finally {
+                this.isSubmitting = false;
+            }
+        }
+    };
+}
+</script>
+{% endblock %}
