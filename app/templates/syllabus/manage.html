@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Syllabus Chapters & Topics — StratLearn{% endblock %}
+{% block header_title %}Syllabus & Chapter Authoring Manager{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-6xl mx-auto animate-fade-in">
+
+    <!-- 1. HEADER -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 text-white shadow-xl border border-slate-800 flex items-center justify-between">
+        <div>
+            <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                ⚙️ SYLLABUS AUTHORING
+            </span>
+            <h1 class="text-2xl font-black tracking-tight mt-1">Manage Chapters & Topics</h1>
+        </div>
+        <a href="{{ url_for('syllabus.index') }}" class="px-4 py-2 rounded-xl bg-white/10 text-white font-bold text-xs hover:bg-white/20">
+            ← Directory
+        </a>
+    </div>
+
+    <!-- 2. FILTER SELECTION -->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+        <form method="GET" action="{{ url_for('syllabus.manage') }}" class="flex flex-wrap items-center gap-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Select Class</label>
+                <select name="class_id" onchange="this.form.submit()" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none">
+                    {% for c in classes %}
+                    <option value="{{ c.id }}" {% if selected_class_id == c.id %}selected{% endif %}>Class {{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Select Subject</label>
+                <select name="subject_id" onchange="this.form.submit()" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none">
+                    {% for s in subjects %}
+                    <option value="{{ s.id }}" {% if selected_subject_id == s.id %}selected{% endif %}>{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+    </div>
+
+    <!-- 3. ADD CHAPTER FORM -->
+    <form method="POST" action="{{ url_for('syllabus.manage') }}" class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+        <input type="hidden" name="action" value="create_chapter">
+        <input type="hidden" name="class_id" value="{{ selected_class_id }}">
+        <input type="hidden" name="subject_id" value="{{ selected_subject_id }}">
+
+        <h3 class="text-sm font-black text-slate-900">+ Add New Syllabus Chapter</h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Chapter Number</label>
+                <input type="number" name="chapter_number" value="{{ (chapters|length) + 1 }}" required
+                       class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none">
+            </div>
+
+            <div class="sm:col-span-2">
+                <label class="block text-xs font-bold text-slate-700 mb-1">Chapter Name / Title</label>
+                <input type="text" name="chapter_name" required placeholder="e.g. Chapter 1: Real Numbers & Polynomials"
+                       class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none">
+            </div>
+        </div>
+
+        <div class="flex justify-end">
+            <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md">
+                + Create Chapter
+            </button>
+        </div>
+    </form>
+
+    <!-- 4. CHAPTERS & TOPICS LIST -->
+    <div class="space-y-6">
+        {% for ch in chapters %}
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="text-base font-black text-slate-900">
+                    Chapter {{ ch.chapter_number }}: {{ ch.chapter_name }}
+                </h3>
+                <span class="text-xs font-mono font-bold text-slate-400">{{ ch.topics|length }} Topics</span>
+            </div>
+
+            <!-- Existing Topics List -->
+            <div class="space-y-2">
+                {% for t in ch.topics %}
+                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/60 text-xs font-semibold text-slate-800">
+                    <span>📌 {{ loop.index }}. {{ t.topic_name }}</span>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider
+                        {% if t.teaching_status == 'COMPLETED' %}bg-emerald-100 text-emerald-800{% elif t.teaching_status == 'IN_PROGRESS' %}bg-amber-100 text-amber-800{% else %}bg-slate-200 text-slate-600{% endif %}">
+                        {{ t.teaching_status.replace('_', ' ') }}
+                    </span>
+                </div>
+                {% else %}
+                <p class="text-xs text-slate-400 font-semibold italic">No topics added to this chapter yet.</p>
+                {% endfor %}
+            </div>
+
+            <!-- Add Topic Form inside Chapter -->
+            <form method="POST" action="{{ url_for('syllabus.manage') }}" class="pt-3 border-t border-slate-100 flex items-center gap-3">
+                <input type="hidden" name="action" value="create_topic">
+                <input type="hidden" name="chapter_id" value="{{ ch.id }}">
+
+                <input type="text" name="topic_name" required placeholder="Add new topic name (e.g. Fundamental Theorem of Arithmetic)..."
+                       class="flex-1 px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 focus:outline-none">
+
+                <button type="submit" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs">
+                    + Add Topic
+                </button>
+            </form>
+        </div>
+        {% else %}
+        <div class="bg-white p-12 rounded-2xl border border-slate-200 text-center text-slate-400 text-xs font-semibold">
+            No chapters created for this class and subject yet. Use the form above to add Chapter 1.
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

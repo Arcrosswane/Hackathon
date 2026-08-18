@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StratLearn — The Complete Operating System for Modern Schools</title>
+    <meta name="description" content="StratLearn connects Administrators, Teachers, Students, and Parents into one unified, intelligent school management ecosystem.">
+
+    <!-- Fonts & Tailwind CSS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-glow': 'pulseGlow 3s infinite ease-in-out',
+                        'shimmer': 'shimmer 2.5s infinite linear',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { opacity: '0.4', filter: 'blur(20px)' },
+                            '50%': { opacity: '0.8', filter: 'blur(35px)' },
+                        },
+                        shimmer: {
+                            '0%': { backgroundPosition: '-200% 0' },
+                            '100%': { backgroundPosition: '200% 0' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        @media (prefers-reduced-motion: reduce) {
+            *, ::before, ::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-indigo-500 selection:text-white overflow-x-hidden" x-data="landingApp()">
+
+    <!-- 1. PUBLIC STICKY NAVIGATION HEADER -->
+    <header class="fixed top-0 inset-x-0 z-50 bg-slate-950/80 backdrop-blur-md border-b border-slate-800/80 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            
+            <!-- Brand Logo -->
+            <a href="#" class="flex items-center space-x-3 group">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-emerald-400 p-0.5 shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-all">
+                    <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center font-black text-xl text-white">
+                        S
+                    </div>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-lg font-black tracking-tight text-white flex items-center gap-1.5">
+                        StratLearn <span class="text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">OS</span>
+                    </span>
+                    <span class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Unified School Platform</span>
+                </div>
+            </a>
+
+            <!-- Navigation Links (Desktop) -->
+            <nav class="hidden md:flex items-center space-x-8 text-xs font-bold text-slate-300">
+                <a href="#overview" class="hover:text-white transition-colors">Overview</a>
+                <a href="#transformation" class="hover:text-white transition-colors">Transformation</a>
+                <a href="#ecosystem" class="hover:text-white transition-colors">4-Role Ecosystem</a>
+                <a href="#capabilities" class="hover:text-white transition-colors">Capabilities</a>
+                <a href="#showcase" class="hover:text-white transition-colors">Live Showcase</a>
+                <a href="{{ url_for('certificates.verify') }}" class="text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1">
+                    <span>🔍 Verify Certificate</span>
+                </a>
+            </nav>
+
+            <!-- Action CTAs -->
+            <div class="flex items-center space-x-3">
+                <button @click="showDemoModal = true" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs transition-all flex items-center space-x-1.5">
+                    <span>⚡ Judge Quick Demo</span>
+                </button>
+                <a href="{{ url_for('auth.login') }}" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-extrabold text-xs shadow-lg shadow-indigo-600/30 transition-all transform hover:-translate-y-0.5">
+                    Sign In →
+                </a>
+            </div>
+
+        </div>
+    </header>
+
+    <main class="pt-20">
+
+        <!-- 2. HERO SECTION WITH WOW INTERACTIVE ARCHITECTURE VISUALIZER -->
+        <section id="overview" class="relative min-h-[90vh] flex items-center justify-center pt-12 pb-20 overflow-hidden">
+            <!-- Background Glow Orbs -->
+            <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-600/20 rounded-full animate-pulse-glow pointer-events-none"></div>
+            <div class="absolute top-1/3 right-10 w-[400px] h-[400px] bg-emerald-500/10 rounded-full animate-pulse-glow pointer-events-none"></div>
+
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-10">
+                
+                <!-- Badge -->
+                <div class="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-slate-900/90 border border-slate-800 shadow-xl backdrop-blur-md">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span class="text-xs font-extrabold text-slate-300 uppercase tracking-widest">NEXT-GEN SCHOOL OPERATING SYSTEM</span>
+                </div>
+
+                <!-- Main Headline -->
+                <div class="space-y-4 max-w-4xl mx-auto">
+                    <h1 class="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.1]">
+                        One Connected Platform for the <span class="bg-gradient-to-r from-indigo-400 via-purple-300 to-emerald-400 bg-clip-text text-transparent">Entire School Ecosystem.</span>
+                    </h1>
+                    <p class="text-base sm:text-lg text-slate-400 max-w-2xl mx-auto font-medium leading-relaxed">
+                        StratLearn unifies Administrators, Teachers, Students, and Parents into a single real-time operational engine — connecting academics, attendance, fees, payroll, exams, and commerce.
+                    </p>
+                </div>
+
+                <!-- Primary CTAs -->
+                <div class="flex flex-wrap items-center justify-center gap-4 pt-2">
+                    <a href="{{ url_for('auth.login') }}" class="px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-sm shadow-xl shadow-indigo-600/30 transition-all transform hover:-translate-y-1 flex items-center space-x-2">
+                        <span>🚀 Explore Live Platform</span>
+                    </a>
+                    <button @click="showDemoModal = true" class="px-8 py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-extrabold text-sm shadow-xl transition-all flex items-center space-x-2">
+                        <span>🔑 Instant Demo Accounts</span>
+                    </button>
+                </div>
+
+                <!-- HERO WOW VISUAL: INTERACTIVE 4-NODE ECOSYSTEM ENGINE -->
+                <div class="pt-10 max-w-5xl mx-auto">
+                    <div class="relative bg-slate-900/90 rounded-3xl border border-slate-800 p-6 sm:p-10 shadow-2xl backdrop-blur-xl space-y-8">
+                        
+                        <!-- Header Banner -->
+                        <div class="flex items-center justify-between pb-6 border-b border-slate-800 text-left">
+                            <div>
+                                <span class="text-[10px] font-black uppercase text-indigo-400 tracking-widest">LIVE ARCHITECTURE DEMO</span>
+                                <h3 class="text-lg font-black text-white">StratLearn Central Data Exchange</h3>
+                            </div>
+                            <div class="flex items-center space-x-2 text-xs font-mono font-bold text-emerald-400">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                <span>100% REALTIME SYNC</span>
+                            </div>
+                        </div>
+
+                        <!-- 4 Node Diagram Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative">
+
+                            <!-- Node 1: Admin -->
+                            <div class="p-5 rounded-2xl bg-slate-950/80 border border-indigo-500/30 space-y-3 text-left hover:border-indigo-500 transition-all group">
+                                <div class="w-10 h-10 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center font-black text-lg border border-indigo-500/30">
+                                    ⚙️
+                                </div>
+                                <h4 class="font-extrabold text-white text-sm">ADMINISTRATOR</h4>
+                                <p class="text-[11px] text-slate-400 font-medium">School setup, payroll, financial accounts, POS inventory & master controls.</p>
+                                <span class="inline-block px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-500/10 text-indigo-300">Command Center</span>
+                            </div>
+
+                            <!-- Node 2: Teacher -->
+                            <div class="p-5 rounded-2xl bg-slate-950/80 border border-purple-500/30 space-y-3 text-left hover:border-purple-500 transition-all group">
+                                <div class="w-10 h-10 rounded-xl bg-purple-600/20 text-purple-400 flex items-center justify-center font-black text-lg border border-purple-500/30">
+                                    👩‍🏫
+                                </div>
+                                <h4 class="font-extrabold text-white text-sm">TEACHER</h4>
+                                <p class="text-[11px] text-slate-400 font-medium">Attendance marking, homework, AI question generator & marks entry.</p>
+                                <span class="inline-block px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-500/10 text-purple-300">Classroom Hub</span>
+                            </div>
+
+                            <!-- Node 3: Student -->
+                            <div class="p-5 rounded-2xl bg-slate-950/80 border border-emerald-500/30 space-y-3 text-left hover:border-emerald-500 transition-all group">
+                                <div class="w-10 h-10 rounded-xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center font-black text-lg border border-emerald-500/30">
+                                    🎓
+                                </div>
+                                <h4 class="font-extrabold text-white text-sm">STUDENT</h4>
+                                <p class="text-[11px] text-slate-400 font-medium">Report cards, timetables, test banks, store orders & certificates.</p>
+                                <span class="inline-block px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-300">Learner Portal</span>
+                            </div>
+
+                            <!-- Node 4: Parent -->
+                            <div class="p-5 rounded-2xl bg-slate-950/80 border border-amber-500/30 space-y-3 text-left hover:border-amber-500 transition-all group">
+                                <div class="w-10 h-10 rounded-xl bg-amber-600/20 text-amber-400 flex items-center justify-center font-black text-lg border border-amber-500/30">
+                                    👨‍👩‍👧
+                                </div>
+                                <h4 class="font-extrabold text-white text-sm">PARENT</h4>
+                                <p class="text-[11px] text-slate-400 font-medium">Fee payments, attendance alerts, child progress & official receipts.</p>
+                                <span class="inline-block px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/10 text-amber-300">Guardian Hub</span>
+                            </div>
+
+                        </div>
+
+                        <!-- Live Metrics Row -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-slate-800 font-mono text-left">
+                            <div class="p-3 bg-slate-950/50 rounded-xl border border-slate-800">
+                                <span class="text-[10px] uppercase font-bold text-slate-500 block">Modules Built</span>
+                                <span class="text-lg font-black text-emerald-400">100% Unified</span>
+                            </div>
+                            <div class="p-3 bg-slate-950/50 rounded-xl border border-slate-800">
+                                <span class="text-[10px] uppercase font-bold text-slate-500 block">Data Isolation</span>
+                                <span class="text-lg font-black text-indigo-400">Multi-Tenant</span>
+                            </div>
+                            <div class="p-3 bg-slate-950/50 rounded-xl border border-slate-800">
+                                <span class="text-[10px] uppercase font-bold text-slate-500 block">Report Cards</span>
+                                <span class="text-lg font-black text-purple-400">Print Ready</span>
+                            </div>
+                            <div class="p-3 bg-slate-950/50 rounded-xl border border-slate-800">
+                                <span class="text-[10px] uppercase font-bold text-slate-500 block">Verification</span>
+                                <span class="text-lg font-black text-amber-400">Instant Public</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 3. PROBLEM VS. TRANSFORMATION SECTION -->
+        <section id="transformation" class="py-20 bg-slate-900/60 border-y border-slate-800/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+                
+                <div class="text-center space-y-3 max-w-3xl mx-auto">
+                    <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                        ⚡ THE STRATLEARN ADVANTAGE
+                    </span>
+                    <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">Transforming School Operations</h2>
+                    <p class="text-sm text-slate-400 font-medium">Replace scattered spreadsheets, lost physical receipts, and delayed communication with one synchronized digital platform.</p>
+                </div>
+
+                <!-- Before vs After Interactive Matrix -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    
+                    <!-- BEFORE CARD -->
+                    <div class="p-8 rounded-3xl bg-slate-950 border border-rose-500/30 space-y-6">
+                        <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                            <span class="px-3 py-1 rounded-full text-xs font-black uppercase bg-rose-500/20 text-rose-400">❌ TRADITIONAL SCHOOL WORKFLOW</span>
+                            <span class="text-xs text-slate-500 font-mono">Fragmented Systems</span>
+                        </div>
+                        <ul class="space-y-4 text-xs font-semibold text-slate-300">
+                            <li class="flex items-start space-x-3">
+                                <span class="text-rose-500 font-bold text-base">✕</span>
+                                <span>Attendance recorded in physical registers, requiring manual monthly tallying.</span>
+                            </li>
+                            <li class="flex items-start space-x-3">
+                                <span class="text-rose-500 font-bold text-base">✕</span>
+                                <span>Fee tracking managed across separate spreadsheets, causing overdue billing disputes.</span>
+                            </li>
+                            <li class="flex items-start space-x-3">
+                                <span class="text-rose-500 font-bold text-base">✕</span>
+                                <span>Report cards compiled manually by teachers, prone to formula errors.</span>
+                            </li>
+                            <li class="flex items-start space-x-3">
+                                <span class="text-rose-500 font-bold text-base">✕</span>
+                                <span>Certificates handwritten or individually typed without verification audit logs.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- AFTER CARD -->
+                    <div class="p-8 rounded-3xl bg-slate-950 border border-emerald-500/40 space-y-6 shadow-xl shadow-emerald-500/5">
+                        <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                            <span class="px-3 py-1 rounded-full text-xs font-black uppercase bg-emerald-500/20 text-emerald-400">✅ STRATLEARN UNIFIED ENGINE</span>
+                            <span class="text-xs text-slate-500 font-mono">100% Digital Integration</span>
+                        </div>
+                        <ul class="space-y-4 text-xs font-semibold text-slate-200">
+                            <li class="flex items-start space-x-3">
+                                <span class="text-emerald-400 font-bold text-base">✓</span>
+                                <span>Realtime class attendance matrices instantly accessible to Teachers & Parents.</span>
+                            </li>
+                            <li class="flex items-start space-x-3">
+                                <span class="text-emerald-400 font-bold text-base">✓</span>
+                                <span>Automated fee invoices with integrated simulated payment gateway & income accounting.</span>
+                            </li>
+                            <li class="flex items-start space-x-3">
+                                <span class="text-emerald-400 font-bold text-base">✓</span>
+                                <span>Printable official CBSE-compliant report cards generated automatically from exam marks.</span>
+                            </li>
+                            <li class="flex items-start space-x-3">
+                                <span class="text-emerald-400 font-bold text-base">✓</span>
+                                <span>Instant certificate issuance with unique numbers (`CERT-2026-XXXXXX`) and public verification.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 4. 4-ROLE ECOSYSTEM INTERACTIVE TAB SWITCHER -->
+        <section id="ecosystem" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+                
+                <div class="text-center space-y-3 max-w-3xl mx-auto">
+                    <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                        👥 TAILORED ROLE EXPERIENCES
+                    </span>
+                    <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">Designed for Every School Stakeholder</h2>
+                    <p class="text-sm text-slate-400 font-medium">Explore how StratLearn empowers Administrators, Teachers, Students, and Parents with role-specific tools.</p>
+                </div>
+
+                <!-- Role Selector Tabs -->
+                <div class="flex flex-wrap items-center justify-center gap-3">
+                    <button @click="activeRole = 'admin'" :class="activeRole === 'admin' ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/30' : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'" class="px-6 py-3 rounded-2xl border font-black text-xs transition-all">
+                        ⚙️ Administrator
+                    </button>
+                    <button @click="activeRole = 'teacher'" :class="activeRole === 'teacher' ? 'bg-purple-600 text-white border-purple-500 shadow-lg shadow-purple-600/30' : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'" class="px-6 py-3 rounded-2xl border font-black text-xs transition-all">
+                        👩‍🏫 Teacher
+                    </button>
+                    <button @click="activeRole = 'student'" :class="activeRole === 'student' ? 'bg-emerald-600 text-white border-emerald-500 shadow-lg shadow-emerald-600/30' : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'" class="px-6 py-3 rounded-2xl border font-black text-xs transition-all">
+                        🎓 Student
+                    </button>
+                    <button @click="activeRole = 'parent'" :class="activeRole === 'parent' ? 'bg-amber-600 text-white border-amber-500 shadow-lg shadow-amber-600/30' : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'" class="px-6 py-3 rounded-2xl border font-black text-xs transition-all">
+                        👨‍👩‍👧 Parent
+                    </button>
+                </div>
+
+                <!-- Role Content Preview -->
+                <div class="bg-slate-900/90 rounded-3xl border border-slate-800 p-8 shadow-2xl">
+                    
+                    <!-- Admin Role View -->
+                    <div x-show="activeRole === 'admin'" class="space-y-6 animate-fade-in">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                            <div>
+                                <h3 class="text-xl font-black text-white">Administrator Command Center</h3>
+                                <p class="text-xs text-slate-400 font-medium">Full institutional visibility, master rosters, finance, payroll, POS, and certificate issuance.</p>
+                            </div>
+                            <a href="{{ url_for('auth.login') }}" class="px-4 py-2 rounded-xl bg-indigo-600 text-white font-bold text-xs shadow-md">Launch Admin Portal →</a>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 font-semibold text-xs">
+                            <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                                <span class="font-extrabold text-indigo-400">💳 Finance & Accounts</span>
+                                <p class="text-slate-400 text-[11px]">Income & expense ledgers, fee structures, and collection audit tracking.</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                                <span class="font-extrabold text-indigo-400">💰 Staff Payroll</span>
+                                <p class="text-slate-400 text-[11px]">Salary disbursement records, gross pay calculations, and deductions.</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                                <span class="font-extrabold text-indigo-400">🛒 School Store & POS</span>
+                                <p class="text-slate-400 text-[11px]">Physical counter sales, product master inventory, and stock movement logs.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Teacher Role View -->
+                    <div x-show="activeRole === 'teacher'" class="space-y-6 animate-fade-in">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                            <div>
+                                <h3 class="text-xl font-black text-white">Teacher Classroom & Academic Hub</h3>
+                                <p class="text-xs text-slate-400 font-medium">Attendance marking, homework assignments, AI question generation, and exam marks entry.</p>
+                            </div>
+                            <a href="{{ url_for('auth.login') }}" class="px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs shadow-md">Launch Teacher Portal →</a>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 font-semibold text-xs">
+                            <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                                <span class="font-extrabold text-purple-400">📝 Mark Attendance</span>
+                                <p class="text-slate-400 text-[11px]">Fast class attendance marking with monthly matrix views.</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                                <span class="font-extrabold text-purple-400">🤖 AI Question Paper Generator</span>
+                                <p class="text-slate-400 text-[11px]">Auto-generate balanced test papers with marking schemes.</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                                <span class="font-extrabold text-purple-400">📊 Exam Marks Entry</span>
+                                <p class="text-slate-400 text-[11px]">Direct subject score entry feeding into automated report cards.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Student Role View -->
+                    <div x-show="activeRole === 'student'" class="space-y-6 animate-fade-in">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                            <div>
+                                <h3 class="text-xl font-black text-white">Student Academic & Learner Portal</h3>
+                                <p class="text-xs text-slate-400 font-medium">Class timetables, homework submissions, official report cards, and store ordering.</p>
+                            </div>
+                            <a href="{{ url_for('auth.login') }}" class="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow-md">Launch Student Portal →</a>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 font-semibold text-xs">
+                            <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                                <span class="font-extrabold text-emerald-400">📄 Official Report Cards</span>
+                                <p class="text-slate-400 text-[11px]">Printable CBSE-compliant academic performance report sheets.</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                                <span class="font-extrabold text-emerald-400">🛍️ School Store Catalog</span>
+                                <p class="text-slate-400 text-[11px]">Online uniform & textbook purchases with simulated payments.</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                                <span class="font-extrabold text-emerald-400">📜 Issued Certificates</span>
+                                <p class="text-slate-400 text-[11px]">Access to verified Transfer & Character certificates.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Parent Role View -->
+                    <div x-show="activeRole === 'parent'" class="space-y-6 animate-fade-in">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                            <div>
+                                <h3 class="text-xl font-black text-white">Parent & Guardian Dashboard</h3>
+                                <p class="text-xs text-slate-400 font-medium">Child attendance monitoring, online fee payments, report cards, and school communications.</p>
+                            </div>
+                            <a href="{{ url_for('auth.login') }}" class="px-4 py-2 rounded-xl bg-amber-600 text-white font-bold text-xs shadow-md">Launch Parent Portal →</a>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 font-semibold text-xs">
+                            <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                                <span class="font-extrabold text-amber-400">💳 Online Fee Checkout</span>
+                                <p class="text-slate-400 text-[11px]">Instant card/UPI payments with digital payment receipts.</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                                <span class="font-extrabold text-amber-400">📋 Attendance Tracking</span>
+                                <p class="text-slate-400 text-[11px]">Realtime view of child's monthly present/absent record.</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                                <span class="font-extrabold text-amber-400">💬 Teacher Messaging</span>
+                                <p class="text-slate-400 text-[11px]">Direct two-way message exchanges with class teachers.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 5. 8 CORE PLATFORM CAPABILITIES GRID -->
+        <section id="capabilities" class="py-20 bg-slate-900/60 border-y border-slate-800/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+                
+                <div class="text-center space-y-3 max-w-3xl mx-auto">
+                    <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        ⚡ CAPABILITIES AT A GLANCE
+                    </span>
+                    <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">Complete Feature Suite</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    
+                    <div class="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                        <div class="text-2xl">🎓</div>
+                        <h4 class="font-extrabold text-white text-sm">Academic & Exam Engine</h4>
+                        <p class="text-slate-400 text-xs leading-relaxed font-medium">Exam scheduling, subject marks entry, CBSE grade rules, and official printable report cards.</p>
+                    </div>
+
+                    <div class="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                        <div class="text-2xl">📋</div>
+                        <h4 class="font-extrabold text-white text-sm">Realtime Attendance</h4>
+                        <p class="text-slate-400 text-xs leading-relaxed font-medium">Class & section attendance marking, monthly matrices, and staff attendance tracking.</p>
+                    </div>
+
+                    <div class="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                        <div class="text-2xl">💳</div>
+                        <h4 class="font-extrabold text-white text-sm">Fees & Accounts</h4>
+                        <p class="text-slate-400 text-xs leading-relaxed font-medium">Automated fee invoice generation, simulated online payment gateway, and income ledgers.</p>
+                    </div>
+
+                    <div class="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                        <div class="text-2xl">💰</div>
+                        <h4 class="font-extrabold text-white text-sm">Staff Payroll & HR</h4>
+                        <p class="text-slate-400 text-xs leading-relaxed font-medium">Monthly salary structures, gross pay calculations, statutory deductions, and payroll logs.</p>
+                    </div>
+
+                    <div class="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                        <div class="text-2xl">⭐</div>
+                        <h4 class="font-extrabold text-white text-sm">Behaviour & Skills</h4>
+                        <p class="text-slate-400 text-xs leading-relaxed font-medium">Holistic student development tracking, skill ratings, and behavioural observations.</p>
+                    </div>
+
+                    <div class="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                        <div class="text-2xl">🤖</div>
+                        <h4 class="font-extrabold text-white text-sm">AI Question Generator</h4>
+                        <p class="text-slate-400 text-xs leading-relaxed font-medium">Question bank management and AI-assisted balanced examination paper creation.</p>
+                    </div>
+
+                    <div class="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                        <div class="text-2xl">🛒</div>
+                        <h4 class="font-extrabold text-white text-sm">School Store & POS</h4>
+                        <p class="text-slate-400 text-[11px] leading-relaxed font-medium">Online uniform/textbook catalog and physical store counter Point of Sale terminal.</p>
+                    </div>
+
+                    <div class="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                        <div class="text-2xl">📜</div>
+                        <h4 class="font-extrabold text-white text-sm">Certificates & Verification</h4>
+                        <p class="text-slate-400 text-[11px] leading-relaxed font-medium">Transfer & Character certificate generation with unique numbers (`CERT-2026-XXXXXX`) & public lookup.</p>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 6. FINAL CTA & FOOTER -->
+        <section class="py-20 text-center relative overflow-hidden">
+            <div class="max-w-4xl mx-auto px-4 space-y-6 relative z-10">
+                <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight">Ready to See StratLearn in Action?</h2>
+                <p class="text-slate-400 text-sm max-w-xl mx-auto font-medium">Sign in with one of our demo role accounts or launch the live platform immediately.</p>
+                
+                <div class="flex flex-wrap items-center justify-center gap-4 pt-4">
+                    <a href="{{ url_for('auth.login') }}" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-emerald-500 hover:from-indigo-500 hover:to-emerald-400 text-white font-black text-sm shadow-xl transition-all transform hover:-translate-y-1">
+                        🚀 Enter StratLearn Ecosystem
+                    </a>
+                    <button @click="showDemoModal = true" class="px-8 py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-extrabold text-sm shadow-xl transition-all">
+                        🔑 Open Demo Drawer
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-slate-800/80 bg-slate-950 py-8 text-center text-xs font-semibold text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center space-x-2">
+                <span class="font-black text-white">StratLearn OS</span>
+                <span>• Unified School Platform</span>
+            </div>
+            <p>© 2026 StratLearn Academy. All rights reserved. Hackathon Demonstration Edition.</p>
+        </div>
+    </footer>
+
+    <!-- 7. HACKATHON JUDGE QUICK-DEMO DRAWER / MODAL -->
+    <div x-show="showDemoModal" x-cloak class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl max-w-lg w-full overflow-hidden space-y-6 p-6 sm:p-8 animate-fade-in" @click.away="showDemoModal = false">
+            
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-lg">
+                        🔑
+                    </div>
+                    <div>
+                        <h3 class="text-base font-black text-white">Hackathon Judge Credentials</h3>
+                        <p class="text-[11px] font-bold text-slate-400">One-click role access for demonstration evaluation</p>
+                    </div>
+                </div>
+                <button @click="showDemoModal = false" class="text-slate-400 hover:text-white font-bold text-lg">✕</button>
+            </div>
+
+            <div class="space-y-3 text-xs font-mono">
+                
+                <!-- Admin Credentials -->
+                <div class="p-3.5 rounded-2xl bg-slate-950 border border-indigo-500/30 flex items-center justify-between">
+                    <div>
+                        <span class="font-bold text-indigo-400 font-sans block text-xs">⚙️ Administrator Account</span>
+                        <span class="text-slate-300">Username: <strong>admin</strong> | Password: <strong>admin</strong></span>
+                    </div>
+                    <a href="{{ url_for('auth.login') }}" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-sans font-bold text-[11px]">Login →</a>
+                </div>
+
+                <!-- Teacher Credentials -->
+                <div class="p-3.5 rounded-2xl bg-slate-950 border border-purple-500/30 flex items-center justify-between">
+                    <div>
+                        <span class="font-bold text-purple-400 font-sans block text-xs">👩‍🏫 Teacher Account</span>
+                        <span class="text-slate-300">Username: <strong>teacher</strong> | Password: <strong>teacher</strong></span>
+                    </div>
+                    <a href="{{ url_for('auth.login') }}" class="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-sans font-bold text-[11px]">Login →</a>
+                </div>
+
+                <!-- Student Credentials -->
+                <div class="p-3.5 rounded-2xl bg-slate-950 border border-emerald-500/30 flex items-center justify-between">
+                    <div>
+                        <span class="font-bold text-emerald-400 font-sans block text-xs">🎓 Student Account</span>
+                        <span class="text-slate-300">Username: <strong>stu_std002</strong> | Password: <strong>student</strong></span>
+                    </div>
+                    <a href="{{ url_for('auth.login') }}" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-sans font-bold text-[11px]">Login →</a>
+                </div>
+
+                <!-- Parent Credentials -->
+                <div class="p-3.5 rounded-2xl bg-slate-950 border border-amber-500/30 flex items-center justify-between">
+                    <div>
+                        <span class="font-bold text-amber-400 font-sans block text-xs">👨‍👩‍👧 Parent Account</span>
+                        <span class="text-slate-300">Username: <strong>par_par002</strong> | Password: <strong>Parent@123</strong></span>
+                    </div>
+                    <a href="{{ url_for('auth.login') }}" class="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-sans font-bold text-[11px]">Login →</a>
+                </div>
+
+            </div>
+
+            <div class="pt-2 text-center">
+                <button @click="showDemoModal = false" class="text-xs font-bold text-slate-500 hover:text-slate-300">Close Window</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function landingApp() {
+            return {
+                activeRole: 'admin',
+                showDemoModal: false
+            };
+        }
+    </script>
+</body>
+</html>

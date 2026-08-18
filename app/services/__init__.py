@@ -1,24 +1,14 @@
-from app.services.academic_service import get_active_academic_session, set_active_academic_session
-from app.services.admin_dashboard_service import get_admin_dashboard_summary
-from app.services.teacher_dashboard_service import get_teacher_dashboard_summary
-from app.services.student_dashboard_service import get_student_dashboard_summary
-from app.services.parent_dashboard_service import get_parent_dashboard_summary
-from app.services.messaging_service import (
-    get_user_display_name_and_role,
-    get_authorized_recipients,
-    get_or_create_direct_conversation,
-    send_message,
-    get_user_conversations,
-    get_conversation_messages,
-    get_total_unread_count
-)
-from app.services.notification_service import (
-    create_notification,
-    create_bulk_notifications,
-    get_user_notifications,
-    get_unread_notification_count,
-    mark_notification_as_read,
-    mark_all_notifications_as_read
+from app.services.core_services import (
+    get_active_academic_session, set_active_academic_session,
+    get_admin_dashboard_summary, get_teacher_dashboard_summary,
+    get_student_dashboard_summary, get_parent_dashboard_summary,
+    get_user_display_name_and_role, get_authorized_recipients,
+    get_or_create_direct_conversation, send_message,
+    get_user_conversations, get_conversation_messages,
+    get_total_unread_count, create_notification,
+    create_bulk_notifications, get_user_notifications,
+    get_unread_notification_count, mark_notification_as_read,
+    mark_all_notifications_as_read, get_setting, set_setting, get_all_settings
 )
 from app.services.store_service import (
     seed_default_categories,
@@ -31,12 +21,13 @@ from app.services.store_service import (
     process_pos_sale,
     update_order_status
 )
-from app.services.setting_service import get_setting, set_setting, get_all_settings
-from app.services.class_service import get_classes_for_session, create_class, create_section
-from app.services.subject_service import get_all_subjects, get_subjects_for_class, assign_subject_to_class
-from app.services.employee_service import get_all_employees, get_teachers, get_employee_by_id
-from app.services.student_service import get_all_students, get_current_enrollment, transfer_student
-from app.services.guardian_service import get_all_guardians, link_guardian_student, unlink_guardian_student
+from app.services.academic_services import (
+    get_classes_for_session, create_class, create_section,
+    get_all_subjects, get_subjects_for_class, assign_subject_to_class,
+    get_all_employees, get_teachers, get_employee_by_id,
+    get_all_students, get_current_enrollment, transfer_student,
+    get_all_guardians, link_guardian_student, unlink_guardian_student
+)
 from app.services.timetable_service import (
     DAYS_OF_WEEK, ENTRY_TYPES, TIMETABLE_STATUSES,
     get_all_periods_for_session, initialize_default_periods_for_session,

@@ -37,3 +37,29 @@ def role_required(*allowed_roles):
             return f(*args, **kwargs)
         return decorated_function
     return decorator
+
+
+def permission_required(permission_key):
+    """
+    SERVER-SIDE AUTHORIZATION: Decorator to restrict access based on granular permissions.
+    Example: @permission_required('students.create')
+    """
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if 'user_id' not in session:
+                flash('Please log in to access this page.', 'warning')
+                return redirect(url_for('auth.login'))
+
+            from app.models import User
+            from app.services.setting_service import has_permission
+
+            user_id = session.get('user_id')
+            current_user = User.query.get(user_id) if user_id else None
+
+            if not current_user or not has_permission(current_user, permission_key):
+                return render_template('errors/403.html'), 403
+
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator

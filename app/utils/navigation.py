@@ -85,6 +85,18 @@ ADMIN_NAV = [
     },
     {'label': 'Homework', 'endpoint': 'homework.manage', 'icon': 'document-text', 'subitems': []},
     {
+        'label': 'Syllabus & Notebooks', 'icon': 'book-open',
+        'subitems': [
+            {'label': 'Syllabus Workspace', 'endpoint': 'syllabus.index'},
+            {'label': 'Syllabus Monitoring (Admin)', 'endpoint': 'syllabus_monitoring.index'},
+            {'label': 'Monthly Syllabus Targets', 'endpoint': 'syllabus_monitoring.targets_list'},
+            {'label': 'Create Monthly Target', 'endpoint': 'syllabus_monitoring.create_target_page'},
+            {'label': 'Manage Chapters & Topics', 'endpoint': 'syllabus.manage'},
+            {'label': 'Student Notebook Matrix', 'endpoint': 'syllabus.notebook_index'},
+            {'label': 'Admin Progress Overview', 'endpoint': 'syllabus.admin_overview'}
+        ]
+    },
+    {
         'label': 'Behaviour & Skills', 'icon': 'sparkles',
         'subitems': [
             {'label': 'Behaviour Observations', 'endpoint': 'behaviour_skills.behaviour_index'},
@@ -96,11 +108,16 @@ ADMIN_NAV = [
         ]
     },
     {
-        'label': 'Messaging', 'icon': 'chat',
+        'label': 'Communication & Notices', 'icon': 'chat',
         'subitems': [
+            {'label': 'Notification Center', 'endpoint': 'notifications.center'},
+            {'label': 'School Notices', 'endpoint': 'notices.index'},
+            {'label': 'Publish School Notice', 'endpoint': 'notices.create'},
+            {'label': 'Formal Circulars Catalog', 'endpoint': 'circulars.index'},
+            {'label': 'Publish Formal Circular', 'endpoint': 'circulars.create'},
             {'label': 'Internal School Messages', 'endpoint': 'messaging.inbox'},
-            {'label': 'WhatsApp Gateway & Services', 'endpoint': 'admin.dashboard', 'is_future': True},
-            {'label': 'SMS Services & Broadcasts', 'endpoint': 'admin.dashboard', 'is_future': True}
+            {'label': 'SMS & WhatsApp Settings', 'endpoint': 'communication.settings'},
+            {'label': 'Communication Templates', 'endpoint': 'communication.templates'}
         ]
     },
     {
@@ -152,7 +169,21 @@ ADMIN_NAV = [
             {'label': 'Issue New Certificate', 'endpoint': 'certificates.create'},
             {'label': 'Verify Certificate', 'endpoint': 'certificates.verify'}
         ]
-    }
+    },
+    {
+        'label': 'Settings & Config', 'icon': 'cog',
+        'subitems': [
+            {'label': 'School Profile', 'endpoint': 'settings.school_profile'},
+            {'label': 'Academic Sessions', 'endpoint': 'settings.academic_sessions'},
+            {'label': 'Roles Overview', 'endpoint': 'settings.roles'},
+            {'label': 'Permissions Matrix', 'endpoint': 'settings.permissions_matrix'},
+            {'label': 'Communication & Providers', 'endpoint': 'settings.communication_settings'},
+            {'label': 'Attendance Rules', 'endpoint': 'settings.attendance_settings'},
+            {'label': 'Finance & Payroll Config', 'endpoint': 'settings.finance_settings'},
+            {'label': 'System & Audit Logs', 'endpoint': 'settings.system_settings'}
+        ]
+    },
+    {'label': 'AI School Insights', 'endpoint': 'ai_insights.index', 'icon': 'sparkles', 'subitems': []}
 ]
 
 TEACHER_NAV = [
@@ -167,6 +198,13 @@ TEACHER_NAV = [
         ]
     },
     {'label': 'Homework', 'endpoint': 'homework.manage', 'icon': 'document-text', 'subitems': []},
+    {
+        'label': 'Syllabus & Notebooks', 'icon': 'book-open',
+        'subitems': [
+            {'label': 'My Syllabus Tracker', 'endpoint': 'syllabus.index'},
+            {'label': 'Student Notebook Matrix', 'endpoint': 'syllabus.notebook_index'}
+        ]
+    },
     {'label': 'My Timetable', 'endpoint': 'teacher.my_timetable', 'icon': 'calendar', 'subitems': []},
     {
         'label': 'Behaviour & Skills', 'icon': 'sparkles',
@@ -178,11 +216,13 @@ TEACHER_NAV = [
         ]
     },
     {
-        'label': 'Messaging', 'icon': 'chat',
+        'label': 'Communication & Notices', 'icon': 'chat',
         'subitems': [
-            {'label': 'Class & Parent Messages', 'endpoint': 'messaging.inbox'},
-            {'label': 'WhatsApp Notifications', 'endpoint': 'teacher.dashboard', 'is_future': True},
-            {'label': 'SMS Alerts', 'endpoint': 'teacher.dashboard', 'is_future': True}
+            {'label': 'Notification Center', 'endpoint': 'notifications.center'},
+            {'label': 'School Notices', 'endpoint': 'notices.index'},
+            {'label': 'Publish School Notice', 'endpoint': 'notices.create'},
+            {'label': 'Formal Circulars Catalog', 'endpoint': 'circulars.index'},
+            {'label': 'Class & Parent Messages', 'endpoint': 'messaging.inbox'}
         ]
     },
     {
@@ -260,10 +300,12 @@ STUDENT_NAV = [
         ]
     },
     {
-        'label': 'Messaging', 'icon': 'chat',
+        'label': 'Communication & Notices', 'icon': 'chat',
         'subitems': [
-            {'label': 'Teacher Communication', 'endpoint': 'messaging.inbox'},
-            {'label': 'WhatsApp Notifications', 'endpoint': 'student.dashboard', 'is_future': True}
+            {'label': 'Notification Center', 'endpoint': 'notifications.center'},
+            {'label': 'School Notices', 'endpoint': 'notices.index'},
+            {'label': 'Official Circulars', 'endpoint': 'circulars.index'},
+            {'label': 'Teacher Communication', 'endpoint': 'messaging.inbox'}
         ]
     },
     {'label': 'Account Settings', 'endpoint': 'student.account', 'icon': 'cog', 'subitems': []}
@@ -302,8 +344,11 @@ PARENT_NAV = [
         ]
     },
     {
-        'label': 'Messaging', 'icon': 'chat',
+        'label': 'Communication & Notices', 'icon': 'chat',
         'subitems': [
+            {'label': 'Notification Center', 'endpoint': 'notifications.center'},
+            {'label': 'School Notices', 'endpoint': 'notices.index'},
+            {'label': 'Official Circulars', 'endpoint': 'circulars.index'},
             {'label': 'School Messaging', 'endpoint': 'messaging.inbox'}
         ]
     },

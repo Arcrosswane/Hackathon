@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Issue Formal Circular — StratLearn{% endblock %}
+{% block header_title %}Issue Formal Institutional Circular{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-3xl mx-auto animate-fade-in">
+
+    <!-- 1. HEADER -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 text-white shadow-xl border border-slate-800 flex items-center justify-between">
+        <div>
+            <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                📜 CIRCULAR ISSUANCE ENGINE
+            </span>
+            <h1 class="text-2xl font-black tracking-tight mt-1">Issue Formal Circular</h1>
+        </div>
+        <a href="{{ url_for('circulars.index') }}" class="px-4 py-2 rounded-xl bg-white/10 text-white font-bold text-xs hover:bg-white/20">
+            ← Catalog
+        </a>
+    </div>
+
+    <!-- 2. FORM SHEET -->
+    <form method="POST" action="{{ url_for('circulars.create') }}" class="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-6">
+        
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Circular Subject / Title <span class="text-rose-500">*</span></label>
+                <input type="text" name="title" required placeholder="e.g. Annual Examination Guidelines & Schedule 2026"
+                       class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Target Audience <span class="text-rose-500">*</span></label>
+                    <select name="target_audience" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        {% for aud in audiences %}
+                        <option value="{{ aud }}">{{ aud }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Target Class (Optional)</label>
+                    <select name="class_id" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <option value="">All Classes</option>
+                        {% for cls in classes %}
+                        <option value="{{ cls.id }}">Class {{ cls.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Formal Circular Order Text <span class="text-rose-500">*</span></label>
+                <textarea name="content" rows="8" required placeholder="Write official institutional instructions and guidelines..."
+                          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+            </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+            <a href="{{ url_for('circulars.index') }}" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">
+                Cancel
+            </a>
+            <button type="submit" class="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs shadow-md">
+                📜 Issue Circular & Dispatch Notifications
+            </button>
+        </div>
+
+    </form>
+
+</div>
+{% endblock %}

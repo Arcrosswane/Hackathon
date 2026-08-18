@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Roles Overview — StratLearn Admin Settings{% endblock %}
+{% block header_title %}System User Roles & Access Overview{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-6xl mx-auto animate-fade-in">
+
+    <!-- HERO HEADER -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 text-white shadow-xl border border-slate-800 flex items-center justify-between">
+        <div>
+            <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                🔐 ROLES & AUTHORIZATION
+            </span>
+            <h1 class="text-2xl font-black tracking-tight mt-1">Core User Roles Catalog</h1>
+        </div>
+        <a href="{{ url_for('settings.permissions_matrix') }}" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-md">
+            🛡️ Permission Matrix →
+        </a>
+    </div>
+
+    <!-- ROLES CARDS GRID -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- ADMIN ROLE -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xl space-y-4">
+            <div class="flex items-center justify-between">
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase bg-purple-100 text-purple-800">
+                    🏛️ ADMINISTRATOR
+                </span>
+                <span class="text-xs font-mono font-bold text-slate-500">{{ role_counts.get('ADMIN', 0) }} Active Users</span>
+            </div>
+            <h3 class="text-lg font-black text-slate-900">School Administrator</h3>
+            <p class="text-xs text-slate-500 font-medium">Full administrative access across all operational, financial, academic, and system configuration modules.</p>
+            <div class="pt-3 border-t border-slate-100">
+                <a href="{{ url_for('settings.permissions_matrix') }}" class="text-xs font-bold text-indigo-600 hover:text-indigo-800">
+                    View Granular Permissions →
+                </a>
+            </div>
+        </div>
+
+        <!-- TEACHER ROLE -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xl space-y-4">
+            <div class="flex items-center justify-between">
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase bg-sky-100 text-sky-800">
+                    👨‍🏫 TEACHER / FACULTY
+                </span>
+                <span class="text-xs font-mono font-bold text-slate-500">{{ role_counts.get('TEACHER', 0) }} Active Users</span>
+            </div>
+            <h3 class="text-lg font-black text-slate-900">Academic Faculty</h3>
+            <p class="text-xs text-slate-500 font-medium">Access to attendance recording, homework creation, exam marks entry, question bank, and personal syllabus tracker workspace.</p>
+            <div class="pt-3 border-t border-slate-100">
+                <a href="{{ url_for('settings.permissions_matrix') }}" class="text-xs font-bold text-indigo-600 hover:text-indigo-800">
+                    View Granular Permissions →
+                </a>
+            </div>
+        </div>
+
+        <!-- STUDENT ROLE -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xl space-y-4">
+            <div class="flex items-center justify-between">
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase bg-emerald-100 text-emerald-800">
+                    🎓 STUDENT
+                </span>
+                <span class="text-xs font-mono font-bold text-slate-500">{{ role_counts.get('STUDENT', 0) }} Active Users</span>
+            </div>
+            <h3 class="text-lg font-black text-slate-900">Enrolled Student</h3>
+            <p class="text-xs text-slate-500 font-medium">Student portal view for personal timetable, homework submissions, attendance calendar, exam report cards, and store ordering.</p>
+            <div class="pt-3 border-t border-slate-100">
+                <a href="{{ url_for('settings.permissions_matrix') }}" class="text-xs font-bold text-indigo-600 hover:text-indigo-800">
+                    View Granular Permissions →
+                </a>
+            </div>
+        </div>
+
+        <!-- PARENT ROLE -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xl space-y-4">
+            <div class="flex items-center justify-between">
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase bg-amber-100 text-amber-800">
+                    👨‍👩‍👧 PARENT / GUARDIAN
+                </span>
+                <span class="text-xs font-mono font-bold text-slate-500">{{ role_counts.get('PARENT', 0) }} Active Users</span>
+            </div>
+            <h3 class="text-lg font-black text-slate-900">Parent / Guardian</h3>
+            <p class="text-xs text-slate-500 font-medium">Parent portal access for child's academic progress, attendance history, fee invoice payments, and school circulars.</p>
+            <div class="pt-3 border-t border-slate-100">
+                <a href="{{ url_for('settings.permissions_matrix') }}" class="text-xs font-bold text-indigo-600 hover:text-indigo-800">
+                    View Granular Permissions →
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

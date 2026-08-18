@@ -12,7 +12,7 @@ from app.models.student_enrollment import StudentEnrollment
 from app.models.guardian import Guardian
 from app.models.guardian_student import GuardianStudent
 from app.models.user import User
-from app.models.attendance import Attendance
+from app.models.attendance import Attendance, AttendanceRecord
 from app.models.fee import Fee
 from app.models.salary import Salary
 from app.models.homework import Homework, HomeworkAttachment, HomeworkSubmission
@@ -20,7 +20,7 @@ from app.models.period import Period
 from app.models.timetable import Timetable
 from app.models.school import School
 from app.models.academic_session import AcademicSession
-from app.models.setting import Setting
+from app.models.setting import Setting, RolePermission, AuditLog
 from app.models.subject import Subject
 from app.models.subject_class import SubjectClass
 from app.models.behaviour_skills import BehaviourCategory, BehaviourRecord, SkillDefinition, SkillAssessment
@@ -45,10 +45,22 @@ from app.models.messaging import Conversation, ConversationParticipant, Message,
 from app.models.notification import Notification, NotificationPreference
 from app.models.store import StoreCategory, StoreProduct, InventoryMovement, StoreOrder, StoreOrderItem, POSSale, POSSaleItem
 from app.models.certificate import Certificate
+from app.models.notice import SchoolNotice
+from app.models.circular import SchoolCircular
+from app.models.communication import CommunicationProviderConfig, CommunicationTemplate
+from app.models.syllabus import SyllabusChapter, SyllabusTopic, NotebookCorrection, SyllabusTarget
 
 __all__ = [
     'db',
     'Certificate',
+    'SchoolNotice',
+    'SchoolCircular',
+    'CommunicationProviderConfig',
+    'CommunicationTemplate',
+    'SyllabusChapter',
+    'SyllabusTopic',
+    'NotebookCorrection',
+    'SyllabusTarget',
     'Institute',
     'SchoolClass',
     'Section',
@@ -59,6 +71,7 @@ __all__ = [
     'GuardianStudent',
     'User',
     'Attendance',
+    'AttendanceRecord',
     'Fee',
     'Salary',
     'Homework',

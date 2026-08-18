@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block title %}Class {{ school_class.name }} {{ subject.name }} — Notebook Correction Matrix{% endblock %}
+{% block header_title %}Student × Topic Notebook Correction Matrix{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto animate-fade-in" x-data="notebookMatrixApp()">
+
+    <!-- 1. CONTROLS BAR & CLASS CHIPS -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div class="flex items-center space-x-2">
+                <a href="{{ url_for('syllabus.notebook_index') }}" class="text-xs font-bold text-slate-500 hover:text-slate-700">← Directory</a>
+                <span class="text-slate-300">|</span>
+                <span class="text-xs font-black text-slate-900">Select Grade Tier & Class:</span>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                {% if (current_user.user_type or '').lower() in ('teacher', 'employee') %}
+                <button @click="showAddModal = true" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-1.5">
+                    <span>➕ Add Chapter / Topic</span>
+                </button>
+                {% endif %}
+                <a href="{{ url_for('syllabus.tracker', class_id=school_class.id, subject_id=subject.id) }}"
+                   class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md">
+                    📖 Syllabus Tracker →
+                </a>
+            </div>
+        </div>
+
+        {% if (current_user.user_type or '').lower() == 'admin' %}
+        <!-- ADMIN READ-ONLY NOTICE -->
+        <div class="bg-indigo-50 border border-indigo-200/80 p-3 rounded-xl flex items-center space-x-2 text-indigo-900 text-xs font-semibold">
+            <span class="text-base">ℹ️</span>
+            <span><strong>Admin Read-Only View:</strong> Notebook completion status can only be edited by assigned class teachers. Use the Admin Overview report for graphs, printable PDF, and Excel/CSV exports.</span>
+        </div>
+        {% endif %}
+
+        <!-- HORIZONTAL SCROLLABLE CLASS CHIPS (Class 1st to 12th) -->
+        <div class="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-thin">
+            {% for c in all_classes %}
+            <a href="{{ url_for('syllabus.notebook_matrix', class_id=c.id, subject_id=subject.id) }}"
+               class="px-3.5 py-1.5 rounded-full text-xs font-black shrink-0 transition-all border
+                      {% if school_class.id == c.id %}bg-slate-900 text-white border-slate-900 shadow-sm{% else %}bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100{% endif %}">
+                Class {{ c.name }}
+            </a>
+            {% endfor %}
+        </div>
+
+        <!-- DYNAMIC SUBJECT SELECTOR & CHAPTER FILTER -->
+        <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4 text-xs font-semibold">
+            <form method="GET" action="" class="flex flex-wrap items-center gap-3">
+                <div class="flex items-center space-x-2">
+                    <span class="text-slate-600 font-bold">Subject:</span>
+                    <select onchange="location = this.value" class="px-3.5 py-1.5 rounded-xl border border-slate-200 font-bold text-slate-900 focus:outline-none">
+                        {% for s in all_subjects %}
+                        <option value="{{ url_for('syllabus.notebook_matrix', class_id=school_class.id, subject_id=s.id) }}"
+                                {% if subject.id == s.id %}selected{% endif %}>
+                            {{ s.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+
+            <form method="GET" action="{{ url_for('syllabus.notebook_matrix', class_id=school_class.id, subject_id=subject.id) }}" class="flex items-center space-x-2">
+                <span class="text-slate-600 font-bold">Filter Chapter:</span>
+                <select name="chapter_id" onchange="this.form.submit()" class="px-3.5 py-1.5 rounded-xl border border-slate-200 font-bold text-slate-900 focus:outline-none">
+                    <option value="">All Chapters & Topics</option>
+                    {% for ch in chapters %}
+                    <option value="{{ ch.id }}" {% if selected_chapter_id == ch.id %}selected{% endif %}>
+                        Ch {{ ch.chapter_number }}: {{ ch.chapter_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. REAL-TIME PROGRESS & BREAKDOWN CARD -->
+    <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl space-y-5">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div class="space-y-1">
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    Class {{ school_class.name }} • {{ subject.name }}
+                </span>
+                <h1 class="text-2xl sm:text-3xl font-black tracking-tight mt-2">Notebook Correction Matrix</h1>
+                <p class="text-xs text-slate-300 font-medium">Click any cell to cycle status: 🕒 Pending → 🔵 Submitted → 🟢 Corrected.</p>
+            </div>
+
+            <!-- Breakdown Counters -->
+            <div class="grid grid-cols-4 gap-3 text-center shrink-0">
+                <div class="bg-white/10 px-3.5 py-2.5 rounded-2xl border border-white/20">
+                    <span class="text-[10px] text-slate-300 font-bold block uppercase">Corrected</span>
+                    <span class="text-xl font-black text-emerald-400 font-mono">🟢 {{ stats.corrected }}</span>
+                </div>
+                <div class="bg-white/10 px-3.5 py-2.5 rounded-2xl border border-white/20">
+                    <span class="text-[10px] text-slate-300 font-bold block uppercase">Submitted</span>
+                    <span class="text-xl font-black text-cyan-300 font-mono">🔵 {{ stats.submitted }}</span>
+                </div>
+                <div class="bg-white/10 px-3.5 py-2.5 rounded-2xl border border-white/20">
+                    <span class="text-[10px] text-slate-300 font-bold block uppercase">Pending</span>
+                    <span class="text-xl font-black text-amber-300 font-mono">🕒 {{ stats.pending }}</span>
+                </div>
+                <div class="bg-white/10 px-3.5 py-2.5 rounded-2xl border border-white/20">
+                    <span class="text-[10px] text-slate-300 font-bold block uppercase">% Complete</span>
+                    <span class="text-xl font-black text-indigo-300 font-mono">{{ stats.correction_rate }}%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visual Progress Bar -->
+        <div class="space-y-1">
+            <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
+                <div class="bg-gradient-to-r from-cyan-500 via-indigo-500 to-emerald-400 h-3 rounded-full transition-all duration-500"
+                     style="width: {{ stats.correction_rate }}%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. STUDENT X TOPIC MATRIX DATA GRID TABLE SHEET -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xl overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[900px]">
+                <thead>
+                    <tr class="border-b-2 border-slate-200 text-xs font-black uppercase tracking-wider text-slate-700 bg-slate-100/90">
+                        <th class="py-4 px-4 sticky left-0 bg-slate-100 z-10 border-r border-slate-200 min-w-[220px]">Enrolled Student</th>
+                        <th class="py-4 px-3 border-r border-slate-200 text-center w-24">Adm #</th>
+                        {% for t in topics %}
+                        <th class="py-4 px-3 text-center border-r border-slate-200 min-w-[140px] group relative" title="{{ t.topic_name }}">
+                            <div class="flex items-center justify-between space-x-1">
+                                <span class="text-[10px] text-indigo-600 font-mono block">Topic {{ loop.index }}</span>
+                                {% if (current_user.user_type or '').lower() in ('admin', 'teacher', 'employee') %}
+                                <form method="POST" action="{{ url_for('syllabus.delete_topic_route', topic_id=t.id) }}" onsubmit="return confirm('Delete this topic?')">
+                                    <button type="submit" class="text-rose-400 hover:text-rose-600 text-[10px] p-0.5" title="Delete Topic">❌</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                            <span class="truncate block max-w-[130px] mx-auto font-extrabold text-[11px] text-slate-900 mt-0.5">{{ t.topic_name }}</span>
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-800">
+                    {% for stu in students %}
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <!-- Sticky Left Student Column -->
+                        <td class="py-3 px-4 font-black text-slate-900 sticky left-0 bg-white border-r border-slate-200 shadow-2xs z-10">
+                            <div class="flex items-center space-x-2.5">
+                                <span class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-800 font-black text-xs flex items-center justify-center shrink-0 border border-indigo-200">
+                                    {{ stu.first_name[0] if stu.first_name else 'S' }}
+                                </span>
+                                <div class="truncate">
+                                    <span class="block text-xs font-extrabold text-slate-900 truncate">{{ stu.first_name }} {{ stu.last_name }}</span>
+                                    <span class="block text-[10px] font-mono text-slate-400 font-medium">Roll: {{ stu.roll_number or 'N/A' }}</span>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td class="py-3 px-3 border-r border-slate-200 text-center font-mono text-[11px] text-slate-500 font-bold">
+                            {{ stu.registration_number or stu.id }}
+                        </td>
+
+                        <!-- Interactive 3-State Toggle Matrix Cells -->
+                        {% for t in topics %}
+                        {% set curr_stat = corrections_map.get((stu.id, t.id), 'PENDING') %}
+                        <td class="py-3 px-2 text-center border-r border-slate-100" x-data="{ cellStatus: '{{ curr_stat }}' }">
+                            {% if (current_user.user_type or '').lower() in ('teacher', 'employee') %}
+                            <button @click="cycleStatus({{ stu.id }}, {{ t.id }}, cellStatus)"
+                                    :class="{
+                                        'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100': cellStatus === 'PENDING',
+                                        'bg-cyan-50 text-cyan-800 border-cyan-300 hover:bg-cyan-100': cellStatus === 'SUBMITTED',
+                                        'bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200': cellStatus === 'CORRECTED'
+                                    }"
+                                    class="w-full py-1.5 px-2 rounded-xl border text-[11px] font-black tracking-wider transition-all inline-flex items-center justify-center space-x-1 shadow-2xs">
+                                <span x-show="cellStatus === 'PENDING'">🕒 Pending</span>
+                                <span x-show="cellStatus === 'SUBMITTED'">🔵 Submitted</span>
+                                <span x-show="cellStatus === 'CORRECTED'">🟢 Corrected</span>
+                            </button>
+                            {% else %}
+                            <span class="w-full py-1.5 px-2 rounded-xl border text-[11px] font-black tracking-wider inline-flex items-center justify-center space-x-1
+                                {% if curr_stat == 'PENDING' %}bg-amber-50 text-amber-800 border-amber-300{% elif curr_stat == 'SUBMITTED' %}bg-cyan-50 text-cyan-800 border-cyan-300{% else %}bg-emerald-100 text-emerald-800 border-emerald-300{% endif %}">
+                                {% if curr_stat == 'PENDING' %}🕒 Pending{% elif curr_stat == 'SUBMITTED' %}🔵 Submitted{% else %}🟢 Corrected{% endif %}
+                            </span>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="{{ (topics|length) + 2 }}" class="py-12 text-center text-slate-400 text-xs font-semibold">
+                            No enrolled students found in Class {{ school_class.name }}.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 4. ADD CHAPTER / TOPIC MODAL -->
+    <div x-show="showAddModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full p-6 sm:p-8 space-y-6 animate-scale-up" @click.away="showAddModal = false">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xl">➕</span>
+                    <h3 class="text-base font-black text-slate-900">Add Custom Chapter & Topic</h3>
+                </div>
+                <button @click="showAddModal = false" class="text-slate-400 hover:text-slate-600 font-black text-sm">✕</button>
+            </div>
+
+            <form method="POST" action="{{ url_for('syllabus.quick_add_topic') }}" class="space-y-4 text-xs font-semibold">
+                <input type="hidden" name="class_id" value="{{ school_class.id }}">
+                <input type="hidden" name="subject_id" value="{{ subject.id }}">
+
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">Unit / Chapter Name <span class="text-rose-500">*</span></label>
+                    <input type="text" name="unit_name" required placeholder="e.g. Unit 4: Vector Algebra"
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">Topic Title <span class="text-rose-500">*</span></label>
+                    <input type="text" name="topic_title" required placeholder="e.g. Dot Product of Vectors"
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                    <button type="button" @click="showAddModal = false" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black shadow-md">
+                        + Append to Matrix
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+<script>
+function notebookMatrixApp() {
+    return {
+        showAddModal: false,
+        cycleStatus(studentId, topicId, currentStatus) {
+            let nextStatus = 'PENDING';
+            if (currentStatus === 'PENDING') nextStatus = 'SUBMITTED';
+            else if (currentStatus === 'SUBMITTED') nextStatus = 'CORRECTED';
+            else if (currentStatus === 'CORRECTED') nextStatus = 'PENDING';
+
+            fetch('/notebook-tracker/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    student_id: studentId,
+                    topic_id: topicId,
+                    status: nextStatus
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Failed to update notebook status.');
+                }
+            });
+        }
+    }
+}
+</script>
+{% endblock %}

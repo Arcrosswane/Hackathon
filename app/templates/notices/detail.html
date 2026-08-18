@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}{{ notice.title }} — School Notice{% endblock %}
+{% block header_title %}Official School Notice View{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-4xl mx-auto animate-fade-in">
+
+    <!-- 1. CONTROLS BAR -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <a href="{{ url_for('notices.index') }}" class="text-xs font-bold text-slate-500 hover:text-slate-700">← Back to Notices</a>
+        
+        {% if (current_user.user_type or '').lower() == 'admin' and notice.status == 'Published' %}
+        <form method="POST" action="{{ url_for('notices.archive', notice_id=notice.id) }}" onsubmit="return confirm('Archive this notice?')">
+            <button type="submit" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">
+                Archive Notice
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    <!-- 2. NOTICE CARD CANVAS -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 p-8 sm:p-12 shadow-xl space-y-6">
+        
+        <div class="space-y-3 border-b border-slate-100 pb-6">
+            <div class="flex items-center space-x-3">
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider
+                    {% if notice.priority == 'Urgent' %}bg-rose-100 text-rose-800 border border-rose-200{% elif notice.priority == 'Important' %}bg-amber-100 text-amber-800 border border-amber-200{% else %}bg-indigo-50 text-indigo-700 border border-indigo-100{% endif %}">
+                    {{ notice.priority }} Priority
+                </span>
+                <span class="text-xs font-mono font-bold text-slate-400">Target: {{ notice.target_audience }}</span>
+            </div>
+
+            <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-snug">{{ notice.title }}</h1>
+            
+            <div class="flex items-center justify-between text-xs text-slate-500 font-medium pt-2">
+                <span>Published on: <strong class="text-slate-800 font-mono">{{ notice.publish_date.strftime('%B %d, %Y') if notice.publish_date else 'N/A' }}</strong></span>
+                <span>Author: <strong class="text-slate-800">{{ notice.published_by.username if notice.published_by else 'School Admin' }}</strong></span>
+            </div>
+        </div>
+
+        <div class="text-sm leading-relaxed text-slate-800 font-medium whitespace-pre-line py-4">
+            {{ notice.content }}
+        </div>
+
+        <div class="pt-6 border-t border-slate-100 text-[11px] text-slate-400 font-semibold flex items-center justify-between">
+            <span>Official StratLearn Institutional Bulletin</span>
+            <span>Status: {{ notice.status }}</span>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

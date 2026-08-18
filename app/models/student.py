@@ -6,6 +6,7 @@ class Student(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     institute_id = db.Column(db.Integer, db.ForeignKey('institutes.id'), nullable=True)
+    school_id = db.synonym('institute_id')
     class_id = db.Column(db.Integer, db.ForeignKey('classes.id'), nullable=True) # Legacy direct reference
     registration_number = db.Column(db.String(50), unique=True, nullable=False) # Admission Number (e.g. "ADM001", "STU-2026-001")
     
@@ -51,9 +52,27 @@ class Student(db.Model):
 
     # Property Aliases
     @property
+    def school(self):
+        from app.models.school import School
+        return School.query.get(self.institute_id) if self.institute_id else School.query.first()
+
+    @property
     def roll_number(self):
         en = self.get_current_enrollment()
         return en.roll_number if en and en.roll_number else self.registration_number
+
+    @property
+    def school_class_id(self):
+        en = self.get_current_enrollment()
+        return en.school_class_id if en else self.class_id
+
+    @property
+    def school_class(self):
+        en = self.get_current_enrollment()
+        if en and en.school_class:
+            return en.school_class
+        from app.models.school_class import SchoolClass
+        return SchoolClass.query.get(self.class_id) if self.class_id else None
 
     @property
     def section_id(self):
@@ -120,6 +139,26 @@ class Student(db.Model):
         """Construct full_name from first_name, middle_name, and last_name."""
         parts = [p for p in [self.first_name, self.middle_name, self.last_name] if p and str(p).strip() != 'None']
         self.full_name = " ".join(parts) if parts else f"Student #{self.registration_number}"
+
+    @property
+    def dob(self):
+        return self.date_of_birth
+
+    @dob.setter
+    def dob(self, val):
+        self.date_of_birth = val
+
+    @property
+    def father_name(self):
+        if self.guardian_relation and str(self.guardian_relation).lower() == 'father':
+            return self.guardian_name or ''
+        return self.guardian_name or ''
+
+    @property
+    def mother_name(self):
+        if self.guardian_relation and str(self.guardian_relation).lower() == 'mother':
+            return self.guardian_name or ''
+        return ''
 
     def get_current_enrollment(self):
         """Returns the student's currently active enrollment record."""

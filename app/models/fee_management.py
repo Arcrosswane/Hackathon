@@ -115,6 +115,10 @@ class FeeInvoice(db.Model):
         pd = float(self.paid_amount or 0.0)
         return max(round(tot - pd, 2), 0.0)
 
+    @property
+    def total_amount(self):
+        return self.total_payable
+
     def __repr__(self):
         return f'<FeeInvoice #{self.invoice_number} Student #{self.student_id}: ₹{self.total_payable} [{self.status}]>'
 
@@ -154,6 +158,10 @@ class Payment(db.Model):
 
     # Relationships
     student = db.relationship('Student', lazy=True)
+
+    @property
+    def amount_paid(self):
+        return self.amount
     received_by = db.relationship('Employee', lazy=True)
     receipt = db.relationship('Receipt', backref='payment', uselist=False, lazy=True)
 

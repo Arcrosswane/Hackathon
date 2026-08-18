@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Create Monthly Syllabus Target — StratLearn Admin{% endblock %}
+{% block header_title %}Create Monthly Expected Syllabus Target{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-3xl mx-auto animate-fade-in">
+
+    <!-- 1. HEADER -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 text-white shadow-xl border border-slate-800 flex items-center justify-between">
+        <div>
+            <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                ➕ NEW TARGET AUTHORING
+            </span>
+            <h1 class="text-2xl font-black tracking-tight mt-1">Define Monthly Expected Target</h1>
+        </div>
+        <a href="{{ url_for('syllabus_monitoring.index') }}" class="px-4 py-2 rounded-xl bg-white/10 text-white font-bold text-xs hover:bg-white/20">
+            ← Cancel
+        </a>
+    </div>
+
+    <!-- 2. FULL PAGE FORM SHEET -->
+    <form method="POST" action="{{ url_for('syllabus_monitoring.create_target_page') }}" class="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xl space-y-6 text-xs font-semibold">
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-slate-700 font-bold mb-1">Target Month <span class="text-rose-500">*</span></label>
+                <select name="month" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    {% for m_num, m_name in [(1,'January'), (2,'February'), (3,'March'), (4,'April'), (5,'May'), (6,'June'), (7,'July'), (8,'August'), (9,'September'), (10,'October'), (11,'November'), (12,'December')] %}
+                    <option value="{{ m_num }}" {% if current_month == m_num %}selected{% endif %}>{{ m_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-slate-700 font-bold mb-1">Target Year <span class="text-rose-500">*</span></label>
+                <input type="number" name="year" value="{{ current_year }}" required
+                       class="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-slate-700 font-bold mb-1">Select Class <span class="text-rose-500">*</span></label>
+                <select name="class_id" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    {% for c in classes %}
+                    <option value="{{ c.id }}">Class {{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-slate-700 font-bold mb-1">Select Subject <span class="text-rose-500">*</span></label>
+                <select name="subject_id" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    {% for s in subjects %}
+                    <option value="{{ s.id }}">{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-slate-700 font-bold mb-1">Assigned Teacher <span class="text-rose-500">*</span></label>
+            <select name="teacher_id" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                {% for t in teachers %}
+                <option value="{{ t.id }}">{{ t.first_name }} {{ t.last_name }} ({{ t.employee_code or 'Emp' }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+            <div>
+                <label class="block text-slate-700 font-bold mb-1">Expected Completed Topics <span class="text-rose-500">*</span></label>
+                <input type="number" name="target_topic_count" value="10" required min="1"
+                       class="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <span class="text-[11px] text-slate-400 font-medium">Expected number of topics marked COMPLETED by month end.</span>
+            </div>
+
+            <div>
+                <label class="block text-slate-700 font-bold mb-1">Tolerance Margin (± Topics)</label>
+                <input type="number" name="tolerance_margin" value="1" min="0" max="5"
+                       class="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <span class="text-[11px] text-slate-400 font-medium">Acceptable margin before flagging as BEHIND or AHEAD.</span>
+            </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+            <a href="{{ url_for('syllabus_monitoring.index') }}" class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold">
+                Cancel
+            </a>
+            <button type="submit" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black shadow-md">
+                + Save Monthly Target
+            </button>
+        </div>
+
+    </form>
+
+</div>
+{% endblock %}

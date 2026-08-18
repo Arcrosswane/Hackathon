@@ -76,7 +76,8 @@ def verify_certificate(cert_number):
         return {'is_valid': False, 'message': 'Certificate number not found in official school records.'}
 
     student_initials = f"{cert.student.first_name[0]}. {cert.student.last_name}" if cert.student else "Student"
-    school_name = cert.student.school.name if (cert.student and cert.student.school) else "StratLearn Partner School"
+    sch = School.query.get(cert.school_id) if cert.school_id else School.query.first()
+    school_name = sch.name if sch else "StratLearn Academy"
 
     return {
         'is_valid': cert.status == 'Issued',

@@ -84,7 +84,7 @@ def create():
             flash(str(e), 'danger')
             return redirect(url_for('certificates.create'))
 
-    students = Student.query.filter_by(school_id=sch_id).all()
+    students = Student.query.filter((Student.institute_id == sch_id) | (Student.institute_id.is_(None))).all() if sch_id else Student.query.all()
     cert_types = [
         "Transfer Certificate",
         "Character Certificate",

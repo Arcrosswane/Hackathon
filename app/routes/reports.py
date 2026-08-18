@@ -94,7 +94,7 @@ def academic_report_card():
             student_id = link.student_id if link else None
 
     if not student_id:
-        stu = Student.query.filter_by(school_id=sch_id).first()
+        stu = Student.query.first()
         student_id = stu.id if stu else None
 
     if not student_id:
@@ -107,7 +107,7 @@ def academic_report_card():
         school_id=sch_id
     )
 
-    all_students = Student.query.filter_by(school_id=sch_id).all() if user_role in ('admin', 'teacher', 'employee') else []
+    all_students = Student.query.all() if user_role in ('admin', 'teacher', 'employee') else []
     all_exams = Examination.query.filter_by(institute_id=sch_id).all()
 
     return render_template(
@@ -221,7 +221,9 @@ def students():
     class_id = request.args.get('class_id', type=int)
 
     classes = SchoolClass.query.all()
-    query = Student.query.filter_by(school_id=sch_id)
+    query = Student.query
+    if sch_id:
+        query = query.filter((Student.institute_id == sch_id) | (Student.institute_id.is_(None)))
     if class_id:
         query = query.filter_by(class_id=class_id)
 

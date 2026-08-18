@@ -378,4 +378,12 @@ def get_admin_dashboard_summary(school_id=None, session_id=None):
     except Exception as e:
         summary['level4_activity'] = []
 
+    # Calculate Syllabus Completion Checker Summary for Admin Dashboard
+    try:
+        from app.services.syllabus_checker_service import get_school_syllabus_monitoring
+        syll_data = get_school_syllabus_monitoring(school_id=school_id, month=today.month, year=today.year, session_id=sess_id)
+        summary['syllabus_overview'] = syll_data['summary']
+    except Exception as e:
+        summary['syllabus_overview'] = {'behind': 0, 'on_track': 0, 'ahead': 0, 'overall_progress_pct': 0.0, 'total_monitored': 0}
+
     return summary

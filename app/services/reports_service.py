@@ -89,14 +89,14 @@ def get_academic_report_card(student_id, examination_id=None, academic_session_i
     return {
         'student': {
             'id': student.id,
-            'admission_number': student.admission_number or f"STU-{student.id}",
-            'name': f"{student.first_name} {student.last_name}",
-            'class_name': student.school_class.name if student.school_class else 'N/A',
-            'section_name': student.section.name if student.section else '',
-            'roll_number': student.roll_number or 'N/A',
-            'father_name': student.father_name or '',
-            'mother_name': student.mother_name or '',
-            'dob': student.dob.strftime('%b %d, %Y') if student.dob else 'N/A'
+            'admission_number': getattr(student, 'admission_number', None) or getattr(student, 'registration_number', f"STU-{student.id}"),
+            'name': getattr(student, 'display_name', None) or f"{student.first_name} {student.last_name}",
+            'class_name': student.school_class.display_name if (getattr(student, 'school_class', None) and hasattr(student.school_class, 'display_name')) else (student.school_class.name if getattr(student, 'school_class', None) else 'N/A'),
+            'section_name': student.section.display_name if (getattr(student, 'section', None) and hasattr(student.section, 'display_name')) else (student.section.name if getattr(student, 'section', None) else ''),
+            'roll_number': getattr(student, 'roll_number', None) or 'N/A',
+            'father_name': getattr(student, 'father_name', '') or getattr(student, 'guardian_name', '') or '',
+            'mother_name': getattr(student, 'mother_name', '') or '',
+            'dob': (getattr(student, 'dob', None) or getattr(student, 'date_of_birth', None)).strftime('%b %d, %Y') if (getattr(student, 'dob', None) or getattr(student, 'date_of_birth', None)) else 'N/A'
         },
         'exam': {
             'id': exam.id if exam else None,
@@ -119,7 +119,7 @@ def get_class_result_summary(class_id=None, section_id=None, examination_id=None
     """
     query = Student.query
     if school_id:
-        query = query.filter_by(school_id=school_id)
+        query = query.filter((Student.institute_id == school_id) | (Student.institute_id.is_(None)))
     if class_id:
         query = query.filter_by(class_id=class_id)
     if section_id:
@@ -176,7 +176,7 @@ def get_attendance_summary_report(school_id=None, class_id=None, section_id=None
     """
     query = Student.query
     if school_id:
-        query = query.filter_by(school_id=school_id)
+        query = query.filter((Student.institute_id == school_id) | (Student.institute_id.is_(None)))
     if class_id:
         query = query.filter_by(class_id=class_id)
     if section_id:

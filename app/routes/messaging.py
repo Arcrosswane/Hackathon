@@ -61,6 +61,7 @@ def list_conversations():
 
 
 @messaging_bp.route('/conversations', methods=['POST'])
+@messaging_bp.route('/api/conversations/direct', methods=['POST'])
 @login_required
 def create_conversation():
     """JSON API endpoint creating or fetching a 1-to-1 conversation with recipient_id."""
@@ -70,7 +71,7 @@ def create_conversation():
         return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
 
     data = request.get_json() or {}
-    recipient_id = data.get('recipient_id')
+    recipient_id = data.get('recipient_id') or data.get('recipient_user_id')
     if not recipient_id:
         return jsonify({'status': 'error', 'message': 'Recipient ID is required.'}), 400
 
@@ -90,6 +91,7 @@ def create_conversation():
 
 
 @messaging_bp.route('/conversations/<int:conversation_id>', methods=['GET'])
+@messaging_bp.route('/api/conversations/<int:conversation_id>/messages', methods=['GET'])
 @login_required
 def get_messages(conversation_id):
     """JSON API endpoint fetching message history for a conversation."""
@@ -114,6 +116,7 @@ def get_messages(conversation_id):
 
 
 @messaging_bp.route('/conversations/<int:conversation_id>/send', methods=['POST'])
+@messaging_bp.route('/api/conversations/<int:conversation_id>/send', methods=['POST'])
 @login_required
 def post_message(conversation_id):
     """JSON API endpoint posting a message to a conversation."""

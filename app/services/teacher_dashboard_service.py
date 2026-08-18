@@ -290,4 +290,20 @@ def get_teacher_dashboard_summary(user_id=None, teacher_id=None, session_id=None
     except Exception as e:
         summary['payroll_overview'] = {'latest_payroll': None, 'status': 'N/A', 'error': str(e)}
 
+    # ==========================================
+    # 9. PERSONAL SYLLABUS TARGET & PROGRESS
+    # ==========================================
+    try:
+        from app.services.syllabus_checker_service import get_teacher_detail_monitoring
+        detail_data = get_teacher_detail_monitoring(
+            school_id=teacher.school_id or 1,
+            teacher_id=teacher.id,
+            month=today.month,
+            year=today.year,
+            session_id=sess_id
+        )
+        summary['syllabus_overview'] = detail_data['targets_detail']
+    except Exception as e:
+        summary['syllabus_overview'] = []
+
     return summary

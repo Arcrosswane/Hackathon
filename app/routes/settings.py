@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session
 from werkzeug.utils import secure_filename
 
 from app.models import db, School, AcademicSession
@@ -191,6 +191,11 @@ def academic_settings():
             else:
                 set_setting('passing_percentage', str(passing_pct))
                 set_setting('grading_system', grading_system)
+                
+                from app.services.setting_service import log_audit_event
+                user_id = session.get('user_id')
+                log_audit_event(school_id=1, user_id=user_id, action="Updated Academic Settings", module="SETTINGS", details=f"Passing: {passing_pct}%, Grading: {grading_system}")
+                
                 flash('Academic settings updated successfully!', 'success')
                 return redirect(url_for('settings.academic_settings'))
         except ValueError:
@@ -198,3 +203,137 @@ def academic_settings():
 
     current_settings = get_all_settings()
     return render_template('settings/academic_settings.html', settings=current_settings, active_tab='academic')
+
+
+@settings_bp.route('/roles')
+@login_required
+@role_required('admin')
+def roles():
+    """Renders Core Roles List & User Access Overview Page."""
+    from app.models import User
+    role_counts = {
+        'ADMIN': User.query.filter((User.user_type == 'admin') | (User.user_type == 'ADMIN')).count(),
+        'TEACHER': User.query.filter((User.user_type == 'teacher') | (User.user_type == 'TEACHER') | (User.user_type == 'employee')).count(),
+        'STUDENT': User.query.filter((User.user_type == 'student') | (User.user_type == 'STUDENT')).count(),
+        'PARENT': User.query.filter((User.user_type == 'parent') | (User.user_type == 'PARENT')).count()
+    }
+    return render_template('settings/roles.html', role_counts=role_counts, active_tab='roles')
+
+
+@settings_bp.route('/permissions', methods=['GET', 'POST'])
+@login_required
+@role_required('admin')
+def permissions_matrix():
+    """Renders Granular Role-Permission Matrix Page."""
+    from app.services.setting_service import get_role_permissions_matrix, update_role_permission, ALL_PERMISSIONS, log_audit_event
+    user_id = session.get('user_id')
+
+    if request.method == 'POST':
+        form_data = request.form
+        for role in ['ADMIN', 'TEACHER', 'STUDENT', 'PARENT']:
+            for p_key in ALL_PERMISSIONS:
+                form_field = f"perm_{role}_{p_key}"
+                is_granted = form_field in form_data
+                update_role_permission(role, p_key, is_granted)
+
+        log_audit_event(school_id=1, user_id=user_id, action="Updated Granular Role Permissions Matrix", module="PERMISSIONS")
+        flash('Role permissions matrix updated successfully!', 'success')
+        return redirect(url_for('settings.permissions_matrix'))
+
+    matrix = get_role_permissions_matrix()
+    return render_template('settings/permissions.html', matrix=matrix, all_permissions=ALL_PERMISSIONS, active_tab='permissions')
+
+
+@settings_bp.route('/communication', methods=['GET', 'POST'])
+@login_required
+@role_required('admin')
+def communication_settings():
+    """Renders Communication & SMS/WhatsApp Provider Credentials Configuration."""
+    from app.services.setting_service import log_audit_event
+    user_id = session.get('user_id')
+
+    if request.method == 'POST':
+        set_setting('sms_provider', request.form.get('sms_provider', 'Disabled').strip())
+        set_setting('sms_api_key', request.form.get('sms_api_key', '').strip())
+        set_setting('sms_sender_id', request.form.get('sms_sender_id', '').strip())
+
+        set_setting('whatsapp_provider', request.form.get('whatsapp_provider', 'Disabled').strip())
+        set_setting('whatsapp_api_token', request.form.get('whatsapp_api_token', '').strip())
+        set_setting('whatsapp_phone_number_id', request.form.get('whatsapp_phone_number_id', '').strip())
+
+        log_audit_event(school_id=1, user_id=user_id, action="Updated Communication Provider Settings", module="COMMUNICATION")
+        flash('Communication Provider configuration updated successfully!', 'success')
+        return redirect(url_for('settings.communication_settings'))
+
+    current_settings = get_all_settings()
+    sms_configured = bool(current_settings.get('sms_provider') not in ('Disabled', '') and current_settings.get('sms_api_key'))
+    wa_configured = bool(current_settings.get('whatsapp_provider') not in ('Disabled', '') and current_settings.get('whatsapp_api_token'))
+
+    return render_template('settings/communication.html', settings=current_settings, sms_configured=sms_configured, wa_configured=wa_configured, active_tab='communication')
+
+
+@settings_bp.route('/attendance', methods=['GET', 'POST'])
+@login_required
+@role_required('admin')
+def attendance_settings():
+    """Renders Attendance Rules & Working Days Settings Page."""
+    from app.services.setting_service import log_audit_event
+    user_id = session.get('user_id')
+
+    if request.method == 'POST':
+        set_setting('attendance_late_threshold', request.form.get('late_threshold', '15').strip())
+        set_setting('working_days_per_month', request.form.get('working_days', '24').strip())
+        set_setting('auto_absent_notification', request.form.get('auto_absent_notification', 'enabled').strip())
+
+        log_audit_event(school_id=1, user_id=user_id, action="Updated Attendance Rules & Thresholds", module="ATTENDANCE")
+        flash('Attendance settings updated successfully!', 'success')
+        return redirect(url_for('settings.attendance_settings'))
+
+    current_settings = get_all_settings()
+    return render_template('settings/attendance_settings.html', settings=current_settings, active_tab='attendance')
+
+
+@settings_bp.route('/finance', methods=['GET', 'POST'])
+@login_required
+@role_required('admin')
+def finance_settings():
+    """Renders Fee & Payroll Finance Preferences Page."""
+    from app.services.setting_service import log_audit_event
+    user_id = session.get('user_id')
+
+    if request.method == 'POST':
+        set_setting('currency', request.form.get('currency', 'INR (₹)').strip())
+        set_setting('fee_invoice_prefix', request.form.get('fee_invoice_prefix', 'INV-').strip())
+        set_setting('fee_due_days', request.form.get('fee_due_days', '10').strip())
+        set_setting('payroll_cycle', request.form.get('payroll_cycle', 'Monthly').strip())
+
+        log_audit_event(school_id=1, user_id=user_id, action="Updated Finance & Payroll Preferences", module="FINANCE")
+        flash('Finance settings updated successfully!', 'success')
+        return redirect(url_for('settings.finance_settings'))
+
+    current_settings = get_all_settings()
+    return render_template('settings/finance_settings.html', settings=current_settings, active_tab='finance')
+
+
+@settings_bp.route('/system', methods=['GET', 'POST'])
+@login_required
+@role_required('admin')
+def system_settings():
+    """Renders System Preferences & Administrative Audit Logs Page."""
+    from app.services.setting_service import log_audit_event, get_audit_logs
+    user_id = session.get('user_id')
+
+    if request.method == 'POST':
+        set_setting('timezone', request.form.get('timezone', 'Asia/Kolkata').strip())
+        set_setting('date_format', request.form.get('date_format', 'YYYY-MM-DD').strip())
+        set_setting('time_format', request.form.get('time_format', '12-hour').strip())
+        set_setting('pagination_size', request.form.get('pagination_size', '25').strip())
+
+        log_audit_event(school_id=1, user_id=user_id, action="Updated System Preferences", module="SYSTEM")
+        flash('System preferences updated successfully!', 'success')
+        return redirect(url_for('settings.system_settings'))
+
+    current_settings = get_all_settings()
+    audit_logs = get_audit_logs(school_id=1, limit=50)
+
+    return render_template('settings/system.html', settings=current_settings, audit_logs=audit_logs, active_tab='system')

@@ -125,6 +125,14 @@ class ExaminationResult(db.Model):
     entered_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     approved_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     
+    @property
+    def is_passed(self):
+        return self.is_pass
+
+    @is_passed.setter
+    def is_passed(self, val):
+        self.is_pass = val
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

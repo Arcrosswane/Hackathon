@@ -40,6 +40,12 @@ def create_app(config_class=Config):
     from app.routes.store import store_bp
     from app.routes.reports import reports_bp
     from app.routes.certificates import certificates_bp
+    from app.routes.notices import notices_bp
+    from app.routes.circulars import circulars_bp
+    from app.routes.communication import communication_bp
+    from app.routes.syllabus import syllabus_bp
+    from app.routes.syllabus_monitoring import syllabus_monitoring_bp
+    from app.routes.ai_insights import ai_insights_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
@@ -67,6 +73,12 @@ def create_app(config_class=Config):
     app.register_blueprint(store_bp)
     app.register_blueprint(reports_bp)
     app.register_blueprint(certificates_bp)
+    app.register_blueprint(notices_bp)
+    app.register_blueprint(circulars_bp)
+    app.register_blueprint(communication_bp)
+    app.register_blueprint(syllabus_bp)
+    app.register_blueprint(syllabus_monitoring_bp)
+    app.register_blueprint(ai_insights_bp)
 
     # Register Python built-in helpers into Jinja template environment
     app.jinja_env.globals['int'] = int
@@ -373,7 +385,7 @@ def create_app(config_class=Config):
                 return redirect(url_for('student.dashboard'))
             elif role in ('parent', 'guardian'):
                 return redirect(url_for('parent.dashboard'))
-        return redirect(url_for('auth.login'))
+        return render_template('landing.html')
 
     # Error Handlers
     @app.errorhandler(403)

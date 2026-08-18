@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}AI School Insights & Admin Copilot — StratLearn{% endblock %}
+{% block header_title %}AI School Insights & Administrative Intelligence Copilot{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto animate-fade-in" x-data="aiCopilot()">
+
+    <!-- 1. HERO BANNER -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-indigo-950 to-purple-950 rounded-3xl p-6 sm:p-8 text-white shadow-2xl border border-indigo-900/50 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div class="space-y-2 max-w-3xl">
+            <div class="flex items-center space-x-2">
+                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-500/30 text-indigo-300 border border-indigo-400/40 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span>REAL-TIME ERP DATA GROUNDED</span>
+                </span>
+                <span class="text-xs text-slate-400 font-mono">{{ context.period_month_year }}</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-3">
+                <span>AI School Insights & Admin Copilot</span>
+                <span class="inline-block animate-bounce text-xl">✨</span>
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
+                Analyzes live operational metrics across Attendance, Syllabus Completion Checker targets, Exams, Fee Collections, and Staff Roster to deliver explainable, grounded administrative intelligence.
+            </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3 shrink-0">
+            <button @click="askQuestion('Summarize my school')" :disabled="loading"
+                    class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-lg transition-all flex items-center space-x-2 disabled:opacity-50">
+                <span>🚀 Refresh School Summary</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. QUICK PROMPT PRESETS BAR -->
+    <div class="bg-white dark:bg-[#1E1F22] p-4 rounded-2xl border border-slate-200 dark:border-white/10 shadow-lg space-y-3">
+        <div class="flex items-center justify-between">
+            <span class="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Quick Intelligence Prompts</span>
+            <span class="text-[11px] font-mono text-slate-400">Click any preset to analyze</span>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <button type="button" @click="userQuery = 'Summarize my school'; askQuestion('Summarize my school')" :disabled="loading" class="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-black/40 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 font-bold text-xs transition-colors border border-slate-200 dark:border-white/10 cursor-pointer">
+                📊 Summarize My School
+            </button>
+            <button type="button" @click="userQuery = 'Which teachers are behind on syllabus?'; askQuestion('Which teachers are behind on syllabus?')" :disabled="loading" class="px-3.5 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 font-bold text-xs transition-colors border border-rose-200 dark:border-rose-500/20 cursor-pointer">
+                🔴 Who is Behind on Syllabus?
+            </button>
+            <button type="button" @click="userQuery = 'How is attendance this month?'; askQuestion('How is attendance this month?')" :disabled="loading" class="px-3.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold text-xs transition-colors border border-amber-200 dark:border-amber-500/20 cursor-pointer">
+                📋 Attendance Concerns
+            </button>
+            <button type="button" @click="userQuery = 'Fee collection summary'; askQuestion('Fee collection summary')" :disabled="loading" class="px-3.5 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold text-xs transition-colors border border-emerald-200 dark:border-emerald-500/20 cursor-pointer">
+                💰 Fee Collection Summary
+            </button>
+            <button type="button" @click="userQuery = 'What are the major academic concerns?'; askQuestion('What are the major academic concerns?')" :disabled="loading" class="px-3.5 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 font-bold text-xs transition-colors border border-purple-200 dark:border-purple-500/20 cursor-pointer">
+                🎓 Academic Performance Overview
+            </button>
+        </div>
+
+        <!-- NATURAL LANGUAGE QUESTION INPUT -->
+        <form @submit.prevent="askQuestion(userQuery)" class="relative pt-2">
+            <input type="text" x-model="userQuery" placeholder="Ask Admin Copilot any school operational question (e.g., 'Which teachers need syllabus intervention?')..."
+                   class="w-full pl-4 pr-28 py-3 rounded-xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 text-xs font-bold text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 focus:outline-none shadow-inner">
+            <button type="submit" :disabled="loading || !userQuery.trim()"
+                    class="absolute right-2 top-4 px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs shadow-md transition-all disabled:opacity-50 cursor-pointer">
+                <span x-show="!loading">Ask Copilot →</span>
+                <span x-show="loading" class="flex items-center gap-1.5">
+                    <svg class="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span>Analyzing...</span>
+                </span>
+            </button>
+        </form>
+    </div>
+
+    <!-- 3. AI RESULTS SECTION -->
+    <div class="space-y-6">
+        
+        <!-- EXECUTIVE OVERVIEW CARD -->
+        <div class="bg-[#1E1F22] p-6 sm:p-8 rounded-3xl border border-white/10 shadow-xl space-y-4">
+            <div class="flex items-center justify-between border-b border-white/5 pb-3">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xl">🏛️</span>
+                    <h2 class="text-base font-black text-slate-100">Executive School Summary</h2>
+                </div>
+                <template x-if="currentInsights.is_fallback">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-slate-800 text-slate-300 border border-slate-700">
+                        Rule-Based ERP Engine
+                    </span>
+                </template>
+                <template x-if="!currentInsights.is_fallback">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                        Gemini AI Grounded Response
+                    </span>
+                </template>
+            </div>
+
+            <p class="text-sm font-bold text-slate-200 leading-relaxed font-sans" x-text="currentInsights.summary"></p>
+        </div>
+
+        <!-- WARNINGS & EARLY ALERTS (IF ANY) -->
+        <template x-if="currentInsights.warnings && currentInsights.warnings.length > 0">
+            <div class="space-y-3">
+                <h3 class="text-xs font-black uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
+                    <span>🚨 Important Administrative Alerts & Warnings</span>
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <template x-for="(w, idx) in currentInsights.warnings" :key="idx">
+                        <div class="p-5 rounded-2xl border border-rose-500/30 bg-rose-500/10 space-y-3">
+                            <h4 class="text-sm font-black text-rose-200" x-text="w.title"></h4>
+                            <p class="text-xs font-semibold text-rose-300" x-text="w.description"></p>
+                            
+                            <div class="flex items-center justify-between pt-2 border-t border-rose-500/20">
+                                <span class="text-[10px] font-mono font-bold text-rose-400" x-text="'Basis: ' + w.data_basis"></span>
+                                <template x-if="w.action_url">
+                                    <a :href="w.action_url" class="px-3 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-[11px]">
+                                        <span x-text="w.action_label || 'View in ERP →'"></span>
+                                    </a>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <!-- KEY INSIGHTS GRID -->
+        <div class="space-y-3">
+            <h3 class="text-xs font-black uppercase tracking-wider text-slate-400">Key Operational Insights</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <template x-for="(insight, idx) in currentInsights.key_insights" :key="idx">
+                    <div class="bg-[#1E1F22] p-5 rounded-2xl border border-white/10 shadow-md space-y-3 flex flex-col justify-between">
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-black/40 text-slate-300 border border-white/5" x-text="insight.category"></span>
+                            </div>
+                            <h4 class="text-xs font-black text-slate-100" x-text="insight.title"></h4>
+                            <p class="text-xs font-medium text-slate-400" x-text="insight.description"></p>
+                        </div>
+                        <div class="pt-2 border-t border-white/5 text-[10px] font-mono text-slate-400 font-bold" x-text="insight.data_basis"></div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- POSITIVE TRENDS & ACTIONABLE RECOMMENDATIONS ROW -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- POSITIVE TRENDS -->
+            <div class="bg-[#1E1F22] p-6 rounded-3xl border border-white/10 shadow-xl space-y-4">
+                <h3 class="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                    <span>🟢 Positive Trends & Strengths</span>
+                </h3>
+
+                <div class="space-y-3">
+                    <template x-for="(trend, idx) in currentInsights.positive_trends" :key="idx">
+                        <div class="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 space-y-1">
+                            <h4 class="text-xs font-black text-emerald-200" x-text="trend.title"></h4>
+                            <p class="text-xs text-emerald-300 font-medium" x-text="trend.description"></p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- ACTIONABLE RECOMMENDATIONS -->
+            <div class="bg-[#1E1F22] p-6 rounded-3xl border border-white/10 shadow-xl space-y-4">
+                <h3 class="text-xs font-black uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
+                    <span>💡 Actionable Recommendations</span>
+                </h3>
+
+                <div class="space-y-3">
+                    <template x-for="(rec, idx) in currentInsights.recommendations" :key="idx">
+                        <div class="p-4 rounded-2xl border border-indigo-500/20 bg-indigo-500/10 space-y-3 flex flex-col justify-between">
+                            <div class="space-y-1">
+                                <h4 class="text-xs font-black text-indigo-200" x-text="rec.action_title"></h4>
+                                <p class="text-xs text-indigo-300 font-medium" x-text="rec.reasoning"></p>
+                            </div>
+                            <template x-if="rec.action_url">
+                                <div>
+                                    <a :href="rec.action_url" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs inline-block shadow-md">
+                                        <span x-text="rec.action_label || 'Go to Page →'"></span>
+                                    </a>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+function aiCopilot() {
+    return {
+        userQuery: '',
+        loading: false,
+        currentInsights: {{ insights | tojson | safe }},
+        askQuestion(qText) {
+            if (!qText || this.loading) return;
+            this.loading = true;
+            this.userQuery = qText;
+
+            fetch('/admin/ai-insights/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question: qText })
+            })
+            .then(r => r.json())
+            .then(data => {
+                this.loading = false;
+                if (data.status === 'success') {
+                    this.currentInsights = data;
+                }
+            })
+            .catch(err => {
+                this.loading = false;
+            });
+        }
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Monthly Syllabus Targets Directory — StratLearn Admin{% endblock %}
+{% block header_title %}Monthly Syllabus Target Directory{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-6xl mx-auto animate-fade-in">
+
+    <!-- 1. HEADER -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 text-white shadow-xl border border-slate-800 flex items-center justify-between">
+        <div>
+            <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                📋 TARGET MANAGEMENT
+            </span>
+            <h1 class="text-2xl font-black tracking-tight mt-1">Monthly Syllabus Targets Catalog</h1>
+        </div>
+        <div class="flex items-center space-x-3">
+            <a href="{{ url_for('syllabus_monitoring.create_target_page') }}" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-md">
+                ➕ Create Target
+            </a>
+            <a href="{{ url_for('syllabus_monitoring.index') }}" class="px-4 py-2 rounded-xl bg-white/10 text-white font-bold text-xs hover:bg-white/20">
+                ← Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- 2. TARGETS TABLE SHEET -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xl space-y-4">
+        <div class="flex items-center justify-between">
+            <h2 class="text-base font-extrabold text-slate-900">Active & Historical Monthly Targets</h2>
+            <span class="text-xs font-mono font-bold text-slate-400">Total Targets: {{ targets|length }}</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b-2 border-slate-200 text-[11px] font-black uppercase tracking-wider text-slate-700 bg-slate-100/90">
+                        <th class="py-3.5 px-4">Period</th>
+                        <th class="py-3.5 px-4">Class</th>
+                        <th class="py-3.5 px-4">Subject</th>
+                        <th class="py-3.5 px-4">Assigned Teacher</th>
+                        <th class="py-3.5 px-3 text-center">Target Topics</th>
+                        <th class="py-3.5 px-3 text-center">Tolerance</th>
+                        <th class="py-3.5 px-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-800">
+                    {% for t in targets %}
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="py-3.5 px-4 font-black text-indigo-700">{{ t.month_name }}</td>
+                        <td class="py-3.5 px-4 font-bold text-slate-900">Class {{ t.school_class.name }}</td>
+                        <td class="py-3.5 px-4 font-extrabold text-slate-800">{{ t.subject.name }}</td>
+                        <td class="py-3.5 px-4 font-bold text-slate-700">
+                            {{ t.teacher.first_name }} {{ t.teacher.last_name }}
+                        </td>
+                        <td class="py-3.5 px-3 text-center font-mono font-black text-indigo-600">{{ t.target_topic_count }} topics</td>
+                        <td class="py-3.5 px-3 text-center font-mono font-bold text-slate-500">±{{ t.tolerance_margin }} topic</td>
+                        <td class="py-3.5 px-4 text-right space-x-2">
+                            <a href="{{ url_for('syllabus_monitoring.edit_target_page', target_id=t.id) }}" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] inline-block">
+                                ✏️ Edit
+                            </a>
+                            <form method="POST" action="{{ url_for('syllabus_monitoring.delete_target_submit', target_id=t.id) }}" class="inline" onsubmit="return confirm('Delete this target?')">
+                                <button type="submit" class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px]">
+                                    🗑️ Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="py-12 text-center text-slate-400 text-xs font-semibold">
+                            No monthly syllabus targets created yet. Click "+ Create Target" above to define expected progress targets.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

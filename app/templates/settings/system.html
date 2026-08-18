@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}System Preferences & Audit Logs — StratLearn Admin{% endblock %}
+{% block header_title %}System Preferences & Administrative Audit Logs{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-6xl mx-auto animate-fade-in">
+
+    <!-- HERO HEADER -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-2xl p-6 text-white shadow-xl border border-slate-800 flex items-center justify-between">
+        <div>
+            <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                ⚙️ SYSTEM CONFIG & AUDIT LOGS
+            </span>
+            <h1 class="text-2xl font-black tracking-tight mt-1">System Preferences & Audit History</h1>
+        </div>
+    </div>
+
+    <!-- 1. SYSTEM PREFERENCES FORM SHEET -->
+    <form method="POST" action="{{ url_for('settings.system_settings') }}" class="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xl space-y-6 text-xs font-semibold">
+        
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-sm font-black text-slate-900">System Preferences</h3>
+            <span class="text-[11px] text-slate-400 font-bold">Global System Settings</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-slate-700 font-bold mb-1">Timezone</label>
+                <select name="timezone" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <option value="Asia/Kolkata" {% if settings.get('timezone') == 'Asia/Kolkata' %}selected{% endif %}>Asia/Kolkata (IST +5:30)</option>
+                    <option value="UTC" {% if settings.get('timezone') == 'UTC' %}selected{% endif %}>Coordinated Universal Time (UTC)</option>
+                    <option value="America/New_York" {% if settings.get('timezone') == 'America/New_York' %}selected{% endif %}>America/New_York (EST)</option>
+                    <option value="Europe/London" {% if settings.get('timezone') == 'Europe/London' %}selected{% endif %}>Europe/London (GMT)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-slate-700 font-bold mb-1">Date Format</label>
+                <select name="date_format" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <option value="YYYY-MM-DD" {% if settings.get('date_format') == 'YYYY-MM-DD' %}selected{% endif %}>YYYY-MM-DD (2026-08-17)</option>
+                    <option value="DD/MM/YYYY" {% if settings.get('date_format') == 'DD/MM/YYYY' %}selected{% endif %}>DD/MM/YYYY (17/08/2026)</option>
+                    <option value="MM/DD/YYYY" {% if settings.get('date_format') == 'MM/DD/YYYY' %}selected{% endif %}>MM/DD/YYYY (08/17/2026)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-slate-700 font-bold mb-1">Time Format</label>
+                <select name="time_format" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <option value="12-hour" {% if settings.get('time_format') == '12-hour' %}selected{% endif %}>12-hour (09:30 PM)</option>
+                    <option value="24-hour" {% if settings.get('time_format') == '24-hour' %}selected{% endif %}>24-hour (21:30)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-slate-700 font-bold mb-1">Default Pagination Rows</label>
+                <select name="pagination_size" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <option value="15" {% if settings.get('pagination_size') == '15' %}selected{% endif %}>15 rows per page</option>
+                    <option value="25" {% if settings.get('pagination_size') == '25' %}selected{% endif %}>25 rows per page</option>
+                    <option value="50" {% if settings.get('pagination_size') == '50' %}selected{% endif %}>50 rows per page</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-100 flex items-center justify-end">
+            <button type="submit" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black shadow-md">
+                💾 Save System Preferences
+            </button>
+        </div>
+
+    </form>
+
+    <!-- 2. ADMINISTRATIVE AUDIT LOGS TABLE -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 p-8 shadow-xl space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+                <h3 class="text-base font-black text-slate-900">Administrative Audit Log Trail</h3>
+                <p class="text-xs text-slate-500 font-medium">Tracks who changed what settings and when for administrative security auditing.</p>
+            </div>
+            <span class="text-xs font-mono font-bold text-slate-400">Total Audit Logs: {{ audit_logs|length }}</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b-2 border-slate-200 text-[11px] font-black uppercase tracking-wider text-slate-700 bg-slate-100/90">
+                        <th class="py-3.5 px-4">Timestamp</th>
+                        <th class="py-3.5 px-4">Module</th>
+                        <th class="py-3.5 px-4">Action</th>
+                        <th class="py-3.5 px-4">Performed By</th>
+                        <th class="py-3.5 px-4">Details</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-800">
+                    {% for log in audit_logs %}
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="py-3.5 px-4 font-mono font-bold text-slate-500">
+                            {{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                        </td>
+                        <td class="py-3.5 px-4 font-extrabold text-indigo-700">
+                            <span class="px-2 py-0.5 rounded bg-indigo-50 border border-indigo-200 text-[10px] uppercase">
+                                {{ log.module }}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4 font-black text-slate-900">{{ log.action }}</td>
+                        <td class="py-3.5 px-4 font-bold text-slate-700">
+                            {{ log.user.username if log.user else 'Administrator' }}
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-500 font-mono text-[11px]">
+                            {{ log.details or '—' }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="py-12 text-center text-slate-400 text-xs font-semibold">
+                            No administrative audit log entries recorded yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -63,8 +63,27 @@ def index():
     try:
         active_session = get_active_academic_session()
         if not active_session:
-            flash("No active academic session found. Please activate an academic session first.", "warning")
-            return redirect(url_for('admin.dashboard'))
+            active_session = AcademicSession.query.order_by(AcademicSession.id.desc()).first()
+            if active_session:
+                active_session.is_active = True
+                db.session.commit()
+
+        if not active_session:
+            return render_template(
+                'timetables/index.html',
+                active_session=None,
+                classes=[],
+                selected_class=None,
+                sections=[],
+                selected_section=None,
+                periods=[],
+                days=DAYS_OF_WEEK,
+                entry_types=ENTRY_TYPES,
+                matrix={},
+                class_subjects=[],
+                teachers=[],
+                is_published=False
+            )
 
         classes = get_classes_for_session(active_session.id)
         selected_class_id = request.args.get('class_id', type=int)
@@ -107,7 +126,21 @@ def index():
     except Exception as e:
         db.session.rollback()
         flash(f"Error loading Timetable system: {str(e)}", "danger")
-        return redirect(url_for('admin.dashboard'))
+        return render_template(
+            'timetables/index.html',
+            active_session=None,
+            classes=[],
+            selected_class=None,
+            sections=[],
+            selected_section=None,
+            periods=[],
+            days=DAYS_OF_WEEK,
+            entry_types=ENTRY_TYPES,
+            matrix={},
+            class_subjects=[],
+            teachers=[],
+            is_published=False
+        )
 
 @timetables_bp.route('/save', methods=['POST'])
 @login_required

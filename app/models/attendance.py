@@ -46,3 +46,5 @@ class Attendance(db.Model):
     def __repr__(self):
         target = f"Student #{self.student_id}" if self.student_id else f"Employee #{self.employee_id}"
         return f'<Attendance {target} on {self.attendance_date}: {self.status}>'
+
+AttendanceRecord = Attendance

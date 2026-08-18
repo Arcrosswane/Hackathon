@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Class {{ school_class.name }} {{ subject.name }} — Syllabus Tracker{% endblock %}
+{% block header_title %}Interactive Syllabus Teaching Tracker{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-5xl mx-auto animate-fade-in" x-data="syllabusTrackerApp()">
+
+    <!-- 1. CONTROLS BAR -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <a href="{{ url_for('syllabus.index') }}" class="text-xs font-bold text-slate-500 hover:text-slate-700">← Back to Workspace</a>
+
+        <a href="{{ url_for('syllabus.notebook_matrix', class_id=school_class.id, subject_id=subject.id) }}"
+           class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md">
+            📓 Notebook Correction Matrix →
+        </a>
+    </div>
+
+    <!-- 2. PROGRESS BANNER -->
+    <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 rounded-3xl p-8 text-white shadow-xl space-y-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    Class {{ school_class.name }} • {{ subject.name }}
+                </span>
+                <h1 class="text-2xl sm:text-3xl font-black tracking-tight mt-2">Syllabus Completion Tracker</h1>
+            </div>
+
+            <div class="bg-white/10 px-5 py-3 rounded-2xl border border-white/20 text-center">
+                <span class="text-xs text-slate-300 font-bold block uppercase tracking-wider">Completion Progress</span>
+                <span class="text-3xl font-black text-emerald-400 font-mono" x-text="`${progress.completion_percentage}%`">{{ progress.completion_percentage }}%</span>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="space-y-1">
+            <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
+                <div class="bg-gradient-to-r from-indigo-500 to-emerald-400 h-3 rounded-full transition-all duration-500"
+                     :style="`width: ${progress.completion_percentage}%`"></div>
+            </div>
+            <div class="flex justify-between text-xs text-slate-300 font-medium pt-1">
+                <span>Completed: <strong class="text-white" x-text="progress.completed_topics">{{ progress.completed_topics }}</strong> of <strong class="text-white" x-text="progress.total_topics">{{ progress.total_topics }}</strong> Topics</span>
+                <span>In Progress: <strong class="text-amber-300" x-text="progress.in_progress_topics">{{ progress.in_progress_topics }}</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. CHAPTERS & TOPICS ACCORDION TRACKER -->
+    <div class="space-y-6">
+        {% for ch in chapters %}
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <span class="text-xs font-mono font-bold text-indigo-600">Chapter {{ ch.chapter_number }}</span>
+                    <h3 class="text-base font-black text-slate-900">{{ ch.chapter_name }}</h3>
+                </div>
+
+                <span class="text-xs font-mono font-bold text-slate-400">{{ ch.topics|length }} Topics</span>
+            </div>
+
+            <div class="space-y-3">
+                {% for t in ch.topics %}
+                <div class="p-4 rounded-xl border border-slate-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-50/50 hover:bg-slate-50 transition-colors"
+                     x-data="{ status: '{{ t.teaching_status }}' }">
+                    <div class="space-y-0.5">
+                        <span class="text-xs font-black text-slate-900">📌 Topic {{ loop.index }}: {{ t.topic_name }}</span>
+                        {% if t.description %}
+                        <p class="text-[11px] text-slate-500 font-medium">{{ t.description }}</p>
+                        {% endif %}
+                    </div>
+
+                    {% if (current_user.user_type or '').lower() in ('teacher', 'employee') %}
+                    <div class="flex items-center space-x-2 shrink-0">
+                        <button @click="updateStatus({{ t.id }}, 'NOT_STARTED')"
+                                :class="status === 'NOT_STARTED' ? 'bg-slate-800 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'"
+                                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all">
+                            Not Started
+                        </button>
+                        <button @click="updateStatus({{ t.id }}, 'IN_PROGRESS')"
+                                :class="status === 'IN_PROGRESS' ? 'bg-amber-500 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'"
+                                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all">
+                            In Progress ⏳
+                        </button>
+                        <button @click="updateStatus({{ t.id }}, 'COMPLETED')"
+                                :class="status === 'COMPLETED' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'"
+                                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all">
+                            Completed ✓
+                        </button>
+                    </div>
+                    {% else %}
+                    <div class="shrink-0">
+                        <span class="px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider
+                            {% if t.teaching_status == 'COMPLETED' %}bg-emerald-100 text-emerald-800 border border-emerald-300{% elif t.teaching_status == 'IN_PROGRESS' %}bg-amber-100 text-amber-800 border border-amber-300{% else %}bg-slate-100 text-slate-600 border border-slate-200{% endif %}">
+                            {{ t.teaching_status.replace('_', ' ') }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <p class="text-xs text-slate-400 italic">No topics defined for this chapter yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="bg-white p-12 rounded-2xl border border-slate-200 text-center text-slate-400 text-xs font-semibold">
+            No syllabus chapters have been created for Class {{ school_class.name }} {{ subject.name }} yet.
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<script>
+function syllabusTrackerApp() {
+    return {
+        progress: {{ progress|tojson }},
+        updateStatus(topicId, newStatus) {
+            fetch(`/syllabus/topic/${topicId}/status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    this.progress = data.progress;
+                    location.reload();
+                } else {
+                    alert(data.message || 'Failed to update topic status.');
+                }
+            });
+        }
+    }
+}
+</script>
+{% endblock %}
