@@ -568,6 +568,7 @@ def get_student_fee_summary(student_id, session_id=None):
             'total_subtotal': tot_subtotal,
             'total_discount': tot_discount,
             'total_payable': tot_payable,
+            'total_invoiced': tot_payable,
             'total_paid': tot_paid,
             'total_outstanding': tot_outstanding,
             'total_overdue': tot_overdue,

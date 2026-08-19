@@ -25,7 +25,7 @@ def index():
 
     student_id = None
     if user_role == 'student':
-        stu = Student.query.filter_by(user_id=current_user.id).first()
+        stu = Student.query.get(current_user.linked_entity_id) if current_user.linked_entity_id else Student.query.first()
         student_id = stu.id if stu else None
 
     certificates = get_certificate_history(
@@ -116,7 +116,7 @@ def detail(cert_id):
 
     # Permission check
     if user_role == 'student':
-        stu = Student.query.filter_by(user_id=current_user.id).first()
+        stu = Student.query.get(current_user.linked_entity_id) if current_user.linked_entity_id else Student.query.first()
         if not stu or cert.student_id != stu.id:
             flash('Permission denied to view this certificate.', 'danger')
             return redirect(url_for('certificates.index'))

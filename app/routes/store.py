@@ -426,6 +426,23 @@ def admin_update_order_status(order_id):
         return redirect(url_for('store.admin_orders'))
 
 
+@store_bp.route('/admin/orders/<int:order_id>/return', methods=['POST'])
+@login_required
+def admin_return_order(order_id):
+    """Admin endpoint to process order return."""
+    user_id = session.get('user_id')
+    current_user = User.query.get(user_id) if user_id else None
+    if not current_user:
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
+
+    try:
+        order = update_order_status(order_id, 'Returned', staff_user=current_user)
+        flash(f"Order #{order.order_number} has been marked as Returned and inventory updated.", 'success')
+    except (ValueError, PermissionError) as ve:
+        flash(str(ve), 'danger')
+    return redirect(url_for('store.admin_orders'))
+
+
 @store_bp.route('/pos')
 @login_required
 def pos_terminal():

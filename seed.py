@@ -1,5 +1,5 @@
 import sys
-from datetime import date, time
+from datetime import date, time, datetime, timedelta
 from sqlalchemy import create_engine, text
 from app import create_app
 from app.config import Config
@@ -868,7 +868,6 @@ def seed_database():
 
             # Seed Module 14 Attendance Records (Students & Employees)
             from app.services.attendance_service import save_bulk_class_student_attendance, save_bulk_employee_attendance
-            from app.models import StudentEnrollment, SchoolClass
             import random
 
             classes = SchoolClass.query.filter_by(academic_session_id=active_sess.id).all()

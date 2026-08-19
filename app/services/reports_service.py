@@ -217,8 +217,6 @@ def get_fee_reports(school_id=None, class_id=None):
     Summarizes Fee Invoices & Payment Ledger from existing fee tables.
     """
     query = FeeInvoice.query
-    if school_id:
-        query = query.filter_by(school_id=school_id)
     if class_id:
         query = query.filter_by(class_id=class_id)
 
@@ -254,10 +252,12 @@ def get_payroll_report(school_id=None, month=None, year=None):
     query = PayrollRecord.query
     if school_id:
         query = query.filter_by(school_id=school_id)
-    if month:
-        query = query.filter_by(payroll_month=month)
-    if year:
-        query = query.filter_by(payroll_year=year)
+    if month and year:
+        query = query.filter_by(payroll_period=f"{year}-{str(month).zfill(2)}")
+    elif year:
+        query = query.filter(PayrollRecord.payroll_period.like(f"{year}-%"))
+    elif month:
+        query = query.filter(PayrollRecord.payroll_period.like(f"%-{str(month).zfill(2)}"))
 
     records = query.all()
     total_gross = sum(float(r.gross_salary or 0) for r in records)
@@ -269,9 +269,9 @@ def get_payroll_report(school_id=None, month=None, year=None):
         emp_name = f"{r.employee.first_name} {r.employee.last_name}" if r.employee else "Employee"
         employee_list.append({
             'id': r.id,
-            'payroll_number': r.payroll_number,
+            'payroll_number': r.salary_slip_number,
             'employee_name': emp_name,
-            'month_year': f"{r.payroll_month}/{r.payroll_year}",
+            'month_year': r.period_label,
             'gross_salary': float(r.gross_salary or 0),
             'total_deductions': float(r.total_deductions or 0),
             'net_salary': float(r.net_salary or 0),

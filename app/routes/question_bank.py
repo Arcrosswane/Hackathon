@@ -388,6 +388,7 @@ def ai_generate():
 
 
 @question_bank_bp.route('/ai-accept', methods=['POST'])
+@question_bank_bp.route('/save-generated', methods=['POST'], endpoint='save_generated_questions')
 @login_required
 @role_required('Admin', 'Teacher')
 def ai_accept():

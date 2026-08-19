@@ -430,7 +430,7 @@ def seed_cbse_curriculum_data(school_id=None):
         if not cls:
             cls = SchoolClass(
                 name=class_name,
-                code=f"CLS-{grade_code}",
+                display_name=f"Class {class_name}",
                 academic_session_id=sess_id
             )
             db.session.add(cls)

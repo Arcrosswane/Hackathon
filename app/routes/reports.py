@@ -84,7 +84,7 @@ def academic_report_card():
 
     # Permission check for Student / Parent
     if user_role == 'student':
-        stu = Student.query.filter_by(user_id=current_user.id).first()
+        stu = Student.query.get(current_user.linked_entity_id) if current_user.linked_entity_id else Student.query.first()
         student_id = stu.id if stu else student_id
     elif user_role in ('parent', 'guardian'):
         if not student_id:
@@ -136,7 +136,7 @@ def attendance():
     student_id = request.args.get('student_id', type=int)
 
     if user_role == 'student':
-        stu = Student.query.filter_by(user_id=current_user.id).first()
+        stu = Student.query.get(current_user.linked_entity_id) if current_user.linked_entity_id else Student.query.first()
         student_id = stu.id if stu else student_id
 
     classes = SchoolClass.query.all()

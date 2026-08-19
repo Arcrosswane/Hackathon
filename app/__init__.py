@@ -46,6 +46,7 @@ def create_app(config_class=Config):
     from app.routes.syllabus import syllabus_bp
     from app.routes.syllabus_monitoring import syllabus_monitoring_bp
     from app.routes.ai_insights import ai_insights_bp
+    from app.routes.live_classes import live_classes_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
@@ -79,6 +80,7 @@ def create_app(config_class=Config):
     app.register_blueprint(syllabus_bp)
     app.register_blueprint(syllabus_monitoring_bp)
     app.register_blueprint(ai_insights_bp)
+    app.register_blueprint(live_classes_bp)
 
     # Register Python built-in helpers into Jinja template environment
     app.jinja_env.globals['int'] = int
